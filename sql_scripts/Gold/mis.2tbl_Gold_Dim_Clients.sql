@@ -9,9 +9,9 @@ GO
 
 -- Create the table
 CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
-    [ClientID]              NVARCHAR(100)  NOT NULL,
-    [ParentID]              NVARCHAR(100)  NULL,
-    [BranchID]              NVARCHAR(100)  NULL,
+    [ClientID]              VARCHAR(36)    NOT NULL,
+    [ParentID]              VARCHAR(36)    NOT NULL,
+    [BranchID]              VARCHAR(36)    NULL,
     [IsDeleted]             NVARCHAR(36)   NULL,
     [IsGroup]               NVARCHAR(36)   NULL,
     [ClientCode]            NVARCHAR(50)   NULL,
@@ -39,11 +39,13 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [NoEmailNotifications]  NVARCHAR(36)   NULL,
     [NoPromoSMS]            NVARCHAR(36)   NULL,
     [OrganizationType]      NVARCHAR(500)  NULL,
+    [GroupOwner]            VARCHAR(36)    NULL,
+    [GroupID]               NVARCHAR(5)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
 
--- Prepare source data with organization type
+-- Prepare source data with organization type and group affiliation
 ;WITH Src AS (
     SELECT
         s.[Контрагенты ID] AS ClientID,
@@ -74,15 +76,16 @@ GO
         s.[Контрагенты Язык] AS [Language],
         s.[Контрагенты Не Уведомлять Письмом] AS NoEmailNotifications,
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
-        fp.[ФормыПредприятия Наименование] AS OrganizationType
+        fp.[ФормыПредприятия Наименование] AS OrganizationType,
+        gb.[СоставГруппАффилированныхЛиц Контрагент ID] AS GroupOwner,
+        ga.[ГруппыАффилированныхЛиц Код] AS GroupID
     FROM [ATK].[mis].[Silver_Справочники.Контрагенты] s
-    LEFT JOIN (
-    SELECT [ФормыПредприятия Наименование]
-    FROM [ATK].[dbo].[Справочники.ФормыПредприятия]
-    GROUP BY [ФормыПредприятия Наименование]
-) fp
-    ON fp.[ФормыПредприятия Наименование] = s.[Контрагенты Форма Организации]
-
+    LEFT JOIN [ATK].[dbo].[Справочники.ФормыПредприятия] fp
+        ON fp.[ФормыПредприятия Наименование] = s.[Контрагенты Форма Организации]
+    LEFT JOIN [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] gb
+        ON gb.[СоставГруппАффилированныхЛиц Контрагент ID] = s.[Контрагенты ID]
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] ga
+        ON ga.[ГруппыАффилированныхЛиц ID] = gb.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
 ),
 AgeCalc AS (
     SELECT *,
@@ -112,17 +115,27 @@ Final AS (
         City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
         Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
         FiscalCode, LegalAddress, RegistrationDate, [Language],
-        NoEmailNotifications, NoPromoSMS, OrganizationType
+        NoEmailNotifications, NoPromoSMS, OrganizationType,
+        GroupOwner, GroupID
     FROM AgeCalc
+),
+Dedup AS (
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY ClientID
+               ORDER BY RegistrationDate DESC, CreatedDate DESC
+           ) AS rn
+    FROM Final
 )
--- Insert into final table
+-- Insert only the latest per ClientID
 INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [ClientID],[ParentID],[BranchID],
     [IsDeleted],[IsGroup],[ClientCode],[ClientName],[IsBlocked],[Visibility],
     [Age],[AgeGroup],[City],[CreatedDate],[PartnerCode],[FullName],[IsNonResident],[NoPaymentNotification],
     [Gender],[PostalAddress],[Country],[MobilePhone1],[MobilePhone2],[Phones],
     [FiscalCode],[LegalAddress],[RegistrationDate],[Language],
-    [NoEmailNotifications],[NoPromoSMS],[OrganizationType]
+    [NoEmailNotifications],[NoPromoSMS],[OrganizationType],
+    [GroupOwner],[GroupID]
 )
 SELECT
     ClientID, ParentID, BranchID,
@@ -130,12 +143,15 @@ SELECT
     Age, AgeGroup, City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
     Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
     FiscalCode, LegalAddress, RegistrationDate, [Language],
-    NoEmailNotifications, NoPromoSMS, OrganizationType
-FROM Final;
+    NoEmailNotifications, NoPromoSMS, OrganizationType,
+    GroupOwner, GroupID
+FROM Dedup
+WHERE rn = 1;
 GO
 
 -- Create indexes
-CREATE NONCLUSTERED INDEX IX_Clients_Branch   ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
-CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
+CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
+CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
 CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[2tbl_Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
+CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](GroupOwner, GroupID);
 GO

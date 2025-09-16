@@ -42,7 +42,8 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [LastExpertID] VARCHAR(36) NULL,
     [DealerID] VARCHAR(36) NULL,
     [Source] VARCHAR(36) NULL,
-    [LatestOutstandingAmount] DECIMAL(18,2) NULL
+    [LatestOutstandingAmount] DECIMAL(18,2) NULL,
+	[SegmentRevenue] NVARCHAR (50) NULL
 );
 GO
 
@@ -78,7 +79,7 @@ CreditRequest AS (
     WHERE rn = 1
 ),
 
--- First and Last responsible experts/branches
+-- First and Last responsible
 FirstLast AS (
     SELECT
         [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
@@ -140,9 +141,16 @@ LatestOutstanding AS (
     ) md
         ON sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = md.CreditID
        AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] = md.MaxDate
+),
+
+-- Segment Revenue
+SegmentRevenue AS (
+    SELECT
+        cp.[КредитныеПродукты ID] AS ProductID,
+        cp.[КредитныеПродукты Сегмент Доходов] AS SegmentRevenue
+    FROM [ATK].[dbo].[Справочники.КредитныеПродукты] cp
 )
 
--- Insert all columns
 INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
@@ -155,7 +163,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [FinancialProductsMainGroup], [IssuedCreditsStatus],
     [CreditApplicationPartnerID], [FirstFilialID], [FirstExpertID],
     [LastFilialID], [LastExpertID], [DealerID], [Source],
-    [LatestOutstandingAmount]
+    [LatestOutstandingAmount], [SegmentRevenue]
 )
 SELECT
     c.CreditID,
@@ -192,14 +200,16 @@ SELECT
     COALESCE(lr.LastExpertID, cr.ExpertID),
     cr.DealerID,
     cr.Source,
-    lo.LatestOutstandingAmount
+    lo.LatestOutstandingAmount,
+    seg.SegmentRevenue
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.CreditID = cr.CreditID
 LEFT JOIN FirstResp fr ON c.CreditID = fr.CreditID
 LEFT JOIN LastResp lr ON c.CreditID = lr.CreditID
 LEFT JOIN FinProducts fp ON c.FinancialProductID = fp.CreditFinancialProductID
 LEFT JOIN Statuses st ON c.CreditID = st.CreditID AND st.rn_last = 1
-LEFT JOIN LatestOutstanding lo ON c.CreditID = lo.CreditID;
+LEFT JOIN LatestOutstanding lo ON c.CreditID = lo.CreditID
+LEFT JOIN SegmentRevenue seg ON c.ProductID = seg.ProductID;
 GO
 
 -- Optional index for faster queries

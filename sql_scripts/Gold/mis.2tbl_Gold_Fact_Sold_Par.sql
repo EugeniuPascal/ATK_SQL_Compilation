@@ -119,11 +119,18 @@ SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
     
-    -- IRR Values (use last IRR if present)
-    ROUND(
-        COALESCE(ir.IRR_Year, ir.IRR_Client, 0)
-        * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
-    ) AS IRR_Values,
+-- IRR Values with conditional logic
+ROUND(
+    COALESCE(
+        CASE 
+            WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 
+                THEN ir.IRR_Year
+            ELSE ir.IRR_Client
+        END,
+        0
+    )
+    * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
+) AS IRR_Values,
     
     -- Shadow Branch (latest <= SoldDate)
     sh.BranchShadow,
@@ -131,8 +138,7 @@ SELECT
     -- ExpertID from latest responsible
     r.ExpertID,
     
-    -- BranchID: prefer shadow, otherwise responsible
-    COALESCE(sh.BranchShadow, r.BranchID) AS BranchID,
+    r.BranchID AS BranchID,
     
     -- ParNas IFRS
     CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_0_IFRS,
@@ -186,3 +192,6 @@ ON mis.[2tbl_Gold_Fact_Sold_Par];
 
 -- Drop temp tables
 DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranch, #Responsible, #IRR;
+
+
+

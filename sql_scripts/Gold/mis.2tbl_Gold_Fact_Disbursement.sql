@@ -28,8 +28,8 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] (
     FirstExpertID      NVARCHAR(36)   NULL,
     LastFilialID       NVARCHAR(36)   NULL,
     LastExpertID       NVARCHAR(36)   NULL,
-    IRR                DECIMAL(18,6)  NULL,
-    IRR_Client         DECIMAL(18,6)  NULL,
+    IRR                DECIMAL(18,2)  NULL,
+    IRR_Client         DECIMAL(18,2)  NULL,
     Qty                INT            NULL,
     NewExisting_Client NVARCHAR(20)   NULL,
     CreatedAt          DATETIME       NOT NULL DEFAULT GETDATE()
@@ -92,12 +92,20 @@ OUTER APPLY (
     ORDER BY r.[ОтветственныеПоКредитамВыданным Период] DESC
 ) lastR_month
 OUTER APPLY (
-    SELECT TOP 1 
-        COALESCE(
-            NULLIF(doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая], 9999.999999),
-            doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая]
-        ) AS IRR,
-        doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая] AS IRR_Client
+    /* IRR with conditional: prefer IRR_Year (<100) else IRR_Client; round to 6dp; no TRY_CONVERT */
+    SELECT TOP 1
+        IRR_Client = ROUND(
+            COALESCE(
+                doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая], 0), 2),
+        IRR = ROUND(
+            COALESCE(
+                CASE
+                    WHEN doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] IS NOT NULL
+                     AND doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] < 100
+                        THEN doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая]
+                    ELSE doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая]
+                END,
+                0), 2)
     FROM [ATK].[mis].[Silver_Документы.УстановкаДанныхКредита] doc
     WHERE doc.[УстановкаДанныхКредита Кредит ID] = d.[ДанныеКредитовВыданных Кредит ID]
     ORDER BY doc.[УстановкаДанныхКредита Дата] DESC
@@ -147,10 +155,7 @@ SELECT COUNT(*) AS StatusRows FROM #Status;
 GO
 
 /* ============================
-   Build #Final:
-   + Disbursement (qty=+1)
-   + Cancel (qty=-1, negative amounts)  — only if >= disbursement
-   + Restore (qty=+1, positive amounts) — only if >= disbursement AND > cancel
+   Build #Final
    ============================ */
 SELECT
     b.CreditID, b.ClientID, b.DisbursementDate, b.CurrencyID,
@@ -184,7 +189,7 @@ FROM #Status s
 JOIN #Base b ON b.CreditID = s.CreditID AND b.rn = 1
 WHERE s.RestorePeriod IS NOT NULL
   AND s.RestorePeriod >= b.DisbursementDate
-  AND (s.CancelPeriod IS NULL OR s.RestorePeriod > s.CancelPeriod);  -- prevents same-day duplicate
+  AND (s.CancelPeriod IS NULL OR s.RestorePeriod > s.CancelPeriod);
 GO
 
 SELECT COUNT(*) AS FinalRows FROM #Final;
@@ -192,11 +197,6 @@ GO
 
 /* ============================
    Insert to target
-   - Order by date only (sign ignored)
-   - First encounter for a client:
-       if positive => New
-       else positives => Existing
-       negatives => Cancelled
    ============================ */
 WITH AllSeq AS (
     SELECT
@@ -246,14 +246,6 @@ ON mis.[2tbl_Gold_Fact_Disbursement] (NewExisting_Client);
 CREATE NONCLUSTERED INDEX IX_Disbursement_ClientID
 ON mis.[2tbl_Gold_Fact_Disbursement] (ClientID);
 GO
-
-/* ============================
-   Optional: event-level uniqueness (avoids accidental dup loads)
-   ============================ */
--- CREATE UNIQUE INDEX UX_Disb_UniqueEvent
--- ON mis.[2tbl_Gold_Fact_Disbursement] (CreditID, DisbursementDate, Qty)
--- WITH (IGNORE_DUP_KEY = ON);
--- GO
 
 /* ============================
    Cleanup

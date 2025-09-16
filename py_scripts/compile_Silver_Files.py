@@ -2,7 +2,7 @@
 from pathlib import Path
 from datetime import datetime
 
-MAIN_DIR = Path(r"C:\ATK_Project\sql\Silver")
+MAIN_DIR = Path(r"C:\ATK_Project\sql_scripts\Silver")
 OUTPUT   = Path(r"C:\ATK_Project\compiled\compiled_Silver_Tables.sql")
 
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")

@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime
 
 # ---- configure your folder ----
-MAIN_DIR  = Path(r"C:\ATK_Project\sql\Gold")
+MAIN_DIR  = Path(r"C:\ATK_Project\sql_scripts\Gold")
 OUTPUT    = Path(r"C:\ATK_Project\compiled\compiled_Gold_Tables.sql")
 
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")

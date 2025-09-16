@@ -4,9 +4,7 @@ import numpy as np
 from tabulate import tabulate
 
 # Read Excel
-df = pd.read_excel(
-    r"H:\mapa lucru\ATK_db\Import_Excel_in_db\mis.2tbl_Gold_Fact_BudgetBranch\Branch Plan 2025.xlsx"
-)
+df = pd.read_excel(r"C:\ATK_Project\data\Branch Plan 2025.xlsx")
 
 # Strip column names of extra spaces
 df.columns = df.columns.str.strip()
@@ -23,14 +21,14 @@ def safe_val(val):
 
 # List the exact columns you need to map to SQL table
 columns_needed = [
-    'Gold Tables',          # BranchID
-    'FROMTables/columns',   # Month
-    'Current values',       # Product_Segment
-    'DataType example',     # BranchRegion
-    'update',               # BranchName
-    'Disbursed',            # Disbursed
-    'Payments',             # Payments
-    'LP'                    # LP
+    'BranchID',
+    'Month',
+    'Product_Segment',
+    'BranchRegion',
+    'BranchName',
+    'Disbursed',
+    'Payments',    
+    'LP'             
 ]
 
 # Ensure all required columns exist in Excel

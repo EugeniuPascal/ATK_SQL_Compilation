@@ -1,6 +1,6 @@
 -- Compiled SQL bundle
--- Generated: 2025-09-15 08:37:00
--- Source folder: H:\mapa lucru\ATK_db\mis.Gold_actual\[ATK].[mis]_Tables\Gold_Tables
+-- Generated: 2025-09-16 16:01:42
+-- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (13):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
 --   mis.2tbl_Gold_Dim_Branch.sql
@@ -161,9 +161,9 @@ GO
 
 -- Create the table
 CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
-    [ClientID]              NVARCHAR(100)  NOT NULL,
-    [ParentID]              NVARCHAR(100)  NULL,
-    [BranchID]              NVARCHAR(100)  NULL,
+    [ClientID]              VARCHAR(36)    NOT NULL,
+    [ParentID]              VARCHAR(36)    NOT NULL,
+    [BranchID]              VARCHAR(36)    NULL,
     [IsDeleted]             NVARCHAR(36)   NULL,
     [IsGroup]               NVARCHAR(36)   NULL,
     [ClientCode]            NVARCHAR(50)   NULL,
@@ -191,11 +191,13 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [NoEmailNotifications]  NVARCHAR(36)   NULL,
     [NoPromoSMS]            NVARCHAR(36)   NULL,
     [OrganizationType]      NVARCHAR(500)  NULL,
+    [GroupOwner]            VARCHAR(36)    NULL,
+    [GroupID]               NVARCHAR(5)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
 
--- Prepare source data with organization type
+-- Prepare source data with organization type and group affiliation
 ;WITH Src AS (
     SELECT
         s.[Контрагенты ID] AS ClientID,
@@ -226,15 +228,16 @@ GO
         s.[Контрагенты Язык] AS [Language],
         s.[Контрагенты Не Уведомлять Письмом] AS NoEmailNotifications,
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
-        fp.[ФормыПредприятия Наименование] AS OrganizationType
+        fp.[ФормыПредприятия Наименование] AS OrganizationType,
+        gb.[СоставГруппАффилированныхЛиц Контрагент ID] AS GroupOwner,
+        ga.[ГруппыАффилированныхЛиц Код] AS GroupID
     FROM [ATK].[mis].[Silver_Справочники.Контрагенты] s
-    LEFT JOIN (
-    SELECT [ФормыПредприятия Наименование]
-    FROM [ATK].[dbo].[Справочники.ФормыПредприятия]
-    GROUP BY [ФормыПредприятия Наименование]
-) fp
-    ON fp.[ФормыПредприятия Наименование] = s.[Контрагенты Форма Организации]
-
+    LEFT JOIN [ATK].[dbo].[Справочники.ФормыПредприятия] fp
+        ON fp.[ФормыПредприятия Наименование] = s.[Контрагенты Форма Организации]
+    LEFT JOIN [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] gb
+        ON gb.[СоставГруппАффилированныхЛиц Контрагент ID] = s.[Контрагенты ID]
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] ga
+        ON ga.[ГруппыАффилированныхЛиц ID] = gb.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
 ),
 AgeCalc AS (
     SELECT *,
@@ -264,17 +267,27 @@ Final AS (
         City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
         Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
         FiscalCode, LegalAddress, RegistrationDate, [Language],
-        NoEmailNotifications, NoPromoSMS, OrganizationType
+        NoEmailNotifications, NoPromoSMS, OrganizationType,
+        GroupOwner, GroupID
     FROM AgeCalc
+),
+Dedup AS (
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY ClientID
+               ORDER BY RegistrationDate DESC, CreatedDate DESC
+           ) AS rn
+    FROM Final
 )
--- Insert into final table
+-- Insert only the latest per ClientID
 INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [ClientID],[ParentID],[BranchID],
     [IsDeleted],[IsGroup],[ClientCode],[ClientName],[IsBlocked],[Visibility],
     [Age],[AgeGroup],[City],[CreatedDate],[PartnerCode],[FullName],[IsNonResident],[NoPaymentNotification],
     [Gender],[PostalAddress],[Country],[MobilePhone1],[MobilePhone2],[Phones],
     [FiscalCode],[LegalAddress],[RegistrationDate],[Language],
-    [NoEmailNotifications],[NoPromoSMS],[OrganizationType]
+    [NoEmailNotifications],[NoPromoSMS],[OrganizationType],
+    [GroupOwner],[GroupID]
 )
 SELECT
     ClientID, ParentID, BranchID,
@@ -282,14 +295,17 @@ SELECT
     Age, AgeGroup, City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
     Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
     FiscalCode, LegalAddress, RegistrationDate, [Language],
-    NoEmailNotifications, NoPromoSMS, OrganizationType
-FROM Final;
+    NoEmailNotifications, NoPromoSMS, OrganizationType,
+    GroupOwner, GroupID
+FROM Dedup
+WHERE rn = 1;
 GO
 
 -- Create indexes
-CREATE NONCLUSTERED INDEX IX_Clients_Branch   ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
-CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
+CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
+CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
 CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[2tbl_Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
+CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](GroupOwner, GroupID);
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Dim_Clients.sql
@@ -344,7 +360,8 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [LastExpertID] VARCHAR(36) NULL,
     [DealerID] VARCHAR(36) NULL,
     [Source] VARCHAR(36) NULL,
-    [LatestOutstandingAmount] DECIMAL(18,2) NULL
+    [LatestOutstandingAmount] DECIMAL(18,2) NULL,
+	[SegmentRevenue] NVARCHAR (50) NULL
 );
 GO
 
@@ -380,7 +397,7 @@ CreditRequest AS (
     WHERE rn = 1
 ),
 
--- First and Last responsible experts/branches
+-- First and Last responsible
 FirstLast AS (
     SELECT
         [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
@@ -442,9 +459,16 @@ LatestOutstanding AS (
     ) md
         ON sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = md.CreditID
        AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] = md.MaxDate
+),
+
+-- Segment Revenue
+SegmentRevenue AS (
+    SELECT
+        cp.[КредитныеПродукты ID] AS ProductID,
+        cp.[КредитныеПродукты Сегмент Доходов] AS SegmentRevenue
+    FROM [ATK].[dbo].[Справочники.КредитныеПродукты] cp
 )
 
--- Insert all columns
 INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
@@ -457,7 +481,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [FinancialProductsMainGroup], [IssuedCreditsStatus],
     [CreditApplicationPartnerID], [FirstFilialID], [FirstExpertID],
     [LastFilialID], [LastExpertID], [DealerID], [Source],
-    [LatestOutstandingAmount]
+    [LatestOutstandingAmount], [SegmentRevenue]
 )
 SELECT
     c.CreditID,
@@ -494,14 +518,16 @@ SELECT
     COALESCE(lr.LastExpertID, cr.ExpertID),
     cr.DealerID,
     cr.Source,
-    lo.LatestOutstandingAmount
+    lo.LatestOutstandingAmount,
+    seg.SegmentRevenue
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.CreditID = cr.CreditID
 LEFT JOIN FirstResp fr ON c.CreditID = fr.CreditID
 LEFT JOIN LastResp lr ON c.CreditID = lr.CreditID
 LEFT JOIN FinProducts fp ON c.FinancialProductID = fp.CreditFinancialProductID
 LEFT JOIN Statuses st ON c.CreditID = st.CreditID AND st.rn_last = 1
-LEFT JOIN LatestOutstanding lo ON c.CreditID = lo.CreditID;
+LEFT JOIN LatestOutstanding lo ON c.CreditID = lo.CreditID
+LEFT JOIN SegmentRevenue seg ON c.ProductID = seg.ProductID;
 GO
 
 -- Optional index for faster queries
@@ -1259,8 +1285,8 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] (
     FirstExpertID      NVARCHAR(36)   NULL,
     LastFilialID       NVARCHAR(36)   NULL,
     LastExpertID       NVARCHAR(36)   NULL,
-    IRR                DECIMAL(18,6)  NULL,
-    IRR_Client         DECIMAL(18,6)  NULL,
+    IRR                DECIMAL(18,2)  NULL,
+    IRR_Client         DECIMAL(18,2)  NULL,
     Qty                INT            NULL,
     NewExisting_Client NVARCHAR(20)   NULL,
     CreatedAt          DATETIME       NOT NULL DEFAULT GETDATE()
@@ -1323,12 +1349,20 @@ OUTER APPLY (
     ORDER BY r.[ОтветственныеПоКредитамВыданным Период] DESC
 ) lastR_month
 OUTER APPLY (
-    SELECT TOP 1 
-        COALESCE(
-            NULLIF(doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая], 9999.999999),
-            doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая]
-        ) AS IRR,
-        doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая] AS IRR_Client
+    /* IRR with conditional: prefer IRR_Year (<100) else IRR_Client; round to 6dp; no TRY_CONVERT */
+    SELECT TOP 1
+        IRR_Client = ROUND(
+            COALESCE(
+                doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая], 0), 2),
+        IRR = ROUND(
+            COALESCE(
+                CASE
+                    WHEN doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] IS NOT NULL
+                     AND doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] < 100
+                        THEN doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая]
+                    ELSE doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая]
+                END,
+                0), 2)
     FROM [ATK].[mis].[Silver_Документы.УстановкаДанныхКредита] doc
     WHERE doc.[УстановкаДанныхКредита Кредит ID] = d.[ДанныеКредитовВыданных Кредит ID]
     ORDER BY doc.[УстановкаДанныхКредита Дата] DESC
@@ -1378,10 +1412,7 @@ SELECT COUNT(*) AS StatusRows FROM #Status;
 GO
 
 /* ============================
-   Build #Final:
-   + Disbursement (qty=+1)
-   + Cancel (qty=-1, negative amounts)  — only if >= disbursement
-   + Restore (qty=+1, positive amounts) — only if >= disbursement AND > cancel
+   Build #Final
    ============================ */
 SELECT
     b.CreditID, b.ClientID, b.DisbursementDate, b.CurrencyID,
@@ -1415,7 +1446,7 @@ FROM #Status s
 JOIN #Base b ON b.CreditID = s.CreditID AND b.rn = 1
 WHERE s.RestorePeriod IS NOT NULL
   AND s.RestorePeriod >= b.DisbursementDate
-  AND (s.CancelPeriod IS NULL OR s.RestorePeriod > s.CancelPeriod);  -- prevents same-day duplicate
+  AND (s.CancelPeriod IS NULL OR s.RestorePeriod > s.CancelPeriod);
 GO
 
 SELECT COUNT(*) AS FinalRows FROM #Final;
@@ -1423,11 +1454,6 @@ GO
 
 /* ============================
    Insert to target
-   - Order by date only (sign ignored)
-   - First encounter for a client:
-       if positive => New
-       else positives => Existing
-       negatives => Cancelled
    ============================ */
 WITH AllSeq AS (
     SELECT
@@ -1477,14 +1503,6 @@ ON mis.[2tbl_Gold_Fact_Disbursement] (NewExisting_Client);
 CREATE NONCLUSTERED INDEX IX_Disbursement_ClientID
 ON mis.[2tbl_Gold_Fact_Disbursement] (ClientID);
 GO
-
-/* ============================
-   Optional: event-level uniqueness (avoids accidental dup loads)
-   ============================ */
--- CREATE UNIQUE INDEX UX_Disb_UniqueEvent
--- ON mis.[2tbl_Gold_Fact_Disbursement] (CreditID, DisbursementDate, Qty)
--- WITH (IGNORE_DUP_KEY = ON);
--- GO
 
 /* ============================
    Cleanup
@@ -1623,11 +1641,18 @@ SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
     
-    -- IRR Values (use last IRR if present)
-    ROUND(
-        COALESCE(ir.IRR_Year, ir.IRR_Client, 0)
-        * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
-    ) AS IRR_Values,
+-- IRR Values with conditional logic
+ROUND(
+    COALESCE(
+        CASE 
+            WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 
+                THEN ir.IRR_Year
+            ELSE ir.IRR_Client
+        END,
+        0
+    )
+    * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
+) AS IRR_Values,
     
     -- Shadow Branch (latest <= SoldDate)
     sh.BranchShadow,
@@ -1635,8 +1660,7 @@ SELECT
     -- ExpertID from latest responsible
     r.ExpertID,
     
-    -- BranchID: prefer shadow, otherwise responsible
-    COALESCE(sh.BranchShadow, r.BranchID) AS BranchID,
+    r.BranchID AS BranchID,
     
     -- ParNas IFRS
     CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_0_IFRS,

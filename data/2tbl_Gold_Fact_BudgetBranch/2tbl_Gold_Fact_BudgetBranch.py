@@ -4,7 +4,7 @@ import numpy as np
 from tabulate import tabulate
 
 # --- Read Excel ---
-df = pd.read_excel(r"C:\ATK_Project\data\Branch Plan 2025.xlsx")
+df = pd.read_excel(r"C:\ATK_Project\data\2tbl_Gold_Fact_BudgetBranch\Branch Plan 2025.xlsx")
 
 # Strip extra spaces from column names
 df.columns = df.columns.str.strip()

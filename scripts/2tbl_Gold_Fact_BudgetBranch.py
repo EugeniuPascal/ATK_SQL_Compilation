@@ -65,7 +65,7 @@ cursor.executemany("""
     Disbursed,
     Repayments, 
     LP)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """, data_to_insert)
 
 # Commit and close

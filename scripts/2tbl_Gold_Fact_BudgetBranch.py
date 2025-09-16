@@ -24,11 +24,11 @@ columns_needed = [
     'BranchID',
     'Month',
     'Product_Segment',
-    'Product_Adjusted',  # Excel column
+    'Product_Adjusted', 
     'BranchRegion',
     'BranchName',
     'Disbursed',
-    'Repayments',       # Excel column
+    'Repayments', 
     'LP'
 ]
 
@@ -63,7 +63,7 @@ cursor.executemany("""
         BranchRegion,
         BranchName,
         Disbursed,
-        Payments, 
+        Repayments, 
         LP)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """, data_to_insert)

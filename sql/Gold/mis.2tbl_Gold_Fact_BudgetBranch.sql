@@ -12,12 +12,13 @@ GO
 CREATE TABLE mis.[2tbl_Gold_Fact_BudgetBranch]
   (
     BranchID VARCHAR(36) NULL,
-    MONTH DATETIME,
+    Month DATETIME,
     Product_Segment NVARCHAR(255) NULL,
+	Product_Adjusted NVARCHAR(255) NULL,
     BranchRegion NVARCHAR(255) NULL,
     BranchName NVARCHAR(500) NULL,
     Disbursed DECIMAL(18,2) NULL,
-    Payments DECIMAL(18,2) NULL,
+    Repayments DECIMAL(18,2) NULL,
     LP       DECIMAL(18,2) NULL
    );
 GO

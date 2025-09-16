@@ -56,7 +56,7 @@ cursor.fast_executemany = True
 # Bulk insert into SQL
 cursor.executemany("""
     INSERT INTO mis.2tbl_Gold_Fact_BudgetBranch 
-        (BranchID,
+   (BranchID,
     Month,
     Product_Segment,
     Product_Adjusted,

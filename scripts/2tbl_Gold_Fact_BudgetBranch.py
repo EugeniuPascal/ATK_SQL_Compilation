@@ -6,7 +6,7 @@ from tabulate import tabulate
 # Read Excel
 df = pd.read_excel(r"C:\ATK_Project\data\Branch Plan 2025.xlsx")
 
-# Strip column names of extra spaces
+# Strip extra spaces from column names
 df.columns = df.columns.str.strip()
 
 # Replace NaN or empty strings with None
@@ -17,24 +17,24 @@ print(tabulate(df.head(20), headers='keys', tablefmt='psql'))
 
 # Helper function to safely convert values
 def safe_val(val):
-    return None if val is None else val
+    return None if pd.isna(val) else val
 
-# List the exact columns you need to map to SQL table
+# List of columns to map to SQL table
 columns_needed = [
     'BranchID',
     'Month',
-    'Product_Segment',
+    'Product_Adjusted',
     'BranchRegion',
     'BranchName',
     'Disbursed',
-    'Payments',    
-    'LP'             
+    'Repayments', 
+    'LP'
 ]
 
-# Ensure all required columns exist in Excel
-for col in columns_needed:
-    if col not in df.columns:
-        raise KeyError(f"Column '{col}' not found in Excel sheet. Available columns: {list(df.columns)}")
+# Ensure all required columns exist in DataFrame
+missing_cols = [col for col in columns_needed if col not in df.columns]
+if missing_cols:
+    raise KeyError(f"Missing columns in Excel sheet: {missing_cols}. Available columns: {list(df.columns)}")
 
 # Prepare data for bulk insert
 data_to_insert = [
@@ -52,7 +52,7 @@ conn = pyodbc.connect(
 cursor = conn.cursor()
 cursor.fast_executemany = True
 
-# Bulk insert
+# Bulk insert into SQL
 cursor.executemany("""
     INSERT INTO mis.2tbl_Gold_Fact_BudgetBranch 
         (BranchID, Month, Product_Segment, BranchRegion, BranchName, Disbursed, Payments, LP)
@@ -62,3 +62,4 @@ cursor.executemany("""
 # Commit and close
 conn.commit()
 conn.close()
+print("Data inserted successfully!")

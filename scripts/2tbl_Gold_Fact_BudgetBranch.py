@@ -23,6 +23,7 @@ def safe_val(val):
 columns_needed = [
     'BranchID',
     'Month',
+    'Product_Segment',
     'Product_Adjusted',
     'BranchRegion',
     'BranchName',
@@ -55,7 +56,15 @@ cursor.fast_executemany = True
 # Bulk insert into SQL
 cursor.executemany("""
     INSERT INTO mis.2tbl_Gold_Fact_BudgetBranch 
-        (BranchID, Month, Product_Segment, BranchRegion, BranchName, Disbursed, Payments, LP)
+        (BranchID,
+    Month,
+    Product_Segment,
+    Product_Adjusted,
+    BranchRegion,
+    BranchName,
+    Disbursed,
+    Repayments, 
+    LP)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 """, data_to_insert)
 

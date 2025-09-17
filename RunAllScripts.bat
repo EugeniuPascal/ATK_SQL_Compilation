@@ -19,7 +19,9 @@ if not exist "%LOGS_GOLD%" mkdir "%LOGS_GOLD%"
 REM ----------------------------
 REM --- Helper for timestamp ---
 REM ----------------------------
-set TIMESTAMP=%DATE:~10,4%%DATE:~4,2%%DATE:~7,2%_%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%
+for /f "tokens=1-5 delims=:. " %%a in ("%date% %time%") do (
+    set TIMESTAMP=%%d%%b%%c_%%a%%b%%e
+)
 set TIMESTAMP=%TIMESTAMP: =0%
 
 REM ----------------------------
@@ -85,4 +87,4 @@ if %errorlevel% neq 0 (
 )
 
 echo [%time%] ALL STEPS COMPLETED SUCCESSFULLY.
-pause
+exit /b 0

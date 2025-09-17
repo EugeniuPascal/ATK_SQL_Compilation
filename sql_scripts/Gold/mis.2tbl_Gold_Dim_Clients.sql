@@ -39,13 +39,13 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [NoEmailNotifications]  NVARCHAR(36)   NULL,
     [NoPromoSMS]            NVARCHAR(36)   NULL,
     [OrganizationType]      NVARCHAR(500)  NULL,
-    [GroupOwner]            VARCHAR(36)    NULL,
+    [IsGroupOwner]          BIT            NULL,
     [GroupID]               NVARCHAR(5)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
 
--- Prepare source data with organization type and group affiliation
+-- Prepare source data with organization type and group ownership
 ;WITH Src AS (
     SELECT
         s.[Контрагенты ID] AS ClientID,
@@ -77,7 +77,12 @@ GO
         s.[Контрагенты Не Уведомлять Письмом] AS NoEmailNotifications,
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
         fp.[ФормыПредприятия Наименование] AS OrganizationType,
-        gb.[СоставГруппАффилированныхЛиц Контрагент ID] AS GroupOwner,
+        
+        -- New Boolean: 1 if client is owner of a group, else 0
+        CASE 
+            WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1
+            ELSE 0
+        END AS IsGroupOwner,
         ga.[ГруппыАффилированныхЛиц Код] AS GroupID
     FROM [ATK].[mis].[Silver_Справочники.Контрагенты] s
     LEFT JOIN [ATK].[dbo].[Справочники.ФормыПредприятия] fp
@@ -86,6 +91,8 @@ GO
         ON gb.[СоставГруппАффилированныхЛиц Контрагент ID] = s.[Контрагенты ID]
     LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] ga
         ON ga.[ГруппыАффилированныхЛиц ID] = gb.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+        ON g.[ГруппыАффилированныхЛиц ID] = ga.[ГруппыАффилированныхЛиц ID]
 ),
 AgeCalc AS (
     SELECT *,
@@ -116,7 +123,7 @@ Final AS (
         Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
         FiscalCode, LegalAddress, RegistrationDate, [Language],
         NoEmailNotifications, NoPromoSMS, OrganizationType,
-        GroupOwner, GroupID
+        IsGroupOwner, GroupID
     FROM AgeCalc
 ),
 Dedup AS (
@@ -135,7 +142,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [Gender],[PostalAddress],[Country],[MobilePhone1],[MobilePhone2],[Phones],
     [FiscalCode],[LegalAddress],[RegistrationDate],[Language],
     [NoEmailNotifications],[NoPromoSMS],[OrganizationType],
-    [GroupOwner],[GroupID]
+    [IsGroupOwner],[GroupID]
 )
 SELECT
     ClientID, ParentID, BranchID,
@@ -144,7 +151,7 @@ SELECT
     Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
     FiscalCode, LegalAddress, RegistrationDate, [Language],
     NoEmailNotifications, NoPromoSMS, OrganizationType,
-    GroupOwner, GroupID
+    IsGroupOwner, GroupID
 FROM Dedup
 WHERE rn = 1;
 GO
@@ -153,5 +160,5 @@ GO
 CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
 CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
 CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[2tbl_Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
-CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](GroupOwner, GroupID);
+CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](IsGroupOwner, GroupID);
 GO

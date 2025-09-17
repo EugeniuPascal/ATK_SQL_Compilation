@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-09-17 08:06:18
+-- Generated: 2025-09-17 11:35:42
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (13):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -191,13 +191,13 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [NoEmailNotifications]  NVARCHAR(36)   NULL,
     [NoPromoSMS]            NVARCHAR(36)   NULL,
     [OrganizationType]      NVARCHAR(500)  NULL,
-    [GroupOwner]            VARCHAR(36)    NULL,
+    [IsGroupOwner]          BIT            NULL,
     [GroupID]               NVARCHAR(5)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
 
--- Prepare source data with organization type and group affiliation
+-- Prepare source data with organization type and group ownership
 ;WITH Src AS (
     SELECT
         s.[Контрагенты ID] AS ClientID,
@@ -229,7 +229,12 @@ GO
         s.[Контрагенты Не Уведомлять Письмом] AS NoEmailNotifications,
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
         fp.[ФормыПредприятия Наименование] AS OrganizationType,
-        gb.[СоставГруппАффилированныхЛиц Контрагент ID] AS GroupOwner,
+        
+        -- New Boolean: 1 if client is owner of a group, else 0
+        CASE 
+            WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1
+            ELSE 0
+        END AS IsGroupOwner,
         ga.[ГруппыАффилированныхЛиц Код] AS GroupID
     FROM [ATK].[mis].[Silver_Справочники.Контрагенты] s
     LEFT JOIN [ATK].[dbo].[Справочники.ФормыПредприятия] fp
@@ -238,6 +243,8 @@ GO
         ON gb.[СоставГруппАффилированныхЛиц Контрагент ID] = s.[Контрагенты ID]
     LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] ga
         ON ga.[ГруппыАффилированныхЛиц ID] = gb.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+        ON g.[ГруппыАффилированныхЛиц ID] = ga.[ГруппыАффилированныхЛиц ID]
 ),
 AgeCalc AS (
     SELECT *,
@@ -268,7 +275,7 @@ Final AS (
         Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
         FiscalCode, LegalAddress, RegistrationDate, [Language],
         NoEmailNotifications, NoPromoSMS, OrganizationType,
-        GroupOwner, GroupID
+        IsGroupOwner, GroupID
     FROM AgeCalc
 ),
 Dedup AS (
@@ -287,7 +294,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [Gender],[PostalAddress],[Country],[MobilePhone1],[MobilePhone2],[Phones],
     [FiscalCode],[LegalAddress],[RegistrationDate],[Language],
     [NoEmailNotifications],[NoPromoSMS],[OrganizationType],
-    [GroupOwner],[GroupID]
+    [IsGroupOwner],[GroupID]
 )
 SELECT
     ClientID, ParentID, BranchID,
@@ -296,7 +303,7 @@ SELECT
     Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
     FiscalCode, LegalAddress, RegistrationDate, [Language],
     NoEmailNotifications, NoPromoSMS, OrganizationType,
-    GroupOwner, GroupID
+    IsGroupOwner, GroupID
 FROM Dedup
 WHERE rn = 1;
 GO
@@ -305,7 +312,7 @@ GO
 CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
 CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
 CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[2tbl_Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
-CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](GroupOwner, GroupID);
+CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](IsGroupOwner, GroupID);
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Dim_Clients.sql
@@ -361,7 +368,8 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [DealerID] VARCHAR(36) NULL,
     [Source] VARCHAR(36) NULL,
     [LatestOutstandingAmount] DECIMAL(18,2) NULL,
-	[SegmentRevenue] NVARCHAR (50) NULL
+    [SegmentRevenue] NVARCHAR(50) NULL,
+    [GreenCredit] VARCHAR(36) NULL
 );
 GO
 
@@ -376,6 +384,7 @@ Credits AS (
     FROM [ATK].[mis].[Silver_Справочники.Кредиты]
 ),
 
+-- Credit Request: latest per credit
 CreditRequest AS (
     SELECT *
     FROM (
@@ -397,18 +406,22 @@ CreditRequest AS (
     WHERE rn = 1
 ),
 
--- First and Last responsible
+-- First and Last Responsible
 FirstLast AS (
     SELECT
         [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
         [ОтветственныеПоКредитамВыданным Филиал ID] AS FilialID,
         [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS ExpertID,
-        ROW_NUMBER() OVER (PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
-                           ORDER BY [ОтветственныеПоКредитамВыданным Период],
-                                    [ОтветственныеПоКредитамВыданным Номер Строки]) AS rn_first,
-        ROW_NUMBER() OVER (PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
-                           ORDER BY [ОтветственныеПоКредитамВыданным Период] DESC,
-                                    [ОтветственныеПоКредитамВыданным Номер Строки] DESC) AS rn_last
+        ROW_NUMBER() OVER (
+            PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
+            ORDER BY [ОтветственныеПоКредитамВыданным Период],
+                     [ОтветственныеПоКредитамВыданным Номер Строки]
+        ) AS rn_first,
+        ROW_NUMBER() OVER (
+            PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
+            ORDER BY [ОтветственныеПоКредитамВыданным Период] DESC,
+                     [ОтветственныеПоКредитамВыданным Номер Строки] DESC
+        ) AS rn_last
     FROM [ATK].[mis].[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным]
 ),
 
@@ -435,24 +448,24 @@ FinProducts AS (
 Statuses AS (
     SELECT s.[СтатусыКредитовВыданных Кредит ID] AS CreditID,
            s.[СтатусыКредитовВыданных Статус] AS IssuedCreditsStatus,
-           ROW_NUMBER() OVER (PARTITION BY s.[СтатусыКредитовВыданных Кредит ID]
-                              ORDER BY s.[СтатусыКредитовВыданных Период] DESC,
-                                       s.[СтатусыКредитовВыданных Номер Строки] DESC,
-                                       s.[СтатусыКредитовВыданных ID] DESC) AS rn_last
+           ROW_NUMBER() OVER (
+               PARTITION BY s.[СтатусыКредитовВыданных Кредит ID]
+               ORDER BY s.[СтатусыКредитовВыданных Период] DESC,
+                        s.[СтатусыКредитовВыданных Номер Строки] DESC,
+                        s.[СтатусыКредитовВыданных ID] DESC
+           ) AS rn_last
     FROM [ATK].[mis].[Silver_РегистрыСведений.СтатусыКредитовВыданных] s
     WHERE s.[СтатусыКредитовВыданных Активность] = 0x01
 ),
 
 -- Latest Outstanding Amount
 LatestOutstanding AS (
-    SELECT
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS LatestOutstandingAmount
+    SELECT sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
+           sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS LatestOutstandingAmount
     FROM [ATK].[mis].[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
     INNER JOIN (
-        SELECT 
-            [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
-            MAX([СуммыЗадолженностиПоПериодамПросрочки Дата]) AS MaxDate
+        SELECT [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
+               MAX([СуммыЗадолженностиПоПериодамПросрочки Дата]) AS MaxDate
         FROM [ATK].[mis].[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
         WHERE [СуммыЗадолженностиПоПериодамПросрочки Дата] <= CAST(GETDATE() AS DATE)
         GROUP BY [СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
@@ -463,10 +476,16 @@ LatestOutstanding AS (
 
 -- Segment Revenue
 SegmentRevenue AS (
-    SELECT
-        cp.[КредитныеПродукты ID] AS ProductID,
-        cp.[КредитныеПродукты Сегмент Доходов] AS SegmentRevenue
+    SELECT cp.[КредитныеПродукты ID] AS ProductID,
+           cp.[КредитныеПродукты Сегмент Доходов] AS SegmentRevenue
     FROM [ATK].[dbo].[Справочники.КредитныеПродукты] cp
+),
+
+-- Green Credit
+GreenCredit AS (
+    SELECT gc.[ПротоколКомитета Кредит ID] AS CreditID,
+           gc.[ПротоколКомитета Это Зеленый Кредит] AS GreenCredit
+    FROM [ATK].[dbo].[Документы.ПротоколКомитета] gc
 )
 
 INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
@@ -481,7 +500,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [FinancialProductsMainGroup], [IssuedCreditsStatus],
     [CreditApplicationPartnerID], [FirstFilialID], [FirstExpertID],
     [LastFilialID], [LastExpertID], [DealerID], [Source],
-    [LatestOutstandingAmount], [SegmentRevenue]
+    [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit]
 )
 SELECT
     c.CreditID,
@@ -519,7 +538,8 @@ SELECT
     cr.DealerID,
     cr.Source,
     lo.LatestOutstandingAmount,
-    seg.SegmentRevenue
+    seg.SegmentRevenue,
+    gr.GreenCredit
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.CreditID = cr.CreditID
 LEFT JOIN FirstResp fr ON c.CreditID = fr.CreditID
@@ -527,7 +547,8 @@ LEFT JOIN LastResp lr ON c.CreditID = lr.CreditID
 LEFT JOIN FinProducts fp ON c.FinancialProductID = fp.CreditFinancialProductID
 LEFT JOIN Statuses st ON c.CreditID = st.CreditID AND st.rn_last = 1
 LEFT JOIN LatestOutstanding lo ON c.CreditID = lo.CreditID
-LEFT JOIN SegmentRevenue seg ON c.ProductID = seg.ProductID;
+LEFT JOIN SegmentRevenue seg ON c.ProductID = seg.ProductID
+LEFT JOIN GreenCredit gr ON c.CreditID = gr.CreditID;
 GO
 
 -- Optional index for faster queries

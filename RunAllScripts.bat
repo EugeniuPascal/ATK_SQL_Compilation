@@ -9,8 +9,8 @@ set "BASE_DIR=%~dp0"
 REM ----------------------------
 REM --- Folders for logs ------
 REM ----------------------------
-set "LOGS_SILVER=%BASE_DIR%\Logs\Silver"
-set "LOGS_GOLD=%BASE_DIR%\Logs\Gold"
+set "LOGS_SILVER=%BASE_DIR%Logs\Silver"
+set "LOGS_GOLD=%BASE_DIR%Logs\Gold"
 
 REM Create Logs folders if they don't exist
 if not exist "%LOGS_SILVER%" mkdir "%LOGS_SILVER%"
@@ -36,7 +36,7 @@ REM ----------------------------
 REM --- Step 1: SILVER Python ---
 REM ----------------------------
 echo [%time%] Starting SILVER Python compilation...
-"%PYTHON%" "%BASE_DIR%\compile_Silver_Files.py"
+"%PYTHON%" "%BASE_DIR%py_scripts\compile_Silver_Files.py"
 if %errorlevel% neq 0 (
     echo [%time%] SILVER Python FAILED with code %errorlevel%.
     exit /b %errorlevel%
@@ -47,7 +47,7 @@ if %errorlevel% neq 0 (
 REM ----------------------------
 REM --- Step 2: SILVER SQL -----
 REM ----------------------------
-set "SCRIPT=%BASE_DIR%\compiled_Silver_Tables.sql"
+set "SCRIPT=%BASE_DIR%compiled_Silver_Tables.sql"
 set "LOG=%LOGS_SILVER%\compiled_Silver_Tables_%TIMESTAMP%.log"
 
 echo [%time%] Starting SILVER SQL execution...
@@ -63,7 +63,7 @@ REM ----------------------------
 REM --- Step 3: GOLD Python ----
 REM ----------------------------
 echo [%time%] Starting GOLD Python compilation...
-"%PYTHON%" "%BASE_DIR%\compile_Gold_Files.py"
+"%PYTHON%" "%BASE_DIR%py_scripts\compile_Gold_Files.py"
 if %errorlevel% neq 0 (
     echo [%time%] GOLD Python FAILED with code %errorlevel%.
     exit /b %errorlevel%
@@ -74,7 +74,7 @@ if %errorlevel% neq 0 (
 REM ----------------------------
 REM --- Step 4: GOLD SQL -------
 REM ----------------------------
-set "SCRIPT=%BASE_DIR%\compiled_Gold_Tables.sql"
+set "SCRIPT=%BASE_DIR%compiled_Gold_Tables.sql"
 set "LOG=%LOGS_GOLD%\compiled_Gold_Tables_%TIMESTAMP%.log"
 
 echo [%time%] Starting GOLD SQL execution...

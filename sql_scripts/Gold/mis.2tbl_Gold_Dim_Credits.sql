@@ -43,7 +43,8 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [DealerID] VARCHAR(36) NULL,
     [Source] VARCHAR(36) NULL,
     [LatestOutstandingAmount] DECIMAL(18,2) NULL,
-	[SegmentRevenue] NVARCHAR (50) NULL
+    [SegmentRevenue] NVARCHAR(50) NULL,
+    [GreenCredit] VARCHAR(36) NULL
 );
 GO
 
@@ -58,6 +59,7 @@ Credits AS (
     FROM [ATK].[mis].[Silver_Справочники.Кредиты]
 ),
 
+-- Credit Request: latest per credit
 CreditRequest AS (
     SELECT *
     FROM (
@@ -79,18 +81,22 @@ CreditRequest AS (
     WHERE rn = 1
 ),
 
--- First and Last responsible
+-- First and Last Responsible
 FirstLast AS (
     SELECT
         [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
         [ОтветственныеПоКредитамВыданным Филиал ID] AS FilialID,
         [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS ExpertID,
-        ROW_NUMBER() OVER (PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
-                           ORDER BY [ОтветственныеПоКредитамВыданным Период],
-                                    [ОтветственныеПоКредитамВыданным Номер Строки]) AS rn_first,
-        ROW_NUMBER() OVER (PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
-                           ORDER BY [ОтветственныеПоКредитамВыданным Период] DESC,
-                                    [ОтветственныеПоКредитамВыданным Номер Строки] DESC) AS rn_last
+        ROW_NUMBER() OVER (
+            PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
+            ORDER BY [ОтветственныеПоКредитамВыданным Период],
+                     [ОтветственныеПоКредитамВыданным Номер Строки]
+        ) AS rn_first,
+        ROW_NUMBER() OVER (
+            PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
+            ORDER BY [ОтветственныеПоКредитамВыданным Период] DESC,
+                     [ОтветственныеПоКредитамВыданным Номер Строки] DESC
+        ) AS rn_last
     FROM [ATK].[mis].[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным]
 ),
 
@@ -117,24 +123,24 @@ FinProducts AS (
 Statuses AS (
     SELECT s.[СтатусыКредитовВыданных Кредит ID] AS CreditID,
            s.[СтатусыКредитовВыданных Статус] AS IssuedCreditsStatus,
-           ROW_NUMBER() OVER (PARTITION BY s.[СтатусыКредитовВыданных Кредит ID]
-                              ORDER BY s.[СтатусыКредитовВыданных Период] DESC,
-                                       s.[СтатусыКредитовВыданных Номер Строки] DESC,
-                                       s.[СтатусыКредитовВыданных ID] DESC) AS rn_last
+           ROW_NUMBER() OVER (
+               PARTITION BY s.[СтатусыКредитовВыданных Кредит ID]
+               ORDER BY s.[СтатусыКредитовВыданных Период] DESC,
+                        s.[СтатусыКредитовВыданных Номер Строки] DESC,
+                        s.[СтатусыКредитовВыданных ID] DESC
+           ) AS rn_last
     FROM [ATK].[mis].[Silver_РегистрыСведений.СтатусыКредитовВыданных] s
     WHERE s.[СтатусыКредитовВыданных Активность] = 0x01
 ),
 
 -- Latest Outstanding Amount
 LatestOutstanding AS (
-    SELECT
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS LatestOutstandingAmount
+    SELECT sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
+           sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS LatestOutstandingAmount
     FROM [ATK].[mis].[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
     INNER JOIN (
-        SELECT 
-            [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
-            MAX([СуммыЗадолженностиПоПериодамПросрочки Дата]) AS MaxDate
+        SELECT [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
+               MAX([СуммыЗадолженностиПоПериодамПросрочки Дата]) AS MaxDate
         FROM [ATK].[mis].[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
         WHERE [СуммыЗадолженностиПоПериодамПросрочки Дата] <= CAST(GETDATE() AS DATE)
         GROUP BY [СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
@@ -145,10 +151,16 @@ LatestOutstanding AS (
 
 -- Segment Revenue
 SegmentRevenue AS (
-    SELECT
-        cp.[КредитныеПродукты ID] AS ProductID,
-        cp.[КредитныеПродукты Сегмент Доходов] AS SegmentRevenue
+    SELECT cp.[КредитныеПродукты ID] AS ProductID,
+           cp.[КредитныеПродукты Сегмент Доходов] AS SegmentRevenue
     FROM [ATK].[dbo].[Справочники.КредитныеПродукты] cp
+),
+
+-- Green Credit
+GreenCredit AS (
+    SELECT gc.[ПротоколКомитета Кредит ID] AS CreditID,
+           gc.[ПротоколКомитета Это Зеленый Кредит] AS GreenCredit
+    FROM [ATK].[dbo].[Документы.ПротоколКомитета] gc
 )
 
 INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
@@ -163,7 +175,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [FinancialProductsMainGroup], [IssuedCreditsStatus],
     [CreditApplicationPartnerID], [FirstFilialID], [FirstExpertID],
     [LastFilialID], [LastExpertID], [DealerID], [Source],
-    [LatestOutstandingAmount], [SegmentRevenue]
+    [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit]
 )
 SELECT
     c.CreditID,
@@ -201,7 +213,8 @@ SELECT
     cr.DealerID,
     cr.Source,
     lo.LatestOutstandingAmount,
-    seg.SegmentRevenue
+    seg.SegmentRevenue,
+    gr.GreenCredit
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.CreditID = cr.CreditID
 LEFT JOIN FirstResp fr ON c.CreditID = fr.CreditID
@@ -209,7 +222,8 @@ LEFT JOIN LastResp lr ON c.CreditID = lr.CreditID
 LEFT JOIN FinProducts fp ON c.FinancialProductID = fp.CreditFinancialProductID
 LEFT JOIN Statuses st ON c.CreditID = st.CreditID AND st.rn_last = 1
 LEFT JOIN LatestOutstanding lo ON c.CreditID = lo.CreditID
-LEFT JOIN SegmentRevenue seg ON c.ProductID = seg.ProductID;
+LEFT JOIN SegmentRevenue seg ON c.ProductID = seg.ProductID
+LEFT JOIN GreenCredit gr ON c.CreditID = gr.CreditID;
 GO
 
 -- Optional index for faster queries

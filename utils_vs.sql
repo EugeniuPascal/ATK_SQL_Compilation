@@ -1,3 +1,49 @@
-SELECT *
-  FROM [ATK].[mis].[2tbl_Gold_Fact_CerereOnline]
-  WHERE WebID LIKE '%B72900%' 
+SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'dbo'
+AND TABLE_NAME = 'Справочники.КредитныеПродукты'
+AND COLUMN_NAME = 'КредитныеПродукты Сегмент Доходов';
+
+SELECT TOP (5) [ФормыПредприятия ID]
+FROM [ATK].[dbo].[Справочники.ФормыПредприятия];
+
+SELECT TOP (5) [ФормыПредприятия ID]
+FROM [ATK].[dbo].[Справочники.Кредиты]
+
+SELECT TOP (5) [ФормыПредприятия ID]
+FROM [ATK].[dbo].[Справочники.ФормыПредприятия]
+WHERE [ФормыПредприятия ID] IS NOT NULL;
+
+
+SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE COLUMN_NAME LIKE '%Кредиты ID%'
+ORDER BY TABLE_SCHEMA, TABLE_NAME;
+
+SELECT 
+COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'dbo'
+AND TABLE_NAME = 'Документы.ЗаявкаНаКредит';
+
+SELECT 
+    COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'dbo'
+  AND TABLE_NAME = 'Документы.ЗаявкаНаКредит'
+  AND (
+        COLUMN_NAME LIKE 'ЗаявкаНаКредит Бизнес Сектор Экономики' OR
+        COLUMN_NAME LIKE 'ЗаявкаНаКредит Вид Заявки' OR
+        COLUMN_NAME LIKE 'ЗаявкаНаКредит Клиент ID' OR
+        COLUMN_NAME LIKE 'ЗаявкаНаКредит Кредит ID' OR
+        COLUMN_NAME LIKE 'ЗаявкаНаКредит Цель Кредита' OR
+        COLUMN_NAME LIKE 'ЗаявкаНаКредит Это Зеленый Кредит'
+      );
+
+SELECT COUNT(*) AS TotalRows
+FROM [ATK].[dbo].[Справочники.Контрагенты];
+
+SELECT [Кредиты ID], COUNT(*) AS cnt
+FROM [Dim_Credits]
+GROUP BY [Кредиты ID]
+HAVING COUNT(*) > 1;

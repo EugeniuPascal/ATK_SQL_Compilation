@@ -8,21 +8,20 @@ GO
 
 -- Create the table
 CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
-    BranchID NVARCHAR(100) NOT NULL,
-    BranchCode NVARCHAR(50) NULL,
-    BranchName NVARCHAR(255) NULL,
-    DistrictName NVARCHAR(255) NULL,
-    ActivityType NVARCHAR(255) NULL,
-    EFSERegion NVARCHAR(255) NULL,
-    Address NVARCHAR(500) NULL,
-    Phones NVARCHAR(255) NULL,
-    Email NVARCHAR(255) NULL,
-    PrintBranchName NVARCHAR(255) NULL,
-    Latitude DECIMAL(9, 6) NULL,
-    Longitude DECIMAL(9, 6) NULL,
-    --BranchCity NVARCHAR(255) NULL,
-    BranchDepartment NVARCHAR(255) NULL,
-    BranchRegion NVARCHAR(255) NULL
+    BranchID VARCHAR(36) NOT NULL,
+    BranchCode DECIMAL(2, 0) NULL,
+    BranchName NVARCHAR(100) NULL,
+    DistrictName NVARCHAR(50) NULL,
+    ActivityType NVARCHAR(100) NULL,
+    EFSERegion NVARCHAR(50) NULL,
+    Address NVARCHAR(150) NULL,
+    Phones NVARCHAR(150) NULL,
+    Email NVARCHAR(150) NULL,
+    PrintBranchName NVARCHAR(100) NULL,
+    Latitude DECIMAL(12, 8) NULL,
+    Longitude DECIMAL(12, 8) NULL,
+    BranchDepartment NVARCHAR(150) NULL,
+    BranchRegion NVARCHAR(100) NULL
 );
 GO
 
@@ -50,7 +49,6 @@ INSERT INTO mis.[2tbl_Gold_Dim_Branch] (
     PrintBranchName,
     Latitude,
     Longitude,
-   --BranchCity,
     BranchDepartment,
     BranchRegion
 )
@@ -67,7 +65,6 @@ SELECT
     f.[Филиалы Наименование Филиала для Печати],
     f.[Филиалы Координаты Широта],
     f.[Филиалы Координаты Долгота],
-    --f.[Филиалы Город],
     s.[СведенияОФилиалах Дирекция],
     s.[СведенияОФилиалах Регион]
 FROM [ATK].[dbo].[Справочники.Филиалы] f

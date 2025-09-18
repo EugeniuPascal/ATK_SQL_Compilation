@@ -47,6 +47,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline] (
     [IsGreen]         NVARCHAR(36)   NULL,
     [ClientID]        VARCHAR(36)    NULL,
     [NewExisting_Client]    NVARCHAR(20)   NULL,
+	[RefusalReason]        NVARCHAR(200)   NULL,
     CONSTRAINT PK_2tbl_Gold_Fact_CerereOnline PRIMARY KEY CLUSTERED ([WebID])
 );
 GO
@@ -92,7 +93,8 @@ GO
         z.[ЗаявкаНаКредит Это Зеленый Кредит]            AS [IsGreen],
         z.[ЗаявкаНаКредит Клиент ID]                     AS [ClientID],
         z.[ЗаявкаНаКредит Сумма Кредита]                 AS [CreditAmount],
-        ROW_NUMBER() OVER (
+		z.[ЗаявкаНаКредит Причина Отказа]                AS [RefusalReason],
+    ROW_NUMBER() OVER (
             PARTITION BY COALESCE(
                 z.[ЗаявкаНаКредит Клиент ID],
                 o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
@@ -146,7 +148,8 @@ INSERT INTO mis.[2tbl_Gold_Fact_CerereOnline]
     [Purpose],
     [IsGreen],
     [ClientID],
-    [NewExisting_Client]
+    [NewExisting_Client],
+	[RefusalReason]
 )
 SELECT
     [WebID],
@@ -186,12 +189,14 @@ SELECT
     [Purpose],
     [IsGreen],
     [ClientID],
-    CASE
-        WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N'Cancelled'
-        WHEN ClientOrder = 1 THEN N'New'
-        ELSE N'Existing'
-    END AS [NewExisting_Client]
+CASE
+     WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N'Cancelled'
+     WHEN ClientOrder = 1 THEN N'New'
+     ELSE N'Existing'
+END AS [NewExisting_Client],
+       [RefusalReason]
 FROM WithCreditFlag;
+    
 GO
 
 -- Indexes

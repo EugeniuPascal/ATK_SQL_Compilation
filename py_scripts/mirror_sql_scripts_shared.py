@@ -1,15 +1,15 @@
-import time
 import shutil
 import logging
 from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 
 # -----------------------------
 # Configuration
 # -----------------------------
-SRC = Path(r"C:\ATK_Project\compiled")
-DST = Path(r"G:\CBO\Business Department\Retail Loan Advisor\Private\Sectie Digital\SQL\compiled")
+SOURCES = [
+    Path(r"C:\ATK_Project\sql_scripts"),
+    Path(r"C:\ATK_Project\compiled")
+]
+DST_ROOT = Path(r"G:\CBO\Business Department\Retail Loan Advisor\Private\Sectie Digital\SQL")
 
 # Set up logging
 logging.basicConfig(
@@ -19,54 +19,22 @@ logging.basicConfig(
 )
 
 # -----------------------------
-# Initial sync function
+# Function to fully replace a folder
 # -----------------------------
-def initial_sync():
-    logging.info(f"Starting initial sync from {SRC} → {DST}")
-    for file_path in SRC.rglob("*"):
-        if file_path.is_file():
-            dst_file = DST / file_path.relative_to(SRC)
-            dst_file.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(file_path, dst_file)
-            logging.info(f"Copied: {file_path} → {dst_file}")
-    logging.info("Initial sync completed.")
-
-# -----------------------------
-# Watchdog event handler
-# -----------------------------
-class MirrorHandler(FileSystemEventHandler):
-    def on_created(self, event):
-        self._mirror(event)
-
-    def on_modified(self, event):
-        self._mirror(event)
-
-    def _mirror(self, event):
-        if event.is_directory:
-            return
-        src_path = Path(event.src_path)
-        dst_path = DST / src_path.relative_to(SRC)
-        try:
-            dst_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src_path, dst_path)
-            logging.info(f"Mirrored: {src_path} → {dst_path}")
-        except Exception as e:
-            logging.error(f"Error copying {src_path}: {e}")
+def full_copy(src: Path, dst_root: Path):
+    dst_folder = dst_root / src.name
+    if dst_folder.exists():
+        logging.info(f"Removing old folder: {dst_folder}")
+        shutil.rmtree(dst_folder)
+    logging.info(f"Copying {src} → {dst_folder}")
+    shutil.copytree(src, dst_folder)
+    logging.info(f"Copied {src} → {dst_folder} successfully.")
 
 # -----------------------------
 # Main
 # -----------------------------
 if __name__ == "__main__":
-    initial_sync()
+    for src in SOURCES:
+        full_copy(src, DST_ROOT)
 
-    observer = Observer()
-    observer.schedule(MirrorHandler(), str(SRC), recursive=True)
-    observer.start()
-
-    logging.info(f"Watching {SRC} → {DST}. Press Ctrl+C to stop.")
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+    logging.info("All folders copied successfully.")

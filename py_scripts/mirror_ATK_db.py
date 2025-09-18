@@ -1,53 +1,43 @@
-import time
 import shutil
+import logging
 from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 
-# Source and destination folders
+# -----------------------------
+# Configuration
+# -----------------------------
 SRC = Path(r"C:\ATK_Project")
 DST = Path(r"H:\mapa lucru\ATK_db\ATK_db_mirror")
 
-class MirrorHandler(FileSystemEventHandler):
-    def on_modified(self, event):
-        self._mirror_file(event)
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
-    def on_created(self, event):
-        self._mirror_file(event)
+# -----------------------------
+# Function to update destination
+# -----------------------------
+def update_destination(src: Path, dst: Path):
+    for src_file in src.rglob("*"):
+        if src_file.is_file():
+            # Skip .git folder
+            if ".git" in src_file.parts:
+                continue
 
-    def _mirror_file(self, event):
-        if event.is_directory:
-            return
+            relative_path = src_file.relative_to(src)
+            dst_file = dst / relative_path
+            dst_file.parent.mkdir(parents=True, exist_ok=True)
 
-        src_path = Path(event.src_path)
+            # Copy only if destination doesn't exist or source is newer
+            if not dst_file.exists() or src_file.stat().st_mtime > dst_file.stat().st_mtime:
+                shutil.copy2(src_file, dst_file)
+                logging.info(f"Updated: {src_file} → {dst_file}")
 
-        # Skip .git folder
-        if ".git" in src_path.parts:
-            return
-
-        relative_path = src_path.relative_to(SRC)
-        dst_path = DST / relative_path
-
-        try:
-            # Create parent directories if not exist
-            dst_path.parent.mkdir(parents=True, exist_ok=True)
-
-            # Copy only if source is newer or destination doesn't exist
-            if not dst_path.exists() or src_path.stat().st_mtime > dst_path.stat().st_mtime:
-                shutil.copy2(src_path, dst_path)
-                print(f"Mirrored: {src_path} → {dst_path}")
-        except Exception as e:
-            print(f"Error copying {src_path}: {e}")
-
-# Set up observer
-observer = Observer()
-observer.schedule(MirrorHandler(), str(SRC), recursive=True)
-observer.start()
-
-print(f"Watching {SRC} → {DST}. Press Ctrl+C to stop.")
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    observer.stop()
-observer.join()
+# -----------------------------
+# Main
+# -----------------------------
+if __name__ == "__main__":
+    logging.info(f"Updating destination: {SRC} → {DST}")
+    update_destination(SRC, DST)
+    logging.info("Update completed.")

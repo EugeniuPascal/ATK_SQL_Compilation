@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-09-18 09:10:35
+-- Generated: 2025-09-18 11:58:02
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (13):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -74,21 +74,20 @@ GO
 
 -- Create the table
 CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
-    BranchID NVARCHAR(100) NOT NULL,
-    BranchCode NVARCHAR(50) NULL,
-    BranchName NVARCHAR(255) NULL,
-    DistrictName NVARCHAR(255) NULL,
-    ActivityType NVARCHAR(255) NULL,
-    EFSERegion NVARCHAR(255) NULL,
-    Address NVARCHAR(500) NULL,
-    Phones NVARCHAR(255) NULL,
-    Email NVARCHAR(255) NULL,
-    PrintBranchName NVARCHAR(255) NULL,
-    Latitude DECIMAL(9, 6) NULL,
-    Longitude DECIMAL(9, 6) NULL,
-    --BranchCity NVARCHAR(255) NULL,
-    BranchDepartment NVARCHAR(255) NULL,
-    BranchRegion NVARCHAR(255) NULL
+    BranchID VARCHAR(36) NOT NULL,
+    BranchCode DECIMAL(2, 0) NULL,
+    BranchName NVARCHAR(100) NULL,
+    DistrictName NVARCHAR(50) NULL,
+    ActivityType NVARCHAR(100) NULL,
+    EFSERegion NVARCHAR(50) NULL,
+    Address NVARCHAR(150) NULL,
+    Phones NVARCHAR(150) NULL,
+    Email NVARCHAR(150) NULL,
+    PrintBranchName NVARCHAR(100) NULL,
+    Latitude DECIMAL(12, 8) NULL,
+    Longitude DECIMAL(12, 8) NULL,
+    BranchDepartment NVARCHAR(150) NULL,
+    BranchRegion NVARCHAR(100) NULL
 );
 GO
 
@@ -116,7 +115,6 @@ INSERT INTO mis.[2tbl_Gold_Dim_Branch] (
     PrintBranchName,
     Latitude,
     Longitude,
-   --BranchCity,
     BranchDepartment,
     BranchRegion
 )
@@ -133,7 +131,6 @@ SELECT
     f.[Филиалы Наименование Филиала для Печати],
     f.[Филиалы Координаты Широта],
     f.[Филиалы Координаты Долгота],
-    --f.[Филиалы Город],
     s.[СведенияОФилиалах Дирекция],
     s.[СведенияОФилиалах Регион]
 FROM [ATK].[dbo].[Справочники.Филиалы] f
@@ -164,33 +161,33 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
     [BranchID]              VARCHAR(36)    NULL,
-    [IsDeleted]             NVARCHAR(36)   NULL,
-    [IsGroup]               NVARCHAR(36)   NULL,
-    [ClientCode]            NVARCHAR(50)   NULL,
-    [ClientName]            NVARCHAR(255)  NULL,
-    [IsBlocked]             NVARCHAR(36)   NULL,
-    [Visibility]            NVARCHAR(255)  NULL,
+    [IsDeleted]             VARCHAR(36)   NULL,
+    [IsGroup]               VARCHAR(36)   NULL,
+    [ClientCode]            NCHAR(13)     NULL,
+    [ClientName]            NVARCHAR(100)  NULL,
+    [IsBlocked]             VARCHAR(36)   NULL,
+    [Visibility]            INT           NULL,
     [Age]                   INT            NULL,
     [AgeGroup]              NVARCHAR(10)   NULL,
-    [City]                  NVARCHAR(255)  NULL,
+    [City]                  NVARCHAR(30)  NULL,
     [CreatedDate]           DATETIME2(0)   NULL,
-    [PartnerCode]           NVARCHAR(50)   NULL,
-    [FullName]              NVARCHAR(500)  NULL,
-    [IsNonResident]         NVARCHAR(36)   NULL,
-    [NoPaymentNotification] NVARCHAR(36)   NULL,
-    [Gender]                NVARCHAR(50)   NULL,
-    [PostalAddress]         NVARCHAR(500)  NULL,
-    [Country]               NVARCHAR(255)  NULL,
-    [MobilePhone1]          NVARCHAR(50)   NULL,
-    [MobilePhone2]          NVARCHAR(50)   NULL,
-    [Phones]                NVARCHAR(255)  NULL,
-    [FiscalCode]            NVARCHAR(50)   NULL,
-    [LegalAddress]          NVARCHAR(500)  NULL,
+    [PartnerCode]           NVARCHAR(3)   NULL,
+    [FullName]              NVARCHAR(100)  NULL,
+    [IsNonResident]         INT            NULL,
+    [NoPaymentNotification] VARCHAR(36)    NULL,
+    [Gender]                NVARCHAR(256)   NULL,
+    [PostalAddress]         NVARCHAR(85)  NULL,
+    [Country]               NVARCHAR(30)  NULL,
+    [MobilePhone1]          NVARCHAR(9)   NULL,
+    [MobilePhone2]          NVARCHAR(9)   NULL,
+    [Phones]                NVARCHAR(50)  NULL,
+    [FiscalCode]            NVARCHAR(20)   NULL,
+    [LegalAddress]          NVARCHAR(85)  NULL,
     [RegistrationDate]      DATETIME2(0)   NULL,
-    [Language]              NVARCHAR(50)   NULL,
-    [NoEmailNotifications]  NVARCHAR(36)   NULL,
-    [NoPromoSMS]            NVARCHAR(36)   NULL,
-    [OrganizationType]      NVARCHAR(500)  NULL,
+    [Language]              NVARCHAR(25)   NULL,
+    [NoEmailNotifications]  VARCHAR(36)   NULL,
+    [NoPromoSMS]            VARCHAR(36)   NULL,
+    [OrganizationType]      NVARCHAR(52)  NULL,
     [IsGroupOwner]          BIT            NULL,
     [GroupID]               NVARCHAR(5)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
@@ -1622,7 +1619,7 @@ SELECT
 FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 JOIN mis.[Silver_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] > 0
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] IS NOT NULL
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
 GROUP BY k.[Кредиты Владелец], sd.[СуммыЗадолженностиПоПериодамПросрочки Дата];
 

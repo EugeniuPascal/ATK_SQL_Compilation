@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-09-18 11:58:02
+-- Generated: 2025-09-18 15:56:55
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (13):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -1050,6 +1050,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline] (
     [IsGreen]         NVARCHAR(36)   NULL,
     [ClientID]        VARCHAR(36)    NULL,
     [NewExisting_Client]    NVARCHAR(20)   NULL,
+	[RefusalReason]        NVARCHAR(200)   NULL,
     CONSTRAINT PK_2tbl_Gold_Fact_CerereOnline PRIMARY KEY CLUSTERED ([WebID])
 );
 GO
@@ -1095,7 +1096,8 @@ GO
         z.[ЗаявкаНаКредит Это Зеленый Кредит]            AS [IsGreen],
         z.[ЗаявкаНаКредит Клиент ID]                     AS [ClientID],
         z.[ЗаявкаНаКредит Сумма Кредита]                 AS [CreditAmount],
-        ROW_NUMBER() OVER (
+		z.[ЗаявкаНаКредит Причина Отказа]                AS [RefusalReason],
+    ROW_NUMBER() OVER (
             PARTITION BY COALESCE(
                 z.[ЗаявкаНаКредит Клиент ID],
                 o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
@@ -1149,7 +1151,8 @@ INSERT INTO mis.[2tbl_Gold_Fact_CerereOnline]
     [Purpose],
     [IsGreen],
     [ClientID],
-    [NewExisting_Client]
+    [NewExisting_Client],
+	[RefusalReason]
 )
 SELECT
     [WebID],
@@ -1189,12 +1192,14 @@ SELECT
     [Purpose],
     [IsGreen],
     [ClientID],
-    CASE
-        WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N'Cancelled'
-        WHEN ClientOrder = 1 THEN N'New'
-        ELSE N'Existing'
-    END AS [NewExisting_Client]
+CASE
+     WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N'Cancelled'
+     WHEN ClientOrder = 1 THEN N'New'
+     ELSE N'Existing'
+END AS [NewExisting_Client],
+       [RefusalReason]
 FROM WithCreditFlag;
+    
 GO
 
 -- Indexes
@@ -1583,7 +1588,9 @@ SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = '2024-01-01';
 
+-----------------------------------------------------
 -- Drop & recreate main GOLD table
+-----------------------------------------------------
 DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par];
 
 CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
@@ -1592,8 +1599,8 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
     SoldAmount    DECIMAL(18,2) NULL,
     IRR_Values    DECIMAL(18,6) NULL,
     BranchShadow  NVARCHAR(100) NULL,
-    ExpertID      VARCHAR(36)  NULL,
-    BranchID      VARCHAR(36)  NULL,
+    ExpertID      VARCHAR(36) NULL,
+    BranchID      VARCHAR(36) NULL,
     Par_0_IFRS    DECIMAL(18,6) NULL,
     Par_30_IFRS   DECIMAL(18,6) NULL,
     Par_60_IFRS   DECIMAL(18,6) NULL,
@@ -1699,18 +1706,22 @@ SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
     
--- IRR Values with conditional logic
-ROUND(
-    COALESCE(
-        CASE 
-            WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 
-                THEN ir.IRR_Year
-            ELSE ir.IRR_Client
-        END,
-        0
-    )
-    * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
-) AS IRR_Values,
+    -- IRR Values with sign preserved
+    CASE 
+        WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] IS NOT NULL
+        THEN ROUND(
+            COALESCE(
+                CASE 
+                    WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 THEN ir.IRR_Year
+                    ELSE ir.IRR_Client
+                END,
+                0
+            )
+            * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] / 100.0
+            , 2
+        )
+        ELSE NULL
+    END AS IRR_Values,
     
     -- Shadow Branch (latest <= SoldDate)
     sh.BranchShadow,
@@ -1720,11 +1731,11 @@ ROUND(
     
     r.BranchID AS BranchID,
     
-    -- ParNas IFRS
-    CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_0_IFRS,
-    CASE WHEN mpd.MaxPastDays > 30 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_30_IFRS,
-    CASE WHEN mpd.MaxPastDays > 60 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_60_IFRS,
-    CASE WHEN mpd.MaxPastDays > 90 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_90_IFRS
+    -- ParNas IFRS (preserve negative/positive values)
+    CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE NULL END AS Par_0_IFRS,
+    CASE WHEN mpd.MaxPastDays > 30 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE NULL END AS Par_30_IFRS,
+    CASE WHEN mpd.MaxPastDays > 60 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE NULL END AS Par_60_IFRS,
+    CASE WHEN mpd.MaxPastDays > 90 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE NULL END AS Par_90_IFRS
 
 FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 JOIN mis.[Silver_Справочники.Кредиты] k
@@ -1761,7 +1772,7 @@ OUTER APPLY (
     ORDER BY i.IRRDate DESC
 ) ir
 
-WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] > 0
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] IS NOT NULL
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
 
 -----------------------------------------------------

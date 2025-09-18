@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ----------------------------
-REM --- Base folder (where .bat lives) ---
+REM --- Base folder ---
 REM ----------------------------
 set "BASE_DIR=C:\ATK_Project\"
 set "COMPILED_DIR=%BASE_DIR%compiled\"
@@ -14,17 +14,16 @@ REM ----------------------------
 set "LOGS_SILVER=%COMPILED_DIR%Logs\Silver"
 set "LOGS_GOLD=%COMPILED_DIR%Logs\Gold"
 
-REM Create Logs folders if they don't exist
 if not exist "%LOGS_SILVER%" mkdir "%LOGS_SILVER%" 2>nul
 if not exist "%LOGS_GOLD%" mkdir "%LOGS_GOLD%" 2>nul
 
 REM ----------------------------
-REM --- Helper for timestamp (locale-independent) ---
+REM --- Timestamp helper ---
 REM ----------------------------
 for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set TIMESTAMP=%%i
 
 REM ----------------------------
-REM --- Paths for executables ---
+REM --- Executables & DB ---
 REM ----------------------------
 set "PYTHON=C:\Users\eugeniu.pascal\AppData\Local\Programs\Python\Python313\python.exe"
 set "SQLCMD=C:\Program Files\SqlCmd\sqlcmd.exe"
@@ -32,59 +31,62 @@ set "SERVER=MI-DEV-SQL01"
 set "DB=ATK"
 
 REM ----------------------------
-REM --- Step 1: SILVER Python ---
+REM --- SILVER Python ---
 REM ----------------------------
 echo [%time%] Starting SILVER Python compilation...
 "%PYTHON%" "%PY_SCRIPTS_DIR%compile_Silver_Files.py"
 if %errorlevel% neq 0 (
     echo [%time%] SILVER Python FAILED with code %errorlevel%.
+    pause
     exit /b %errorlevel%
-) else (
-    echo [%time%] SILVER Python SUCCESS.
 )
+echo [%time%] SILVER Python SUCCESS.
 
 REM ----------------------------
-REM --- Step 2: SILVER SQL -----
+REM --- SILVER SQL -----
 REM ----------------------------
 set "SCRIPT=%COMPILED_DIR%compiled_Silver_Tables.sql"
 set "LOG=%LOGS_SILVER%\compiled_Silver_Tables_%TIMESTAMP%.log"
 
-echo [%time%] Starting SILVER SQL execution...
+echo [%time%] Running SILVER SQL...
 "%SQLCMD%" -S "%SERVER%" -d "%DB%" -E -i "%SCRIPT%" -b -r 1 -I -e -o "%LOG%"
 if %errorlevel% neq 0 (
     echo [%time%] SILVER SQL FAILED. See log: "%LOG%"
+    pause
     exit /b %errorlevel%
-) else (
-    echo [%time%] SILVER SQL SUCCESS. Log: "%LOG%"
 )
+echo [%time%] SILVER SQL SUCCESS. Log: "%LOG%"
 
 REM ----------------------------
-REM --- Step 3: GOLD Python ----
+REM --- GOLD Python ----
 REM ----------------------------
 echo [%time%] Starting GOLD Python compilation...
 "%PYTHON%" "%PY_SCRIPTS_DIR%compile_Gold_Files.py"
 if %errorlevel% neq 0 (
     echo [%time%] GOLD Python FAILED with code %errorlevel%.
+    pause
     exit /b %errorlevel%
-) else (
-    echo [%time%] GOLD Python SUCCESS.
 )
+echo [%time%] GOLD Python SUCCESS.
 
 REM ----------------------------
-REM --- Step 4: GOLD SQL -------
+REM --- GOLD SQL -------
 REM ----------------------------
 set "SCRIPT=%COMPILED_DIR%compiled_Gold_Tables.sql"
 set "LOG=%LOGS_GOLD%\compiled_Gold_Tables_%TIMESTAMP%.log"
 
-echo [%time%] Starting GOLD SQL execution...
+echo [%time%] Running GOLD SQL...
 "%SQLCMD%" -S "%SERVER%" -d "%DB%" -E -i "%SCRIPT%" -b -r 1 -I -e -o "%LOG%"
 if %errorlevel% neq 0 (
     echo [%time%] GOLD SQL FAILED. See log: "%LOG%"
+    pause
     exit /b %errorlevel%
-) else (
-    echo [%time%] GOLD SQL SUCCESS. Log: "%LOG%"
 )
+echo [%time%] GOLD SQL SUCCESS. Log: "%LOG%"
 
+REM ----------------------------
+REM --- Finished ---
+REM ----------------------------
 echo [%time%] ALL STEPS COMPLETED SUCCESSFULLY.
 pause
 exit /b 0

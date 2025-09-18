@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Silver)
--- Generated: 2025-09-18 09:14:00
+-- Generated: 2025-09-18 10:02:30
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (16):
 --   Silver_Документы.ЗаявкаНаКредит.sql

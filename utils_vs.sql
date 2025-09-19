@@ -1,7 +1,9 @@
+USE ATK
+
 SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_SCHEMA = 'dbo'
-AND TABLE_NAME = 'Справочники.КредитныеПродукты'
+AND TABLE_NAME = 'Справочники.Кредиты'
 AND COLUMN_NAME = 'КредитныеПродукты Сегмент Доходов';
 
 SELECT TOP (5) [ФормыПредприятия ID]
@@ -47,7 +49,3 @@ SELECT [Кредиты ID], COUNT(*) AS cnt
 FROM [Dim_Credits]
 GROUP BY [Кредиты ID]
 HAVING COUNT(*) > 1;
-
-SELECT name, create_date, modify_date
-FROM sys.tables
-WHERE name = 'YourTableName';

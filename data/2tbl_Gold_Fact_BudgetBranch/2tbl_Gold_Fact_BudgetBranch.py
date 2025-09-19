@@ -13,7 +13,7 @@ df.columns = df.columns.str.strip()
 df = df.replace({np.nan: None, "": None})
 
 # Print first 20 rows for verification
-print(tabulate(df.head(20), headers='keys', tablefmt='psql'))
+print(tabulate(df.head(10), headers='keys', tablefmt='psql'))
 
 # --- Helper function ---
 def safe_val(val):

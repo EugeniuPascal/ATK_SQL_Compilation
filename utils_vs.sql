@@ -47,3 +47,7 @@ SELECT [Кредиты ID], COUNT(*) AS cnt
 FROM [Dim_Credits]
 GROUP BY [Кредиты ID]
 HAVING COUNT(*) > 1;
+
+SELECT name, create_date, modify_date
+FROM sys.tables
+WHERE name = 'YourTableName';

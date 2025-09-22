@@ -41,7 +41,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [LastFilialID] VARCHAR(36) NULL,
     [LastExpertID] VARCHAR(36) NULL,
     [DealerID] VARCHAR(36) NULL,
-    [Source] VARCHAR(36) NULL,
+    [Source] NVARCHAR(50) NULL,
     [LatestOutstandingAmount] DECIMAL(18,2) NULL,
     [SegmentRevenue] NVARCHAR(50) NULL,
     [GreenCredit] VARCHAR(36) NULL,
@@ -62,7 +62,7 @@ Credits AS (
     WHERE rn = 1
 ),
 
--- Latest credit request per CreditID
+-- Latest credit request per CreditID (last Source)
 CreditRequest AS (
     SELECT *
     FROM (
@@ -73,9 +73,11 @@ CreditRequest AS (
             oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения] AS Source,
             oia.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS FilialID,
             oia.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS ExpertID,
-            ROW_NUMBER() OVER(PARTITION BY znk.[ЗаявкаНаКредит Кредит ID]
-                              ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
-                                       oia.[ОбъединеннаяИнтернетЗаявка ID] DESC) AS rn
+            ROW_NUMBER() OVER (
+                PARTITION BY znk.[ЗаявкаНаКредит Кредит ID]
+                ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
+                         oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
+            ) AS rn
         FROM [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит] znk
         LEFT JOIN [ATK].[mis].[Silver_Документы.ОбъединеннаяИнтернетЗаявка] oia
             ON znk.[ЗаявкаНаКредит ID] = oia.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]

@@ -41,7 +41,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [OrganizationType]      NVARCHAR(52)   NULL,
     [IsGroupOwner]          BIT            NULL,
     [GroupID]               NVARCHAR(5)    NULL,
-    [RepresentativeAge]     DATETIME2(0)   NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
@@ -80,17 +79,15 @@ GO
         CASE WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1 ELSE 0 END AS IsGroupOwner,
         ga.[ГруппыАффилированныхЛиц Код] AS GroupID,
 
-        -- RepresentativeAge simplified: take DOB of representative if valid, else default
-        ISNULL(
-            (SELECT TOP 1 r.[Контрагенты Возраст] 
-             FROM [ATK].[mis].[Silver_Справочники.Контрагенты] r
-             WHERE r.[Контрагенты ID] = s.[Контрагенты Представитель Контрагента ID]
-               AND r.[Контрагенты Возраст] <> '1753-01-01 00:00:00'
-            ),
-            '1753-01-01 00:00:00'
-        ) AS RepresentativeAge
+        -- Effective representative DOB: use real DOB if available, else keep 1753-01-01
+        CASE 
+            WHEN r.[Контрагенты Возраст] <> '1753-01-01 00:00:00' THEN r.[Контрагенты Возраст]
+            ELSE s.[Контрагенты Возраст]
+        END AS EffectiveRepDOB
 
     FROM [ATK].[mis].[Silver_Справочники.Контрагенты] s
+    LEFT JOIN [ATK].[mis].[Silver_Справочники.Контрагенты] r
+        ON r.[Контрагенты ID] = s.[Контрагенты Представитель Контрагента ID]
     LEFT JOIN [ATK].[dbo].[Справочники.ФормыПредприятия] fp
         ON fp.[ФормыПредприятия Наименование] = s.[Контрагенты Форма Организации]
     LEFT JOIN [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] gb
@@ -104,10 +101,10 @@ GO
 AgeCalc AS (
     SELECT *,
         CASE 
-            WHEN DOB IS NULL THEN NULL
-            WHEN DOB > CAST(SYSDATETIME() AS date) THEN NULL
-            ELSE DATEDIFF(YEAR, DOB, CAST(SYSDATETIME() AS date))
-                 - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, DOB, CAST(SYSDATETIME() AS date)), DOB) > CAST(SYSDATETIME() AS date) THEN 1 ELSE 0 END
+            WHEN EffectiveRepDOB IS NULL THEN NULL
+            ELSE DATEDIFF(YEAR, EffectiveRepDOB, CAST(SYSDATETIME() AS date))
+                 - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, EffectiveRepDOB, CAST(SYSDATETIME() AS date)), EffectiveRepDOB) 
+                         > CAST(SYSDATETIME() AS date) THEN 1 ELSE 0 END
         END AS Age
     FROM Src
 ),
@@ -132,8 +129,7 @@ Final AS (
         Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
         FiscalCode, LegalAddress, RegistrationDate, [Language],
         NoEmailNotifications, NoPromoSMS, OrganizationType,
-        IsGroupOwner, GroupID,
-        RepresentativeAge
+        IsGroupOwner, GroupID
     FROM AgeCalc
 ),
 
@@ -153,7 +149,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [Gender],[PostalAddress],[Country],[MobilePhone1],[MobilePhone2],[Phones],
     [FiscalCode],[LegalAddress],[RegistrationDate],[Language],
     [NoEmailNotifications],[NoPromoSMS],[OrganizationType],
-    [IsGroupOwner],[GroupID],[RepresentativeAge]
+    [IsGroupOwner],[GroupID]
 )
 SELECT
     ClientID, ParentID, BranchID,
@@ -162,7 +158,7 @@ SELECT
     Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
     FiscalCode, LegalAddress, RegistrationDate, [Language],
     NoEmailNotifications, NoPromoSMS, OrganizationType,
-    IsGroupOwner, GroupID, RepresentativeAge
+    IsGroupOwner, GroupID
 FROM Dedup
 WHERE rn = 1;
 GO

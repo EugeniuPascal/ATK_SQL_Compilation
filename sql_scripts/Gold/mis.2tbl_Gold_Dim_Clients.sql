@@ -12,40 +12,40 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
     [BranchID]              VARCHAR(36)    NULL,
-    [IsDeleted]             VARCHAR(36)   NULL,
-    [IsGroup]               VARCHAR(36)   NULL,
-    [ClientCode]            NCHAR(13)     NULL,
+    [IsDeleted]             VARCHAR(36)    NULL,
+    [IsGroup]               VARCHAR(36)    NULL,
+    [ClientCode]            NCHAR(13)      NULL,
     [ClientName]            NVARCHAR(100)  NULL,
-    [IsBlocked]             VARCHAR(36)   NULL,
-    [Visibility]            INT           NULL,
+    [IsBlocked]             VARCHAR(36)    NULL,
+    [Visibility]            INT            NULL,
     [Age]                   INT            NULL,
     [AgeGroup]              NVARCHAR(10)   NULL,
-    [City]                  NVARCHAR(30)  NULL,
+    [City]                  NVARCHAR(30)   NULL,
     [CreatedDate]           DATETIME2(0)   NULL,
-    [PartnerCode]           NVARCHAR(3)   NULL,
+    [PartnerCode]           NVARCHAR(3)    NULL,
     [FullName]              NVARCHAR(100)  NULL,
     [IsNonResident]         INT            NULL,
     [NoPaymentNotification] VARCHAR(36)    NULL,
-    [Gender]                NVARCHAR(256)   NULL,
-    [PostalAddress]         NVARCHAR(85)  NULL,
-    [Country]               NVARCHAR(30)  NULL,
-    [MobilePhone1]          NVARCHAR(9)   NULL,
-    [MobilePhone2]          NVARCHAR(9)   NULL,
-    [Phones]                NVARCHAR(50)  NULL,
+    [Gender]                NVARCHAR(256)  NULL,
+    [PostalAddress]         NVARCHAR(85)   NULL,
+    [Country]               NVARCHAR(30)   NULL,
+    [MobilePhone1]          NVARCHAR(9)    NULL,
+    [MobilePhone2]          NVARCHAR(9)    NULL,
+    [Phones]                NVARCHAR(50)   NULL,
     [FiscalCode]            NVARCHAR(20)   NULL,
-    [LegalAddress]          NVARCHAR(85)  NULL,
+    [LegalAddress]          NVARCHAR(85)   NULL,
     [RegistrationDate]      DATETIME2(0)   NULL,
     [Language]              NVARCHAR(25)   NULL,
-    [NoEmailNotifications]  VARCHAR(36)   NULL,
-    [NoPromoSMS]            VARCHAR(36)   NULL,
-    [OrganizationType]      NVARCHAR(52)  NULL,
+    [NoEmailNotifications]  VARCHAR(36)    NULL,
+    [NoPromoSMS]            VARCHAR(36)    NULL,
+    [OrganizationType]      NVARCHAR(52)   NULL,
     [IsGroupOwner]          BIT            NULL,
     [GroupID]               NVARCHAR(5)    NULL,
+    [RepresentativeAge]     DATETIME2(0)   NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
 
--- Prepare source data with organization type and group ownership
 ;WITH Src AS (
     SELECT
         s.[Контрагенты ID] AS ClientID,
@@ -77,13 +77,19 @@ GO
         s.[Контрагенты Не Уведомлять Письмом] AS NoEmailNotifications,
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
         fp.[ФормыПредприятия Наименование] AS OrganizationType,
-        
-        -- New Boolean: 1 if client is owner of a group, else 0
-        CASE 
-            WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1
-            ELSE 0
-        END AS IsGroupOwner,
-        ga.[ГруппыАффилированныхЛиц Код] AS GroupID
+        CASE WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1 ELSE 0 END AS IsGroupOwner,
+        ga.[ГруппыАффилированныхЛиц Код] AS GroupID,
+
+        -- RepresentativeAge simplified: take DOB of representative if valid, else default
+        ISNULL(
+            (SELECT TOP 1 r.[Контрагенты Возраст] 
+             FROM [ATK].[mis].[Silver_Справочники.Контрагенты] r
+             WHERE r.[Контрагенты ID] = s.[Контрагенты Представитель Контрагента ID]
+               AND r.[Контрагенты Возраст] <> '1753-01-01 00:00:00'
+            ),
+            '1753-01-01 00:00:00'
+        ) AS RepresentativeAge
+
     FROM [ATK].[mis].[Silver_Справочники.Контрагенты] s
     LEFT JOIN [ATK].[dbo].[Справочники.ФормыПредприятия] fp
         ON fp.[ФормыПредприятия Наименование] = s.[Контрагенты Форма Организации]
@@ -94,6 +100,7 @@ GO
     LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
         ON g.[ГруппыАффилированныхЛиц ID] = ga.[ГруппыАффилированныхЛиц ID]
 ),
+
 AgeCalc AS (
     SELECT *,
         CASE 
@@ -104,6 +111,7 @@ AgeCalc AS (
         END AS Age
     FROM Src
 ),
+
 Final AS (
     SELECT
         ClientID, ParentID, BranchID,
@@ -111,6 +119,7 @@ Final AS (
         Age,
         CASE 
             WHEN Age IS NULL THEN 'n/a'
+            WHEN Age <  22 THEN '< 22'
             WHEN Age <  25 THEN '< 25'
             WHEN Age <  35 THEN '< 35'
             WHEN Age <  45 THEN '< 45'
@@ -123,9 +132,11 @@ Final AS (
         Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
         FiscalCode, LegalAddress, RegistrationDate, [Language],
         NoEmailNotifications, NoPromoSMS, OrganizationType,
-        IsGroupOwner, GroupID
+        IsGroupOwner, GroupID,
+        RepresentativeAge
     FROM AgeCalc
 ),
+
 Dedup AS (
     SELECT *,
            ROW_NUMBER() OVER (
@@ -134,7 +145,7 @@ Dedup AS (
            ) AS rn
     FROM Final
 )
--- Insert only the latest per ClientID
+
 INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [ClientID],[ParentID],[BranchID],
     [IsDeleted],[IsGroup],[ClientCode],[ClientName],[IsBlocked],[Visibility],
@@ -142,7 +153,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [Gender],[PostalAddress],[Country],[MobilePhone1],[MobilePhone2],[Phones],
     [FiscalCode],[LegalAddress],[RegistrationDate],[Language],
     [NoEmailNotifications],[NoPromoSMS],[OrganizationType],
-    [IsGroupOwner],[GroupID]
+    [IsGroupOwner],[GroupID],[RepresentativeAge]
 )
 SELECT
     ClientID, ParentID, BranchID,
@@ -151,12 +162,12 @@ SELECT
     Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
     FiscalCode, LegalAddress, RegistrationDate, [Language],
     NoEmailNotifications, NoPromoSMS, OrganizationType,
-    IsGroupOwner, GroupID
+    IsGroupOwner, GroupID, RepresentativeAge
 FROM Dedup
 WHERE rn = 1;
 GO
 
--- Create indexes
+-- Indexes
 CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
 CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
 CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[2tbl_Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);

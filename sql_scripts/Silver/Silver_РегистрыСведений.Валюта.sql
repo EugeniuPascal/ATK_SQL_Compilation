@@ -7,10 +7,10 @@ GO
 
 CREATE TABLE mis.[Silver_РегистрыСведений.Валюта]
 (
-	[Валюта Период]  DATETIME NULL, 
+	[Валюта Период]    DATETIME NULL, 
 	[Валюта Валюта ID] VARCHAR(36) NOT NULL, 
-	[Валюта Валюта] NVARCHAR(50) NULL,
-    [Валюта Курс] DECIMAL(10, 4) NULL,
+	[Валюта Валюта]    NVARCHAR(50) NULL,
+    [Валюта Курс]      DECIMAL(10, 4) NULL,
 	[Валюта Кратность] INT NULL,
 	[Валюта Средний Курс] DECIMAL(10, 4) NULL
 );

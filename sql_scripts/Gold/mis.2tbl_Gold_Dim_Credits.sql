@@ -62,7 +62,22 @@ Credits AS (
     WHERE rn = 1
 ),
 
--- Latest credit request per CreditID (last Source)
+-- Latest OIA row per Application (collapse multiple OIA rows to one per application)
+OIA_LatestPerApp AS (
+    SELECT *
+    FROM (
+        SELECT oia.*,
+               ROW_NUMBER() OVER (
+                   PARTITION BY oia.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
+                   ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
+                            oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
+               ) AS rn
+        FROM [ATK].[mis].[Silver_Документы.ОбъединеннаяИнтернетЗаявка] oia
+    ) t
+    WHERE rn = 1
+),
+
+-- Latest credit request per CreditID (take latest Source via joined latest-per-application rows)
 CreditRequest AS (
     SELECT *
     FROM (
@@ -70,18 +85,17 @@ CreditRequest AS (
             znk.[ЗаявкаНаКредит Кредит ID] AS CreditID,
             znk.[ЗаявкаНаКредит Партнер ID] AS ApplicationPartnerID,
             oia.[ОбъединеннаяИнтернетЗаявка Дилер ID] AS DealerID,
-            oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения] AS Source,
+            NULLIF(LTRIM(RTRIM(oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения])), '') AS Source,
             oia.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS FilialID,
             oia.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS ExpertID,
             ROW_NUMBER() OVER (
                 PARTITION BY znk.[ЗаявкаНаКредит Кредит ID]
-                ORDER BY 
-                    ISNULL(oia.[ОбъединеннаяИнтернетЗаявка Дата], '1753-01-01') DESC,
-                    oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
+                ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
+                         oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
             ) AS rn
         FROM [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит] znk
-        LEFT JOIN [ATK].[mis].[Silver_Документы.ОбъединеннаяИнтернетЗаявка] oia
-            ON znk.[ЗаявкаНаКредит ID] = oia.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
+        LEFT JOIN OIA_LatestPerApp oia
+           ON znk.[ЗаявкаНаКредит ID] = oia.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
     ) t
     WHERE rn = 1
 ),
@@ -185,17 +199,17 @@ SELECT
     c.[Кредиты Вид Контракта], c.[Кредиты Дата Контракта], c.[Кредиты Сегмент Доходов],
     c.[Кредиты Назначение Использования Кредита], c.[Кредиты Цель Кредита Описание],
     c.[Кредиты Тип Кредитного Продукта], c.[Кредиты Сфера Использования Кредита], c.[Кредиты Источник Подписания],
-    fp.FinancialProductsMainGroup, 
-	st.IssuedCreditsStatus,
-    cr.ApplicationPartnerID, 
-	COALESCE(r.FirstFilialID, cr.FilialID), 
-	COALESCE(r.FirstExpertID, cr.ExpertID),
-    COALESCE(r.LastFilialID, cr.FilialID), 
-	COALESCE(r.LastExpertID, cr.ExpertID),
+    fp.FinancialProductsMainGroup,
+    st.IssuedCreditsStatus,
+    cr.ApplicationPartnerID,
+    COALESCE(r.FirstFilialID, cr.FilialID),
+    COALESCE(r.FirstExpertID, cr.ExpertID),
+    COALESCE(r.LastFilialID, cr.FilialID),
+    COALESCE(r.LastExpertID, cr.ExpertID),
     cr.DealerID, cr.Source,
-    lo.LatestOutstandingAmount, 
-	seg.SegmentRevenue, 
-	gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat
+    lo.LatestOutstandingAmount,
+    seg.SegmentRevenue,
+    gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.[Кредиты ID] = cr.CreditID
 LEFT JOIN Resp r ON c.[Кредиты ID] = r.CreditID

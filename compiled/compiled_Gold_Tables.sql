@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-09-22 07:49:24
+-- Generated: 2025-09-23 08:41:22
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (13):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -161,40 +161,39 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
     [BranchID]              VARCHAR(36)    NULL,
-    [IsDeleted]             VARCHAR(36)   NULL,
-    [IsGroup]               VARCHAR(36)   NULL,
-    [ClientCode]            NCHAR(13)     NULL,
+    [IsDeleted]             VARCHAR(36)    NULL,
+    [IsGroup]               VARCHAR(36)    NULL,
+    [ClientCode]            NCHAR(13)      NULL,
     [ClientName]            NVARCHAR(100)  NULL,
-    [IsBlocked]             VARCHAR(36)   NULL,
-    [Visibility]            INT           NULL,
+    [IsBlocked]             VARCHAR(36)    NULL,
+    [Visibility]            INT            NULL,
     [Age]                   INT            NULL,
     [AgeGroup]              NVARCHAR(10)   NULL,
-    [City]                  NVARCHAR(30)  NULL,
+    [City]                  NVARCHAR(30)   NULL,
     [CreatedDate]           DATETIME2(0)   NULL,
-    [PartnerCode]           NVARCHAR(3)   NULL,
+    [PartnerCode]           NVARCHAR(3)    NULL,
     [FullName]              NVARCHAR(100)  NULL,
     [IsNonResident]         INT            NULL,
     [NoPaymentNotification] VARCHAR(36)    NULL,
-    [Gender]                NVARCHAR(256)   NULL,
-    [PostalAddress]         NVARCHAR(85)  NULL,
-    [Country]               NVARCHAR(30)  NULL,
-    [MobilePhone1]          NVARCHAR(9)   NULL,
-    [MobilePhone2]          NVARCHAR(9)   NULL,
-    [Phones]                NVARCHAR(50)  NULL,
+    [Gender]                NVARCHAR(256)  NULL,
+    [PostalAddress]         NVARCHAR(85)   NULL,
+    [Country]               NVARCHAR(30)   NULL,
+    [MobilePhone1]          NVARCHAR(9)    NULL,
+    [MobilePhone2]          NVARCHAR(9)    NULL,
+    [Phones]                NVARCHAR(50)   NULL,
     [FiscalCode]            NVARCHAR(20)   NULL,
-    [LegalAddress]          NVARCHAR(85)  NULL,
+    [LegalAddress]          NVARCHAR(85)   NULL,
     [RegistrationDate]      DATETIME2(0)   NULL,
     [Language]              NVARCHAR(25)   NULL,
-    [NoEmailNotifications]  VARCHAR(36)   NULL,
-    [NoPromoSMS]            VARCHAR(36)   NULL,
-    [OrganizationType]      NVARCHAR(52)  NULL,
+    [NoEmailNotifications]  VARCHAR(36)    NULL,
+    [NoPromoSMS]            VARCHAR(36)    NULL,
+    [OrganizationType]      NVARCHAR(52)   NULL,
     [IsGroupOwner]          BIT            NULL,
     [GroupID]               NVARCHAR(5)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
 
--- Prepare source data with organization type and group ownership
 ;WITH Src AS (
     SELECT
         s.[Контрагенты ID] AS ClientID,
@@ -226,14 +225,18 @@ GO
         s.[Контрагенты Не Уведомлять Письмом] AS NoEmailNotifications,
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
         fp.[ФормыПредприятия Наименование] AS OrganizationType,
-        
-        -- New Boolean: 1 if client is owner of a group, else 0
+        CASE WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1 ELSE 0 END AS IsGroupOwner,
+        ga.[ГруппыАффилированныхЛиц Код] AS GroupID,
+
+        -- Effective representative DOB: use real DOB if available, else keep 1753-01-01
         CASE 
-            WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1
-            ELSE 0
-        END AS IsGroupOwner,
-        ga.[ГруппыАффилированныхЛиц Код] AS GroupID
+            WHEN r.[Контрагенты Возраст] <> '1753-01-01 00:00:00' THEN r.[Контрагенты Возраст]
+            ELSE s.[Контрагенты Возраст]
+        END AS EffectiveRepDOB
+
     FROM [ATK].[mis].[Silver_Справочники.Контрагенты] s
+    LEFT JOIN [ATK].[mis].[Silver_Справочники.Контрагенты] r
+        ON r.[Контрагенты ID] = s.[Контрагенты Представитель Контрагента ID]
     LEFT JOIN [ATK].[dbo].[Справочники.ФормыПредприятия] fp
         ON fp.[ФормыПредприятия Наименование] = s.[Контрагенты Форма Организации]
     LEFT JOIN [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] gb
@@ -243,16 +246,18 @@ GO
     LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
         ON g.[ГруппыАффилированныхЛиц ID] = ga.[ГруппыАффилированныхЛиц ID]
 ),
+
 AgeCalc AS (
     SELECT *,
         CASE 
-            WHEN DOB IS NULL THEN NULL
-            WHEN DOB > CAST(SYSDATETIME() AS date) THEN NULL
-            ELSE DATEDIFF(YEAR, DOB, CAST(SYSDATETIME() AS date))
-                 - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, DOB, CAST(SYSDATETIME() AS date)), DOB) > CAST(SYSDATETIME() AS date) THEN 1 ELSE 0 END
+            WHEN EffectiveRepDOB IS NULL THEN NULL
+            ELSE DATEDIFF(YEAR, EffectiveRepDOB, CAST(SYSDATETIME() AS date))
+                 - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, EffectiveRepDOB, CAST(SYSDATETIME() AS date)), EffectiveRepDOB) 
+                         > CAST(SYSDATETIME() AS date) THEN 1 ELSE 0 END
         END AS Age
     FROM Src
 ),
+
 Final AS (
     SELECT
         ClientID, ParentID, BranchID,
@@ -260,6 +265,7 @@ Final AS (
         Age,
         CASE 
             WHEN Age IS NULL THEN 'n/a'
+            WHEN Age <  22 THEN '< 22'
             WHEN Age <  25 THEN '< 25'
             WHEN Age <  35 THEN '< 35'
             WHEN Age <  45 THEN '< 45'
@@ -275,6 +281,7 @@ Final AS (
         IsGroupOwner, GroupID
     FROM AgeCalc
 ),
+
 Dedup AS (
     SELECT *,
            ROW_NUMBER() OVER (
@@ -283,7 +290,7 @@ Dedup AS (
            ) AS rn
     FROM Final
 )
--- Insert only the latest per ClientID
+
 INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [ClientID],[ParentID],[BranchID],
     [IsDeleted],[IsGroup],[ClientCode],[ClientName],[IsBlocked],[Visibility],
@@ -305,7 +312,7 @@ FROM Dedup
 WHERE rn = 1;
 GO
 
--- Create indexes
+-- Indexes
 CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
 CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
 CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[2tbl_Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
@@ -323,18 +330,20 @@ GO
 USE [ATK];
 GO
 
+-- Drop table if exists
 IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Credits]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Credits];
 GO
 
+-- Create table
 CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
-    [CreditID] VARCHAR(36) NOT NULL,
+    [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
     [Name] NVARCHAR(255) NULL,
     [IssueDate] DATE NULL,
     [Term] INT NULL,
-    [Amount] DECIMAL(18, 2) NULL,
+    [Amount] DECIMAL(18,2) NULL,
     [EconomicSector] NVARCHAR(255) NULL,
     [FinancialProductID] VARCHAR(36) NULL,
     [FinancialProduct] NVARCHAR(255) NULL,
@@ -361,34 +370,28 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [LastFilialID] VARCHAR(36) NULL,
     [LastExpertID] VARCHAR(36) NULL,
     [DealerID] VARCHAR(36) NULL,
-    [Source] VARCHAR(36) NULL,
+    [Source] NVARCHAR(50) NULL,
     [LatestOutstandingAmount] DECIMAL(18,2) NULL,
     [SegmentRevenue] NVARCHAR(50) NULL,
     [GreenCredit] VARCHAR(36) NULL,
-    CONSTRAINT PK_2tbl_Gold_Dim_Credits PRIMARY KEY CLUSTERED ([CreditID])
+    [CommitteeProt_CrPurpose] NVARCHAR(150) NULL,
+    [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL
 );
 GO
 
-WITH 
--- Credits (dedup, DATETIME already correct)
+WITH
+-- Latest credit per CreditID
 Credits AS (
     SELECT *
     FROM (
-        SELECT  *,
-                [Кредиты ID]                AS CreditID,
-                [Кредиты Владелец]          AS Owner,
-                [Кредиты Финансовый Продукт ID] AS FinancialProductID,
-                [Кредиты Кредитный Продукт ID]  AS ProductID,
-                ROW_NUMBER() OVER (
-                    PARTITION BY [Кредиты ID]
-                    ORDER BY [Кредиты Дата Выдачи] DESC, [Кредиты Код]
-                ) AS rn
+        SELECT *,
+               ROW_NUMBER() OVER(PARTITION BY [Кредиты ID] ORDER BY [Кредиты Дата Выдачи] DESC, [Кредиты Код]) AS rn
         FROM [ATK].[mis].[Silver_Справочники.Кредиты]
-    ) x
+    ) t
     WHERE rn = 1
 ),
 
--- CreditRequest (keep latest)
+-- Latest credit request per CreditID (last Source)
 CreditRequest AS (
     SELECT *
     FROM (
@@ -401,8 +404,9 @@ CreditRequest AS (
             oia.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS ExpertID,
             ROW_NUMBER() OVER (
                 PARTITION BY znk.[ЗаявкаНаКредит Кредит ID]
-                ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
-                         oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
+                ORDER BY 
+                    ISNULL(oia.[ОбъединеннаяИнтернетЗаявка Дата], '1753-01-01') DESC,
+                    oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
             ) AS rn
         FROM [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит] znk
         LEFT JOIN [ATK].[mis].[Silver_Документы.ОбъединеннаяИнтернетЗаявка] oia
@@ -412,58 +416,40 @@ CreditRequest AS (
 ),
 
 -- First/Last Responsible
-FirstLast AS (
+Resp AS (
     SELECT
         [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
-        [ОтветственныеПоКредитамВыданным Филиал ID] AS FilialID,
-        [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS ExpertID,
-        ROW_NUMBER() OVER (
-            PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
-            ORDER BY [ОтветственныеПоКредитамВыданным Период],
-                     [ОтветственныеПоКредитамВыданным Номер Строки]
-        ) AS rn_first,
-        ROW_NUMBER() OVER (
-            PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
-            ORDER BY [ОтветственныеПоКредитамВыданным Период] DESC,
-                     [ОтветственныеПоКредитамВыданным Номер Строки] DESC
-        ) AS rn_last
+        MIN([ОтветственныеПоКредитамВыданным Филиал ID]) AS FirstFilialID,
+        MIN([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS FirstExpertID,
+        MAX([ОтветственныеПоКредитамВыданным Филиал ID]) AS LastFilialID,
+        MAX([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS LastExpertID
     FROM [ATK].[mis].[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным]
-),
-FirstResp AS (
-    SELECT CreditID, FilialID AS FirstFilialID, ExpertID AS FirstExpertID
-    FROM FirstLast WHERE rn_first = 1
-),
-LastResp AS (
-    SELECT CreditID, FilialID AS LastFilialID, ExpertID AS LastExpertID
-    FROM FirstLast WHERE rn_last = 1
+    GROUP BY [ОтветственныеПоКредитамВыданным Кредит ID]
 ),
 
--- Financial Products
+-- Financial products main group
 FinProducts AS (
-    SELECT [ФинансовыеПродукты ID] AS CreditFinancialProductID,
+    SELECT [ФинансовыеПродукты ID] AS FinancialProductID,
            [ФинансовыеПродукты Основная Группа] AS FinancialProductsMainGroup
     FROM [ATK].[mis].[Silver_Справочники.ФинансовыеПродукты]
 ),
 
--- Statuses (already DATETIME in Period column)
+-- Latest credit status
 Statuses AS (
     SELECT *
     FROM (
         SELECT s.[СтатусыКредитовВыданных Кредит ID] AS CreditID,
                s.[СтатусыКредитовВыданных Статус] AS IssuedCreditsStatus,
-               ROW_NUMBER() OVER (
-                   PARTITION BY s.[СтатусыКредитовВыданных Кредит ID]
-                   ORDER BY s.[СтатусыКредитовВыданных Период] DESC,
-                            s.[СтатусыКредитовВыданных Номер Строки] DESC,
-                            s.[СтатусыКредитовВыданных ID] DESC
-               ) AS rn
+               ROW_NUMBER() OVER(PARTITION BY s.[СтатусыКредитовВыданных Кредит ID]
+                                 ORDER BY s.[СтатусыКредитовВыданных Период] DESC,
+                                          s.[СтатусыКредитовВыданных Номер Строки] DESC) AS rn
         FROM [ATK].[mis].[Silver_РегистрыСведений.СтатусыКредитовВыданных] s
         WHERE s.[СтатусыКредитовВыданных Активность] = 0x01
-    ) z
+    ) t
     WHERE rn = 1
 ),
 
--- Latest Outstanding (DATETIME date)
+-- Latest outstanding per credit
 LatestOutstanding AS (
     SELECT sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
            sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS LatestOutstandingAmount
@@ -472,96 +458,38 @@ LatestOutstanding AS (
         SELECT [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
                MAX([СуммыЗадолженностиПоПериодамПросрочки Дата]) AS MaxDate
         FROM [ATK].[mis].[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
-        WHERE [СуммыЗадолженностиПоПериодамПросрочки Дата] IS NOT NULL
-          AND [СуммыЗадолженностиПоПериодамПросрочки Дата] <= CAST(GETDATE() AS DATE)
         GROUP BY [СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
     ) md
       ON sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = md.CreditID
      AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] = md.MaxDate
 ),
 
--- Segment Revenue
+-- Segment revenue
 SegmentRevenue AS (
-    SELECT
-        cp.[КредитныеПродукты ID] AS ProductID,
-        MAX(cp.[КредитныеПродукты Сегмент Доходов]) AS SegmentRevenue
-    FROM [ATK].[dbo].[Справочники.КредитныеПродукты] cp
-    WHERE cp.[КредитныеПродукты Сегмент Доходов] IS NOT NULL
-    GROUP BY cp.[КредитныеПродукты ID]
+    SELECT [КредитныеПродукты ID] AS ProductID,
+           MAX([КредитныеПродукты Сегмент Доходов]) AS SegmentRevenue
+    FROM [ATK].[dbo].[Справочники.КредитныеПродукты]
+    WHERE [КредитныеПродукты Сегмент Доходов] IS NOT NULL
+    GROUP BY [КредитныеПродукты ID]
 ),
 
--- Green Credit (committee date is DATETIME)
+-- Committee info / Green Credit
 GreenCredit AS (
     SELECT *
     FROM (
         SELECT gc.[ПротоколКомитета Кредит ID] AS CreditID,
+               gc.[ПротоколКомитета Назначение Использования Кредита] AS CommitteeProt_CrPurpose,
+               gc.[ПротоколКомитета Категория Риска AML] AS CommitteeProt_AMLRiskCat,
                gc.[ПротоколКомитета Это Зеленый Кредит] AS GreenCredit,
-               ROW_NUMBER() OVER (
-                   PARTITION BY gc.[ПротоколКомитета Кредит ID]
-                   ORDER BY gc.[ПротоколКомитета Дата] DESC,
-                            gc.[ПротоколКомитета ID] DESC
-               ) AS rn
+               ROW_NUMBER() OVER(PARTITION BY gc.[ПротоколКомитета Кредит ID]
+                                 ORDER BY gc.[ПротоколКомитета Дата] DESC,
+                                          gc.[ПротоколКомитета ID] DESC) AS rn
         FROM [ATK].[dbo].[Документы.ПротоколКомитета] gc
     ) t
     WHERE rn = 1
-),
-
--- Final Rows
-FinalRows AS (
-    SELECT
-        c.CreditID,
-        c.Owner,
-        c.[Кредиты Код] AS [Code],
-        c.[Кредиты Наименование] AS [Name],
-        c.[Кредиты Дата Выдачи] AS [IssueDate],
-        c.[Кредиты Срок Кредита] AS [Term],
-        c.[Кредиты Сумма Кредита] AS [Amount],
-        c.[Кредиты Сектор Экономики] AS [EconomicSector],
-        c.FinancialProductID,
-        c.[Кредиты Финансовый Продукт] AS [FinancialProduct],
-        c.[Кредиты Агро] AS [Agro],
-        c.[Кредиты Тип Местности] AS [LocalityType],
-        c.[Кредиты Валюта] AS [Currency],
-        c.ProductID,
-        c.[Кредиты Кредитный Продукт] AS [Product],
-        c.[Кредиты Цель Кредита] AS [Purpose],
-        c.[Кредиты Удалить Источник Финансирования] AS [RemoveFundingSource],
-        c.[Кредиты Вид Контракта] AS [ContractType],
-        c.[Кредиты Дата Контракта] AS [ContractDate],
-        c.[Кредиты Сегмент Доходов] AS [IncomeSegment],
-        c.[Кредиты Назначение Использования Кредита] AS [UsagePurpose],
-        c.[Кредиты Цель Кредита Описание] AS [PurposeDescription],
-        c.[Кредиты Тип Кредитного Продукта] AS [ProductType],
-        c.[Кредиты Сфера Использования Кредита] AS [UsageArea],
-        c.[Кредиты Источник Подписания] AS [SigningSource],
-        fp.FinancialProductsMainGroup,
-        st.IssuedCreditsStatus,
-        cr.ApplicationPartnerID AS [CreditApplicationPartnerID],
-        COALESCE(fr.FirstFilialID, cr.FilialID) AS [FirstFilialID],
-        COALESCE(fr.FirstExpertID, cr.ExpertID) AS [FirstExpertID],
-        COALESCE(lr.LastFilialID, cr.FilialID) AS [LastFilialID],
-        COALESCE(lr.LastExpertID, cr.ExpertID) AS [LastExpertID],
-        cr.DealerID,
-        cr.Source,
-        lo.LatestOutstandingAmount,
-        seg.SegmentRevenue,
-        gr.GreenCredit,
-        ROW_NUMBER() OVER (
-            PARTITION BY c.CreditID
-            ORDER BY ISNULL(c.[Кредиты Дата Выдачи], '19000101') DESC,
-                     c.[Кредиты Код]
-        ) AS rn
-    FROM Credits c
-    LEFT JOIN CreditRequest  cr  ON c.CreditID = cr.CreditID
-    LEFT JOIN FirstResp      fr  ON c.CreditID = fr.CreditID
-    LEFT JOIN LastResp       lr  ON c.CreditID = lr.CreditID
-    LEFT JOIN FinProducts    fp  ON c.FinancialProductID = fp.CreditFinancialProductID
-    LEFT JOIN Statuses       st  ON c.CreditID = st.CreditID
-    LEFT JOIN LatestOutstanding lo ON c.CreditID = lo.CreditID
-    LEFT JOIN SegmentRevenue seg ON c.ProductID = seg.ProductID
-    LEFT JOIN GreenCredit    gr  ON c.CreditID = gr.CreditID
 )
 
+-- Final insert
 INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
@@ -574,23 +502,37 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [FinancialProductsMainGroup], [IssuedCreditsStatus],
     [CreditApplicationPartnerID], [FirstFilialID], [FirstExpertID],
     [LastFilialID], [LastExpertID], [DealerID], [Source],
-    [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit]
+    [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit],
+    [CommitteeProt_CrPurpose], [CommitteeProt_AMLRiskCat]
 )
 SELECT
-    CreditID, Owner, [Code], [Name],
-    [IssueDate], [Term], [Amount],
-    [EconomicSector], [FinancialProductID], [FinancialProduct],
-    [Agro], [LocalityType], [Currency], [ProductID],
-    [Product], [Purpose], [RemoveFundingSource],
-    [ContractType], [ContractDate], [IncomeSegment],
-    [UsagePurpose], [PurposeDescription],
-    [ProductType], [UsageArea], [SigningSource],
-    [FinancialProductsMainGroup], [IssuedCreditsStatus],
-    [CreditApplicationPartnerID], [FirstFilialID], [FirstExpertID],
-    [LastFilialID], [LastExpertID], [DealerID], [Source],
-    [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit]
-FROM FinalRows
-WHERE rn = 1;
+    c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
+    c.[Кредиты Дата Выдачи], c.[Кредиты Срок Кредита], c.[Кредиты Сумма Кредита],
+    c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], c.[Кредиты Финансовый Продукт],
+    c.[Кредиты Агро], c.[Кредиты Тип Местности], c.[Кредиты Валюта], c.[Кредиты Кредитный Продукт ID],
+    c.[Кредиты Кредитный Продукт], c.[Кредиты Цель Кредита], c.[Кредиты Удалить Источник Финансирования],
+    c.[Кредиты Вид Контракта], c.[Кредиты Дата Контракта], c.[Кредиты Сегмент Доходов],
+    c.[Кредиты Назначение Использования Кредита], c.[Кредиты Цель Кредита Описание],
+    c.[Кредиты Тип Кредитного Продукта], c.[Кредиты Сфера Использования Кредита], c.[Кредиты Источник Подписания],
+    fp.FinancialProductsMainGroup, 
+	st.IssuedCreditsStatus,
+    cr.ApplicationPartnerID, 
+	COALESCE(r.FirstFilialID, cr.FilialID), 
+	COALESCE(r.FirstExpertID, cr.ExpertID),
+    COALESCE(r.LastFilialID, cr.FilialID), 
+	COALESCE(r.LastExpertID, cr.ExpertID),
+    cr.DealerID, cr.Source,
+    lo.LatestOutstandingAmount, 
+	seg.SegmentRevenue, 
+	gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat
+FROM Credits c
+LEFT JOIN CreditRequest cr ON c.[Кредиты ID] = cr.CreditID
+LEFT JOIN Resp r ON c.[Кредиты ID] = r.CreditID
+LEFT JOIN FinProducts fp ON c.[Кредиты Финансовый Продукт ID] = fp.FinancialProductID
+LEFT JOIN Statuses st ON c.[Кредиты ID] = st.CreditID
+LEFT JOIN LatestOutstanding lo ON c.[Кредиты ID] = lo.CreditID
+LEFT JOIN SegmentRevenue seg ON c.[Кредиты Кредитный Продукт ID] = seg.ProductID
+LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID;
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Dim_Credits.sql
@@ -1588,9 +1530,7 @@ SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = '2024-01-01';
 
------------------------------------------------------
 -- Drop & recreate main GOLD table
------------------------------------------------------
 DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par];
 
 CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
@@ -1599,8 +1539,8 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
     SoldAmount    DECIMAL(18,2) NULL,
     IRR_Values    DECIMAL(18,6) NULL,
     BranchShadow  NVARCHAR(100) NULL,
-    ExpertID      VARCHAR(36) NULL,
-    BranchID      VARCHAR(36) NULL,
+    ExpertID      VARCHAR(36)  NULL,
+    BranchID      VARCHAR(36)  NULL,
     Par_0_IFRS    DECIMAL(18,6) NULL,
     Par_30_IFRS   DECIMAL(18,6) NULL,
     Par_60_IFRS   DECIMAL(18,6) NULL,
@@ -1609,84 +1549,92 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
 WITH (DATA_COMPRESSION = PAGE);
 
 -----------------------------------------------------
--- Step 1: Max Past Days
+-- Step 1: Max Past Days (explicit temp table)
 -----------------------------------------------------
 IF OBJECT_ID('tempdb..#MaxPastDays') IS NOT NULL DROP TABLE #MaxPastDays;
+CREATE TABLE #MaxPastDays (
+    OwnerID   VARCHAR(36) NOT NULL,
+    ParDate   DATE        NOT NULL,
+    MaxPastDays INT       NULL
+);
+
+INSERT INTO #MaxPastDays (OwnerID, ParDate, MaxPastDays)
 SELECT 
     k.[Кредиты Владелец] AS OwnerID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS ParDate,
     MAX(sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого]) AS MaxPastDays
-INTO #MaxPastDays
 FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 JOIN mis.[Silver_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] IS NOT NULL
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] > 0
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
 GROUP BY k.[Кредиты Владелец], sd.[СуммыЗадолженностиПоПериодамПросрочки Дата];
 
-CREATE CLUSTERED INDEX IX_MaxPastDays_Owner_ParDate ON #MaxPastDays (OwnerID, ParDate);
+CREATE UNIQUE NONCLUSTERED INDEX IX_MaxPastDays_Owner_ParDate ON #MaxPastDays (OwnerID, ParDate);
 
 -----------------------------------------------------
--- Step 2: Shadow Branch latest per CreditID
+-- Step 2: Shadow Branch (explicit temp table)
 -----------------------------------------------------
-IF OBJECT_ID('tempdb..#ShadowBranchLatest') IS NOT NULL DROP TABLE #ShadowBranchLatest;
-;WITH ShadowRanked AS (
-    SELECT
-        CreditID = x.[КредитыВТеневыхФилиалах Кредит ID],
-        BranchShadow = x.[КредитыВТеневыхФилиалах Филиал],
-        Period = x.[КредитыВТеневыхФилиалах Период],
-        ROW_NUMBER() OVER(PARTITION BY x.[КредитыВТеневыхФилиалах Кредит ID] ORDER BY x.[КредитыВТеневыхФилиалах Период] DESC) AS rn
-    FROM mis.[Silver_РегистрыСведений.КредитыВТеневыхФилиалах] x
-) 
-SELECT CreditID, BranchShadow, Period
-INTO #ShadowBranchLatest
-FROM ShadowRanked
-WHERE rn = 1;
+IF OBJECT_ID('tempdb..#ShadowBranch') IS NOT NULL DROP TABLE #ShadowBranch;
+CREATE TABLE #ShadowBranch (
+    CreditID   VARCHAR(36)  NOT NULL,
+    BranchShadow NVARCHAR(100) NULL,
+    Period     DATE         NULL
+);
 
-CREATE CLUSTERED INDEX IX_Shadow_Credit ON #ShadowBranchLatest(CreditID);
+INSERT INTO #ShadowBranch (CreditID, BranchShadow, Period)
+SELECT 
+    x.[КредитыВТеневыхФилиалах Кредит ID] AS CreditID,
+    x.[КредитыВТеневыхФилиалах Филиал] AS BranchShadow,
+    x.[КредитыВТеневыхФилиалах Период] AS Period
+FROM mis.[Silver_РегистрыСведений.КредитыВТеневыхФилиалах] x;
 
------------------------------------------------------
--- Step 3: Responsible / Expert latest per CreditID
------------------------------------------------------
-IF OBJECT_ID('tempdb..#ResponsibleLatest') IS NOT NULL DROP TABLE #ResponsibleLatest;
-;WITH RespRanked AS (
-    SELECT
-        CreditID = r.[ОтветственныеПоКредитамВыданным Кредит ID],
-        ExpertID = r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID],
-        BranchID = r.[ОтветственныеПоКредитамВыданным Филиал ID],
-        Period = r.[ОтветственныеПоКредитамВыданным Период],
-        ROW_NUMBER() OVER(PARTITION BY r.[ОтветственныеПоКредитамВыданным Кредит ID] ORDER BY r.[ОтветственныеПоКредитамВыданным Период] DESC) AS rn
-    FROM mis.[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным] r
-) 
-SELECT CreditID, ExpertID, BranchID, Period
-INTO #ResponsibleLatest
-FROM RespRanked
-WHERE rn = 1;
-
-CREATE CLUSTERED INDEX IX_Resp_Credit ON #ResponsibleLatest(CreditID);
+CREATE NONCLUSTERED INDEX IX_Shadow_Credit_Period ON #ShadowBranch (CreditID, Period);
 
 -----------------------------------------------------
--- Step 4: IRR latest per CreditID
+-- Step 3: Responsible / Expert (explicit temp table)
 -----------------------------------------------------
-IF OBJECT_ID('tempdb..#IRRLatest') IS NOT NULL DROP TABLE #IRRLatest;
-;WITH IRRRanked AS (
-    SELECT
-        CreditID = i.[УстановкаДанныхКредита Кредит ID],
-        IRR_Year = i.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая],
-        IRR_Client = i.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая],
-        IRRDate = i.[УстановкаДанныхКредита Дата],
-        ROW_NUMBER() OVER(PARTITION BY i.[УстановкаДанныхКредита Кредит ID] ORDER BY i.[УстановкаДанныхКредита Дата] DESC) AS rn
-    FROM mis.[Silver_Документы.УстановкаДанныхКредита] i
-) 
-SELECT CreditID, IRR_Year, IRR_Client, IRRDate
-INTO #IRRLatest
-FROM IRRRanked
-WHERE rn = 1;
+IF OBJECT_ID('tempdb..#Responsible') IS NOT NULL DROP TABLE #Responsible;
+CREATE TABLE #Responsible (
+    CreditID VARCHAR(36) NOT NULL,
+    ExpertID VARCHAR(36) NULL,
+    BranchID VARCHAR(36) NULL,
+    Period   DATE        NULL
+);
 
-CREATE CLUSTERED INDEX IX_IRR_Credit ON #IRRLatest(CreditID);
+INSERT INTO #Responsible (CreditID, ExpertID, BranchID, Period)
+SELECT
+    r.[ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
+    r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS ExpertID,
+    r.[ОтветственныеПоКредитамВыданным Филиал ID] AS BranchID,
+    r.[ОтветственныеПоКредитамВыданным Период] AS Period
+FROM mis.[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным] r;
+
+CREATE NONCLUSTERED INDEX IX_Resp_Credit_Period ON #Responsible (CreditID, Period);
 
 -----------------------------------------------------
--- Step 5: Main Insert
+-- Step 4: IRR last (explicit temp table)
+-----------------------------------------------------
+IF OBJECT_ID('tempdb..#IRR') IS NOT NULL DROP TABLE #IRR;
+CREATE TABLE #IRR (
+    CreditID VARCHAR(36) NOT NULL,
+    IRR_Year DECIMAL(18,6) NULL,
+    IRR_Client DECIMAL(18,6) NULL,
+    IRRDate DATETIME2 NULL
+);
+
+INSERT INTO #IRR (CreditID, IRR_Year, IRR_Client, IRRDate)
+SELECT
+    i.[УстановкаДанныхКредита Кредит ID] AS CreditID,
+    i.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] AS IRR_Year,
+    i.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая] AS IRR_Client,
+    i.[УстановкаДанныхКредита Дата] AS IRRDate
+FROM mis.[Silver_Документы.УстановкаДанныхКредита] i;
+
+CREATE NONCLUSTERED INDEX IX_IRR_Credit_Date ON #IRR (CreditID, IRRDate);
+
+-----------------------------------------------------
+-- Step 5: Main Insert (single latest responsible)
 -----------------------------------------------------
 INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
 (
@@ -1698,65 +1646,70 @@ SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
     
-    CASE 
-        WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] IS NOT NULL
-        THEN ROUND(
-            COALESCE(
-                CASE 
-                    WHEN irr.IRR_Year IS NOT NULL AND irr.IRR_Year < 100 THEN irr.IRR_Year
-                    ELSE irr.IRR_Client
-                END,
-                0
-            )
-            * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] / 100.0, 2
-        )
-        ELSE NULL
-    END AS IRR_Values,
+-- IRR Values with conditional logic
+ROUND(
+    COALESCE(
+        CASE 
+            WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 
+                THEN ir.IRR_Year
+            ELSE ir.IRR_Client
+        END,
+        0
+    )
+    * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
+) AS IRR_Values,
     
+    -- Shadow Branch (latest <= SoldDate)
     sh.BranchShadow,
-    r.ExpertID,
-    r.BranchID,
     
-    CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE NULL END AS Par_0_IFRS,
-    CASE WHEN mpd.MaxPastDays > 30 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE NULL END AS Par_30_IFRS,
-    CASE WHEN mpd.MaxPastDays > 60 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE NULL END AS Par_60_IFRS,
-    CASE WHEN mpd.MaxPastDays > 90 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE NULL END AS Par_90_IFRS
+    -- ExpertID from latest responsible
+    r.ExpertID,
+    
+    r.BranchID AS BranchID,
+    
+    -- ParNas IFRS
+    CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_0_IFRS,
+    CASE WHEN mpd.MaxPastDays > 30 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_30_IFRS,
+    CASE WHEN mpd.MaxPastDays > 60 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_60_IFRS,
+    CASE WHEN mpd.MaxPastDays > 90 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_90_IFRS
 
 FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 JOIN mis.[Silver_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
 
--- Join MaxPastDays
+-- MaxPastDays
 LEFT JOIN #MaxPastDays mpd
   ON mpd.OwnerID = k.[Кредиты Владелец]
  AND mpd.ParDate = sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
 
--- Join latest ShadowBranch
-LEFT JOIN #ShadowBranchLatest sh
-  ON sh.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+-- Shadow Branch: pick latest shadow row <= SoldDate
+OUTER APPLY (
+    SELECT TOP(1) sb.BranchShadow
+    FROM #ShadowBranch sb
+    WHERE sb.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+      AND sb.Period <= EOMONTH(sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
+    ORDER BY sb.Period DESC
+) sh
 
--- Join latest Responsible
-LEFT JOIN #ResponsibleLatest r
-  ON r.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+-- Responsible: pick latest responsible row <= SoldDate
+OUTER APPLY (
+    SELECT TOP(1) rr.ExpertID, rr.BranchID
+    FROM #Responsible rr
+    WHERE rr.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+      AND rr.Period <= EOMONTH(sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
+    ORDER BY rr.Period DESC
+) r
 
--- Join latest IRR
-LEFT JOIN #IRRLatest irr
-  ON irr.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+-- IRR latest
+OUTER APPLY (
+    SELECT TOP(1) i.IRR_Year, i.IRR_Client
+    FROM #IRR i
+    WHERE i.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+    ORDER BY i.IRRDate DESC
+) ir
 
--- Include zero balance for active credits
-LEFT JOIN mis.[Silver_РегистрыСведений.СтатусыКредитовВыданных] cs
-  ON cs.[СтатусыКредитовВыданных Кредит ID] = k.[Кредиты ID]
-
-WHERE 
-    (
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] IS NOT NULL
-        OR 
-        (
-            sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] = 0
-            AND cs.[СтатусыКредитовВыданных Статус] = 'Active'
-        )
-    )
-    AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] > 0
+  AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
 
 -----------------------------------------------------
 -- Columnstore
@@ -1765,7 +1718,7 @@ CREATE CLUSTERED COLUMNSTORE INDEX CCSI_2tbl_Gold_Fact_Sold_Par
 ON mis.[2tbl_Gold_Fact_Sold_Par];
 
 -- Drop temp tables
-DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranchLatest, #ResponsibleLatest, #IRRLatest;
+DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranch, #Responsible, #IRR;
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Fact_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------

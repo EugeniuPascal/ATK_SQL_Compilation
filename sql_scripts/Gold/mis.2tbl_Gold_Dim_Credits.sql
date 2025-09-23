@@ -75,8 +75,9 @@ CreditRequest AS (
             oia.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS ExpertID,
             ROW_NUMBER() OVER (
                 PARTITION BY znk.[ЗаявкаНаКредит Кредит ID]
-                ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
-                         oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
+                ORDER BY 
+                    ISNULL(oia.[ОбъединеннаяИнтернетЗаявка Дата], '1753-01-01') DESC,
+                    oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
             ) AS rn
         FROM [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит] znk
         LEFT JOIN [ATK].[mis].[Silver_Документы.ОбъединеннаяИнтернетЗаявка] oia

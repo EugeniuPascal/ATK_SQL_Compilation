@@ -50,9 +50,9 @@ CREATE UNIQUE NONCLUSTERED INDEX IX_MaxPastDays_Owner_ParDate ON #MaxPastDays (O
 -----------------------------------------------------
 IF OBJECT_ID('tempdb..#ShadowBranch') IS NOT NULL DROP TABLE #ShadowBranch;
 CREATE TABLE #ShadowBranch (
-    CreditID   VARCHAR(36)  NOT NULL,
+    CreditID     VARCHAR(36)  NOT NULL,
     BranchShadow NVARCHAR(100) NULL,
-    Period     DATE         NULL
+    Period       DATE         NULL
 );
 
 INSERT INTO #ShadowBranch (CreditID, BranchShadow, Period)
@@ -107,7 +107,27 @@ FROM mis.[Silver_Документы.УстановкаДанныхКредита
 CREATE NONCLUSTERED INDEX IX_IRR_Credit_Date ON #IRR (CreditID, IRRDate);
 
 -----------------------------------------------------
--- Step 5: Main Insert (single latest responsible)
+-- Prepare ranges (ValidFrom, ValidTo) for Responsible & ShadowBranch
+-----------------------------------------------------
+;WITH RespRanges AS (
+    SELECT 
+        CreditID,
+        ExpertID,
+        BranchID,
+        Period AS ValidFrom,
+        LEAD(Period) OVER (PARTITION BY CreditID ORDER BY Period) AS ValidTo
+    FROM #Responsible
+),
+ShadowRanges AS (
+    SELECT
+        CreditID,
+        BranchShadow,
+        Period AS ValidFrom,
+        LEAD(Period) OVER (PARTITION BY CreditID ORDER BY Period) AS ValidTo
+    FROM #ShadowBranch
+)
+-----------------------------------------------------
+-- Step 5: Main Insert (range-join approach)
 -----------------------------------------------------
 INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
 (
@@ -119,25 +139,24 @@ SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
     
--- IRR Values with conditional logic
-ROUND(
-    COALESCE(
-        CASE 
-            WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 
-                THEN ir.IRR_Year
-            ELSE ir.IRR_Client
-        END,
-        0
-    )
-    * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
-) AS IRR_Values,
+    -- IRR Values with conditional logic
+    ROUND(
+        COALESCE(
+            CASE 
+                WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 
+                    THEN ir.IRR_Year
+                ELSE ir.IRR_Client
+            END,
+            0
+        )
+        * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
+    ) AS IRR_Values,
     
-    -- Shadow Branch (latest <= SoldDate)
+    -- BranchShadow from ranges (valid from Period until next change)
     sh.BranchShadow,
     
-    -- ExpertID from latest responsible
+    -- ExpertID and BranchID from ranges (valid from Period until next change)
     r.ExpertID,
-    
     r.BranchID AS BranchID,
     
     -- ParNas IFRS
@@ -155,25 +174,19 @@ LEFT JOIN #MaxPastDays mpd
   ON mpd.OwnerID = k.[Кредиты Владелец]
  AND mpd.ParDate = sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
 
--- Shadow Branch: pick latest shadow row <= SoldDate
-OUTER APPLY (
-    SELECT TOP(1) sb.BranchShadow
-    FROM #ShadowBranch sb
-    WHERE sb.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-      AND sb.Period <= EOMONTH(sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
-    ORDER BY sb.Period DESC
-) sh
+-- Responsible: range join using RespRanges
+LEFT JOIN RespRanges r
+    ON r.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= r.ValidFrom
+   AND (r.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < r.ValidTo)
 
--- Responsible: pick latest responsible row <= SoldDate
-OUTER APPLY (
-    SELECT TOP(1) rr.ExpertID, rr.BranchID
-    FROM #Responsible rr
-    WHERE rr.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-      AND rr.Period <= EOMONTH(sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
-    ORDER BY rr.Period DESC
-) r
+-- Shadow Branch: range join using ShadowRanges
+LEFT JOIN ShadowRanges sh
+    ON sh.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= sh.ValidFrom
+   AND (sh.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < sh.ValidTo)
 
--- IRR latest
+-- IRR latest (keeps your original OUTER APPLY style for IRR)
 OUTER APPLY (
     SELECT TOP(1) i.IRR_Year, i.IRR_Client
     FROM #IRR i
@@ -192,6 +205,3 @@ ON mis.[2tbl_Gold_Fact_Sold_Par];
 
 -- Drop temp tables
 DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranch, #Responsible, #IRR;
-
-
-

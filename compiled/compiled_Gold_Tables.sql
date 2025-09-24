@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-09-23 09:16:59
+-- Generated: 2025-09-24 07:49:04
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (13):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -458,7 +458,7 @@ Statuses AS (
                                  ORDER BY s.[СтатусыКредитовВыданных Период] DESC,
                                           s.[СтатусыКредитовВыданных Номер Строки] DESC) AS rn
         FROM [ATK].[mis].[Silver_РегистрыСведений.СтатусыКредитовВыданных] s
-        WHERE s.[СтатусыКредитовВыданных Активность] = 0x01
+        WHERE s.[СтатусыКредитовВыданных Активность] = 1
     ) t
     WHERE rn = 1
 ),
@@ -631,7 +631,6 @@ GO
 
 CREATE TABLE mis.[2tbl_Gold_Dim_ExpertsHistory] (
     Period       DATETIME      NULL,
-    Registrar_TRef NVARCHAR(100) NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
     IsActive     VARCHAR(36)   NULL,
@@ -647,7 +646,6 @@ GO
 
 INSERT INTO mis.[2tbl_Gold_Dim_ExpertsHistory] (
     Period,
-    Registrar_TRef,
     ID,
     RowNumber,
     IsActive,
@@ -661,7 +659,6 @@ INSERT INTO mis.[2tbl_Gold_Dim_ExpertsHistory] (
 )
 SELECT
     [ОтветственныеПоКредитамВыданным Период]                    AS Period,
-    [ОтветственныеПоКредитамВыданным Регистратор _TRef]         AS Registrar_TRef,
     [ОтветственныеПоКредитамВыданным ID]                        AS ID,         
     [ОтветственныеПоКредитамВыданным Номер Строки]              AS RowNumber,
     [ОтветственныеПоКредитамВыданным Активность]                AS IsActive,
@@ -706,7 +703,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
     [PartnerBranchCode]             NVARCHAR(3)   NOT NULL,
     [PartnerBranchName]             NVARCHAR(150) NULL,
     [PartnerBranchAddress]          NVARCHAR(100) NULL,
-    [PartnerBranchMainBrandID]      VARCHAR(36) NOT NULL,
 
     [DealerID]                      VARCHAR(36) NULL,
     [DealerDefaultExpertID]         VARCHAR(36) NULL,
@@ -726,7 +722,6 @@ INSERT INTO mis.[2tbl_Gold_Dim_PartnersBranch]
     [PartnerBranchCode],
     [PartnerBranchName],
     [PartnerBranchAddress],
-    [PartnerBranchMainBrandID],
 
     [DealerID],
     [DealerDefaultExpertID],
@@ -741,7 +736,6 @@ SELECT
     f.[ФилиалыКонтрагентов Код] AS PartnerBranchCode,
     f.[ФилиалыКонтрагентов Наименование] AS PartnerBranchName,
     f.[ФилиалыКонтрагентов Адрес] AS PartnerBranchAddress,
-    f.[ФилиалыКонтрагентов Основная Торговая Марка ID] AS PartnerBranchMainBrandID,
 
     d.[Дилеры ID] AS DealerID,
     d.[Дилеры Эксперт по Умолчанию ID] AS DealerDefaultExpertID ,
@@ -773,12 +767,9 @@ CREATE TABLE mis.[2tbl_Gold_Fact_BudgetExperts] (
     [Employee]            NVARCHAR(40) NULL,
     [AmountIssued]        DECIMAL(18,2) NULL,
     [PortfolioAmount]     DECIMAL(18,2) NULL,
-    [AmountReimbursed]    DECIMAL(18,2) NULL,
-    [AmountPaid]          DECIMAL(18,2) NULL,
     [QuantityIssued]      INT NULL,
     [DailyVisitPromotions] INT NULL,
     [DailyCallPromotions]  INT NULL,
-    [PAR0]                INT NULL,
     [PAR30]               INT NULL,
     [FinProductID]        VARCHAR(36) NULL,
     [FinProductName]      NVARCHAR(100) NULL,
@@ -793,11 +784,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_BudgetExperts] (
     [Organization]        NVARCHAR(100) NULL,
     [TotalAmountIssued]   DECIMAL(18,2) NULL,
     [TotalPortfolioAmount] DECIMAL(18,2) NULL,
-    [TotalAmountPaid]     DECIMAL(18,2) NULL,
-    [TotalAmountReimbursed] DECIMAL(18,2) NULL,
     [TotalPAR0]           INT NULL,
-    [TotalPAR30]          INT NULL,
-    [NonBusinessPAR0]     INT NULL,
     [NonBusinessPAR30]    INT NULL
 );
 GO
@@ -808,12 +795,9 @@ SELECT
     s.[БюджетПоСотрудникам.Сотрудники Сотрудник] AS Employee,
     s.[БюджетПоСотрудникам.Сотрудники Сумма Выдано] AS AmountIssued,
     s.[БюджетПоСотрудникам.Сотрудники Сумма Портфель] AS PortfolioAmount,
-    s.[БюджетПоСотрудникам.Сотрудники Сумма Возмещено] AS AmountReimbursed,
-    s.[БюджетПоСотрудникам.Сотрудники Сумма Оплачено] AS AmountPaid,
     s.[БюджетПоСотрудникам.Сотрудники Количество Выдано] AS QuantityIssued,
     s.[БюджетПоСотрудникам.Сотрудники Количество Продвижений Визиты в День] AS DailyVisitPromotions,
     s.[БюджетПоСотрудникам.Сотрудники Количество Продвижений Звонки в День] AS DailyCallPromotions,
-    s.[БюджетПоСотрудникам.Сотрудники PAR0] AS PAR0,
     s.[БюджетПоСотрудникам.Сотрудники PAR30] AS PAR30,
     s.[БюджетПоСотрудникам.Сотрудники Финансовый Продукт ID] AS FinProductID,
     s.[БюджетПоСотрудникам.Сотрудники Финансовый Продукт] AS FinProductName,
@@ -828,11 +812,7 @@ SELECT
     d.[БюджетПоСотрудникам Организация] AS Organization,
     d.[БюджетПоСотрудникам Сумма Выдано Итого] AS TotalAmountIssued,
     d.[БюджетПоСотрудникам Сумма Портфель Итого] AS TotalPortfolioAmount,
-    d.[БюджетПоСотрудникам Сумма Оплачено Итого] AS TotalAmountPaid,
-    d.[БюджетПоСотрудникам Сумма Возмещено Итого] AS TotalAmountReimbursed,
     d.[БюджетПоСотрудникам PAR0] AS TotalPAR0,
-    d.[БюджетПоСотрудникам PAR30] AS TotalPAR30,
-    d.[БюджетПоСотрудникам PAR0 Нон Бизнес] AS NonBusinessPAR0,
     d.[БюджетПоСотрудникам PAR30 Нон Бизнес] AS NonBusinessPAR30
 FROM [ATK].[dbo].[Документы.БюджетПоСотрудникам.Сотрудники] s
 LEFT JOIN [ATK].[dbo].[Документы.БюджетПоСотрудникам] d

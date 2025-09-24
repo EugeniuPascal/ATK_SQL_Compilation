@@ -9,7 +9,6 @@ GO
 
 CREATE TABLE mis.[2tbl_Gold_Dim_ExpertsHistory] (
     Period       DATETIME      NULL,
-    Registrar_TRef NVARCHAR(100) NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
     IsActive     VARCHAR(36)   NULL,
@@ -25,7 +24,6 @@ GO
 
 INSERT INTO mis.[2tbl_Gold_Dim_ExpertsHistory] (
     Period,
-    Registrar_TRef,
     ID,
     RowNumber,
     IsActive,
@@ -39,7 +37,6 @@ INSERT INTO mis.[2tbl_Gold_Dim_ExpertsHistory] (
 )
 SELECT
     [ОтветственныеПоКредитамВыданным Период]                    AS Period,
-    [ОтветственныеПоКредитамВыданным Регистратор _TRef]         AS Registrar_TRef,
     [ОтветственныеПоКредитамВыданным ID]                        AS ID,         
     [ОтветственныеПоКредитамВыданным Номер Строки]              AS RowNumber,
     [ОтветственныеПоКредитамВыданным Активность]                AS IsActive,

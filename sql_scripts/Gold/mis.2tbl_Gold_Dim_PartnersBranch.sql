@@ -15,7 +15,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
     [PartnerBranchCode]             NVARCHAR(3)   NOT NULL,
     [PartnerBranchName]             NVARCHAR(150) NULL,
     [PartnerBranchAddress]          NVARCHAR(100) NULL,
-    [PartnerBranchMainBrandID]      VARCHAR(36) NOT NULL,
 
     [DealerID]                      VARCHAR(36) NULL,
     [DealerDefaultExpertID]         VARCHAR(36) NULL,
@@ -35,7 +34,6 @@ INSERT INTO mis.[2tbl_Gold_Dim_PartnersBranch]
     [PartnerBranchCode],
     [PartnerBranchName],
     [PartnerBranchAddress],
-    [PartnerBranchMainBrandID],
 
     [DealerID],
     [DealerDefaultExpertID],
@@ -50,7 +48,6 @@ SELECT
     f.[ФилиалыКонтрагентов Код] AS PartnerBranchCode,
     f.[ФилиалыКонтрагентов Наименование] AS PartnerBranchName,
     f.[ФилиалыКонтрагентов Адрес] AS PartnerBranchAddress,
-    f.[ФилиалыКонтрагентов Основная Торговая Марка ID] AS PartnerBranchMainBrandID,
 
     d.[Дилеры ID] AS DealerID,
     d.[Дилеры Эксперт по Умолчанию ID] AS DealerDefaultExpertID ,

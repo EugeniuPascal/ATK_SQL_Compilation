@@ -6,7 +6,7 @@ IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Credits]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Credits];
 GO
 
--- Create table
+-- Create table with DigitalSign column
 CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
@@ -46,9 +46,11 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [SegmentRevenue] NVARCHAR(50) NULL,
     [GreenCredit] VARCHAR(36) NULL,
     [CommitteeProt_CrPurpose] NVARCHAR(150) NULL,
-    [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL
+    [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL,
+    [DigitalSign] NVARCHAR(50) NULL
 );
 GO
+
 
 WITH
 -- Latest credit per CreditID
@@ -188,7 +190,8 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [CreditApplicationPartnerID], [FirstFilialID], [FirstExpertID],
     [LastFilialID], [LastExpertID], [DealerID], [Source],
     [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit],
-    [CommitteeProt_CrPurpose], [CommitteeProt_AMLRiskCat]
+    [CommitteeProt_CrPurpose], [CommitteeProt_AMLRiskCat],
+    [DigitalSign] 
 )
 SELECT
     c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
@@ -209,7 +212,11 @@ SELECT
     cr.DealerID, cr.Source,
     lo.LatestOutstandingAmount,
     seg.SegmentRevenue,
-    gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat
+    gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat,
+    CASE WHEN c.[Кредиты Источник Подписания] IS NOT NULL 
+	     THEN 'True' 
+		 ELSE 'False' 
+    END AS DigitalSign
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.[Кредиты ID] = cr.CreditID
 LEFT JOIN Resp r ON c.[Кредиты ID] = r.CreditID

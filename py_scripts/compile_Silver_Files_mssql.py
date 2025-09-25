@@ -4,7 +4,7 @@ from datetime import datetime
 import re
 
 MAIN_DIR = Path(r"C:\ATK_Project\sql_scripts\Silver")
-OUTPUT   = Path(r"C:\ATK_Project\compiled\compiled_Silver_Tables_Proc_Full_Idempotent.sql")
+OUTPUT   = Path(r"C:\ATK_Project\compiled\compiled_Silver_mssql_Proc.sql")
 
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100

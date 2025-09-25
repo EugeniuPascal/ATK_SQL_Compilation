@@ -1,95 +1,54 @@
-# compile_silver_tables_folder_proc_full_idempotent.py
-from pathlib import Path
+import os, sys
 from datetime import datetime
-import re
 
-MAIN_DIR = Path(r"C:\ATK_Project\sql_scripts\Silver")
-OUTPUT   = Path(r"C:\ATK_Project\compiled\compiled_Silver_Tables_Proc_mssql.sql")
+source_folder = r"C:\ATK_Project\sql_scripts\Silver"
+output_dir    = r"C:\ATK_Project\compiled"
+output_file   = os.path.join(output_dir, "compiled_silver_mssql.sql")
 
-FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
-DIV = "-" * 100
+try:
+    os.makedirs(output_dir, exist_ok=True)
 
-def read_text_with_fallback(p: Path) -> str | None:
-    for enc in FALLBACK_ENCODINGS:
-        try:
-            return p.read_text(encoding=enc)
-        except Exception:
-            pass
-    return None
+    sql_files = sorted([f for f in os.listdir(source_folder)
+                        if f.lower().endswith('.sql') and not f.lower().endswith('_data.sql')])
 
-def remove_use_statements(sql: str) -> str:
-    """Remove USE <dbname>; statements"""
-    return re.sub(r"^\s*USE\s+\[?[^\]\s]+\]?\s*;\s*", "", sql, flags=re.IGNORECASE | re.MULTILINE)
+    with open(output_file, 'w', encoding='utf-8') as f_out:
+        f_out.write("-- =============================================\n")
+        f_out.write("-- Compiled SQL Script for MSSQL Agent Job (Silver)\n")
+        f_out.write(f"-- Generated: {datetime.now()}\n")
+        f_out.write(f"-- Source folder: {source_folder}\n")
+        f_out.write(f"-- Tables included: {len(sql_files)}\n")
+        for sf in sql_files:
+            f_out.write(f"--   {sf}\n")
+        f_out.write("-- =============================================\n\n")
+        f_out.write("SET NOCOUNT ON;\nGO\n\n")
 
-def wrap_sql_objects(sql: str) -> str:
-    """
-    Wrap CREATE and ALTER statements to avoid errors if object exists
-    """
-    # CREATE TABLE
-    def table_repl(match):
-        table_name = match.group(1)
-        return f"IF OBJECT_ID(N'{table_name}', N'U') IS NULL\nBEGIN\n{match.group(0)}\nEND"
-    sql = re.sub(r"CREATE\s+TABLE\s+([a-zA-Z0-9_\.\[\]]+)", table_repl, sql, flags=re.IGNORECASE)
+        for sf in sql_files:
+            table_name = sf.replace('.sql', '')
+            f_out.write(f"-- =============================================\n")
+            f_out.write(f"-- Start of: {sf}\n")
+            f_out.write(f"-- =============================================\n\n")
+            f_out.write(f"IF OBJECT_ID(N'mis.[{table_name}]', 'U') IS NOT NULL\n")
+            f_out.write(f"    DROP TABLE mis.[{table_name}];\nGO\n\n")
 
-    # CREATE VIEW
-    def view_repl(match):
-        view_name = match.group(1)
-        return f"IF NOT EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'{view_name}'))\nBEGIN\n{match.group(0)}\nEND"
-    sql = re.sub(r"CREATE\s+VIEW\s+([a-zA-Z0-9_\.\[\]]+)", view_repl, sql, flags=re.IGNORECASE)
+            with open(os.path.join(source_folder, sf), 'r', encoding='utf-8') as f_in:
+                content = f_in.read()
+                content = content.replace("\nGO\n", "\n").replace("GO\n", "\n").replace("\nGO", "\n")
+                f_out.write(content.strip() + "\n\n")
 
-    # CREATE PROCEDURE
-    def proc_repl(match):
-        proc_name = match.group(1)
-        return f"IF OBJECT_ID(N'{proc_name}', N'P') IS NULL\nBEGIN\n{match.group(0)}\nEND"
-    sql = re.sub(r"CREATE\s+PROCEDURE\s+([a-zA-Z0-9_\.\[\]]+)", proc_repl, sql, flags=re.IGNORECASE)
+            data_file = os.path.join(source_folder, f"{table_name}_data.sql")
+            if os.path.exists(data_file):
+                f_out.write(f"-- Inserting data for {table_name}\n")
+                with open(data_file, 'r', encoding='utf-8') as f_data:
+                    data_content = f_data.read()
+                    data_content = data_content.replace("\nGO\n", "\n").replace("GO\n", "\n").replace("\nGO", "\n")
+                    f_out.write(data_content.strip() + "\n\n")
 
-    # ALTER TABLE ADD COLUMN -> wrap in IF COL_LENGTH
-    def alter_add_col_repl(match):
-        table_name = match.group(1)
-        col_name   = match.group(2)
-        col_def    = match.group(3)
-        return f"IF COL_LENGTH(N'{table_name}', N'{col_name}') IS NULL\nBEGIN\nALTER TABLE {table_name} ADD {col_name} {col_def}\nEND"
-    sql = re.sub(r"ALTER\s+TABLE\s+([a-zA-Z0-9_\.\[\]]+)\s+ADD\s+([a-zA-Z0-9_\[\]]+)\s+([^\n;]+)", alter_add_col_repl, sql, flags=re.IGNORECASE)
+            f_out.write(f"-- End of: {sf}\n-- =============================================\n\n")
 
-    return sql
+        f_out.write("-- End of compiled script\nGO\n")
 
-def compile_sql_to_proc():
-    sql_files = sorted(
-        [f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"],
-        key=lambda p: p.name.lower()
-    )
-
-    header = (
-        f"-- Compiled SQL procedure (Silver) - Full & Idempotent\n"
-        f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
-        f"-- Source folder: {MAIN_DIR}\n"
-        f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join(f.name for f in sql_files) + "\n"
-        f"{DIV}\n\nSET NOCOUNT ON;\nGO\n\n"
-    )
-
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-
-    with OUTPUT.open("w", encoding="utf-8", newline="\n") as out:
-        out.write(header)
-
-        # Start procedure
-        out.write("CREATE OR ALTER PROCEDURE usp_CompileSilverTables\nAS\nBEGIN\n")
-        out.write("SET NOCOUNT ON;\n\n")
-
-        for f in sql_files:
-            content = read_text_with_fallback(f)
-            if content:
-                content = remove_use_statements(content)
-                content = wrap_sql_objects(content)
-            else:
-                content = "-- Could not decode file"
-
-            out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
-            out.write(content.rstrip() + "\n")
-            out.write(f"{DIV}\n-- End of:   {f.name}\n{DIV}\n\n")
-
-        out.write("END\nGO\n")
-    print(f"Compiled procedure created at: {OUTPUT}")
-
-if __name__ == "__main__":
-    compile_sql_to_proc()
+    print(f"MSSQL Agent-ready script with data generated: {output_file}")
+    sys.exit(0)
+except Exception as e:
+    print(f"[ERROR] {e}")
+    sys.exit(1)

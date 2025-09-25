@@ -1,5 +1,5 @@
 -- Compiled SQL procedure (Silver) - Full & Idempotent
--- Generated: 2025-09-25 11:21:47
+-- Generated: 2025-09-25 11:23:07
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (16):
 --   Silver_Документы.ЗаявкаНаКредит.sql

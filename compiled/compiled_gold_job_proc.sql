@@ -1,7 +1,8 @@
--- Compiled SQL bundle
--- Generated: 2025-09-26 08:46:43
+﻿-- =============================================
+-- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
+-- Generated: 2025-09-26 08:50:32.552205
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files (14):
+-- Files included: 14
 --   mis.2tbl_Gold_Dim_AppUsers.sql
 --   mis.2tbl_Gold_Dim_Branch.sql
 --   mis.2tbl_Gold_Dim_Clients.sql
@@ -16,21 +17,31 @@
 --   mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
 --   mis.2tbl_Gold_Fact_Disbursement.sql
 --   mis.2tbl_Gold_Fact_Sold_Par.sql
-----------------------------------------------------------------------------------------------------
+-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER
+-- =============================================
 
-SET NOCOUNT ON;
-
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_AppUsers.sql
-----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_AppUsers]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_AppUsers];
+IF OBJECT_ID('mis.usp_CompileGoldTables', 'P') IS NOT NULL
+    DROP PROCEDURE mis.usp_CompileGoldTables;
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_AppUsers]
+CREATE PROCEDURE mis.usp_CompileGoldTables
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @sql NVARCHAR(MAX);
+
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Dim_AppUsers.sql
+    -- =============================================
+
+    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Dim_AppUsers]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Dim_AppUsers];
+
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Dim_AppUsers]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Dim_AppUsers];
+CREATE TABLE [mis].[2tbl_Gold_Dim_AppUsers]
 (
     App_User_ClientID VARCHAR(36) NOT NULL,
     App_User_UserID VARCHAR(36) NOT NULL,
@@ -38,7 +49,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_AppUsers]
     App_User_FiscalCode NVARCHAR(20) NULL,
     App_User_ClientName NVARCHAR(100) NULL
 );
-GO
 
 INSERT INTO mis.[2tbl_Gold_Dim_AppUsers] 
 (
@@ -55,26 +65,28 @@ SELECT
     [СведенияОПользователяхМобильногоПриложения Фиск Код]        AS App_User_FiscalCode,
     [СведенияОПользователяхМобильногоПриложения Клиент]          AS App_User_ClientName
 
-FROM [ATK].[mis].[Silver_РегистрыСведений.СведенияОПользователяхМобильногоПриложения];
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_AppUsers.sql
-----------------------------------------------------------------------------------------------------
+FROM [ATK].[mis].[Silver_РегистрыСведений.СведенияОПользователяхМобильногоПриложения];';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Dim_AppUsers.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_Branch.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Dim_Branch.sql
+    -- =============================================
 
--- Drop the table if it exists
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Branch]', 'U') IS NOT NULL
+    SET @sql = N'-- Drop the table if it exists
+IF OBJECT_ID(N''mis.[2tbl_Gold_Dim_Branch]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Branch];
-GO
 
 -- Create the table
-CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Dim_Branch]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Dim_Branch];
+CREATE TABLE [mis].[2tbl_Gold_Dim_Branch](
     BranchID VARCHAR(36) NOT NULL,
     BranchCode DECIMAL(2, 0) NULL,
     BranchName NVARCHAR(100) NULL,
@@ -90,7 +102,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
     BranchDepartment NVARCHAR(150) NULL,
     BranchRegion NVARCHAR(100) NULL
 );
-GO
 
 WITH LastSvedeniya AS (
     SELECT 
@@ -137,28 +148,30 @@ SELECT
 FROM [ATK].[dbo].[Справочники.Филиалы] f
 LEFT JOIN LastSvedeniya s
     ON f.[Филиалы ID] = s.[СведенияОФилиалах Филиал ID]
-    AND s.rn = 1;
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_Branch.sql
-----------------------------------------------------------------------------------------------------
+    AND s.rn = 1;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Dim_Branch.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_Clients.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
-SET NOCOUNT ON;
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Dim_Clients.sql
+    -- =============================================
+
+    SET @sql = N'SET NOCOUNT ON;
 
 -- Drop the table if it exists
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Clients]', 'U') IS NOT NULL
+IF OBJECT_ID(N''mis.[2tbl_Gold_Dim_Clients]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Clients];
-GO
 
 -- Create the table
-CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Dim_Clients]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Dim_Clients];
+CREATE TABLE [mis].[2tbl_Gold_Dim_Clients](
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
     [BranchID]              VARCHAR(36)    NULL,
@@ -193,7 +206,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [GroupID]               NVARCHAR(5)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
-GO
 
 ;WITH Src AS (
     SELECT
@@ -231,7 +243,7 @@ GO
 
         -- Effective representative DOB: use real DOB if available, else keep 1753-01-01
         CASE 
-            WHEN r.[Контрагенты Возраст] <> '1753-01-01 00:00:00' THEN r.[Контрагенты Возраст]
+            WHEN r.[Контрагенты Возраст] <> ''1753-01-01 00:00:00'' THEN r.[Контрагенты Возраст]
             ELSE s.[Контрагенты Возраст]
         END AS EffectiveRepDOB
 
@@ -265,15 +277,15 @@ Final AS (
         IsDeleted, IsGroup, ClientCode, ClientName, IsBlocked, Visibility,
         Age,
         CASE 
-            WHEN Age IS NULL THEN 'n/a'
-            WHEN Age <  22 THEN '< 22'
-            WHEN Age <  25 THEN '< 25'
-            WHEN Age <  35 THEN '< 35'
-            WHEN Age <  45 THEN '< 45'
-            WHEN Age <  55 THEN '< 55'
-            WHEN Age <  65 THEN '< 65'
-            WHEN Age > 110 THEN 'n/a'
-            ELSE '> 65'
+            WHEN Age IS NULL THEN ''n/a''
+            WHEN Age <  22 THEN ''< 22''
+            WHEN Age <  25 THEN ''< 25''
+            WHEN Age <  35 THEN ''< 35''
+            WHEN Age <  45 THEN ''< 45''
+            WHEN Age <  55 THEN ''< 55''
+            WHEN Age <  65 THEN ''< 65''
+            WHEN Age > 110 THEN ''n/a''
+            ELSE ''> 65''
         END AS AgeGroup,
         City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
         Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
@@ -311,33 +323,34 @@ SELECT
     IsGroupOwner, GroupID
 FROM Dedup
 WHERE rn = 1;
-GO
 
 -- Indexes
 CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
 CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
 CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[2tbl_Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
-CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](IsGroupOwner, GroupID);
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_Clients.sql
-----------------------------------------------------------------------------------------------------
+CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](IsGroupOwner, GroupID);';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Dim_Clients.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_Credits.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Dim_Credits.sql
+    -- =============================================
 
--- Drop table if exists
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Credits]', 'U') IS NOT NULL
+    SET @sql = N'-- Drop table if exists
+IF OBJECT_ID(N''mis.[2tbl_Gold_Dim_Credits]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Credits];
-GO
 
--- Create table with DigitalSign column
-CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
+-- IF OBJECT_ID(N''[mis].[with DigitalSign column]'',''U'') IS NOT NULL DROP TABLE [mis].[with DigitalSign column];
+CREATE TABLE [mis].[with DigitalSign column]
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Dim_Credits]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Dim_Credits];
+CREATE TABLE [mis].[2tbl_Gold_Dim_Credits](
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -379,8 +392,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL,
     [DigitalSign] NVARCHAR(50) NULL
 );
-GO
-
 
 WITH
 -- Latest credit per CreditID
@@ -417,7 +428,7 @@ CreditRequest AS (
             znk.[ЗаявкаНаКредит Кредит ID] AS CreditID,
             znk.[ЗаявкаНаКредит Партнер ID] AS ApplicationPartnerID,
             oia.[ОбъединеннаяИнтернетЗаявка Дилер ID] AS DealerID,
-            NULLIF(LTRIM(RTRIM(oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения])), '') AS Source,
+            NULLIF(LTRIM(RTRIM(oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения])), '''') AS Source,
             oia.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS FilialID,
             oia.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS ExpertID,
             ROW_NUMBER() OVER (
@@ -544,8 +555,8 @@ SELECT
     seg.SegmentRevenue,
     gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat,
     CASE WHEN c.[Кредиты Источник Подписания] IS NOT NULL 
-	     THEN 'True' 
-		 ELSE 'False' 
+	     THEN ''True'' 
+		 ELSE ''False'' 
     END AS DigitalSign
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.[Кредиты ID] = cr.CreditID
@@ -554,26 +565,26 @@ LEFT JOIN FinProducts fp ON c.[Кредиты Финансовый Продук�
 LEFT JOIN Statuses st ON c.[Кредиты ID] = st.CreditID
 LEFT JOIN LatestOutstanding lo ON c.[Кредиты ID] = lo.CreditID
 LEFT JOIN SegmentRevenue seg ON c.[Кредиты Кредитный Продукт ID] = seg.ProductID
-LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID;
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_Credits.sql
-----------------------------------------------------------------------------------------------------
+LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Dim_Credits.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_Experts.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Dim_Experts.sql
+    -- =============================================
 
-
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_Experts]', 'U') IS NOT NULL
+    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Dim_Experts]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Experts];
-GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Experts] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Dim_Experts]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Dim_Experts];
+CREATE TABLE [mis].[2tbl_Gold_Dim_Experts](
     [ExpertID] VARCHAR(36) NOT NULL,
     [ExpertCode] INT NULL,
     [ExpertName] NVARCHAR(40) NULL,
@@ -586,7 +597,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Experts] (
     [ExperienceMonths] INT NULL,
     [EmploymentPeriod] NVARCHAR(50) NULL
 );
-GO
 
 INSERT INTO mis.[2tbl_Gold_Dim_Experts] (
     [ExpertID],
@@ -614,30 +624,29 @@ SELECT
     DATEDIFF(MONTH, [Сотрудники Дата Приема], GETDATE()) % 12 AS ExperienceMonths,
     CASE 
         WHEN [Сотрудники Дата Увольнения] IS NULL 
-            THEN FORMAT([Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → Present'
-        ELSE FORMAT([Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → ' + FORMAT([Сотрудники Дата Увольнения], 'yyyy-MM-dd')
+            THEN FORMAT([Сотрудники Дата Приема], ''yyyy-MM-dd'') + N'' → Present''
+        ELSE FORMAT([Сотрудники Дата Приема], ''yyyy-MM-dd'') + N'' → '' + FORMAT([Сотрудники Дата Увольнения], ''yyyy-MM-dd'')
     END AS EmploymentPeriod
-FROM [ATK].[dbo].[Справочники.Сотрудники];
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_Experts.sql
-----------------------------------------------------------------------------------------------------
+FROM [ATK].[dbo].[Справочники.Сотрудники];';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Dim_Experts.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_ExpertsHistory.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Dim_ExpertsHistory.sql
+    -- =============================================
 
-
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_ExpertsHistory]', 'U') IS NOT NULL
+    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Dim_ExpertsHistory]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_ExpertsHistory];
-GO
 
-
-CREATE TABLE mis.[2tbl_Gold_Dim_ExpertsHistory] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Dim_ExpertsHistory]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Dim_ExpertsHistory];
+CREATE TABLE [mis].[2tbl_Gold_Dim_ExpertsHistory](
     Period       DATETIME      NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
@@ -650,7 +659,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_ExpertsHistory] (
     Expert       NVARCHAR(100) NULL,
     DateTo       DATETIME      NULL
 );
-GO
 
 INSERT INTO mis.[2tbl_Gold_Dim_ExpertsHistory] (
     Period,
@@ -681,29 +689,30 @@ SELECT
             PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
             ORDER BY [ОтветственныеПоКредитамВыданным Период], [ОтветственныеПоКредитамВыданным Номер Строки]
         ),
-        CONVERT(DATETIME, '2222-01-01', 120)
+        CONVERT(DATETIME, ''2222-01-01'', 120)
     )                                                           AS DateTo
-FROM [ATK].[mis].[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным];
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_ExpertsHistory.sql
-----------------------------------------------------------------------------------------------------
+FROM [ATK].[mis].[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным];';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Dim_ExpertsHistory.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_PartnersBranch.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Dim_PartnersBranch.sql
+    -- =============================================
 
--- Drop the gold table if it exists
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_PartnersBranch]', 'U') IS NOT NULL
+    SET @sql = N'-- Drop the gold table if it exists
+IF OBJECT_ID(''mis.[2tbl_Gold_Dim_PartnersBranch]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_PartnersBranch];
-GO
 
 -- Create gold table with only essential columns
-CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Dim_PartnersBranch]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Dim_PartnersBranch];
+CREATE TABLE [mis].[2tbl_Gold_Dim_PartnersBranch]
 (
     [PartnerBranchID]               VARCHAR(36) NOT NULL,
     [PartnerBranchDeletedFlag]      VARCHAR(36) NOT NULL,
@@ -719,7 +728,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
     [DealerOrgRepName]              NVARCHAR(50) NULL
 
 );
-GO
 
 -- Insert data from silvers
 INSERT INTO mis.[2tbl_Gold_Dim_PartnersBranch]
@@ -752,25 +760,26 @@ SELECT
     d.[Дилеры Представитель Организации] AS DealerOrgRepName
 FROM mis.[Silver_Справочники.ФилиалыКонтрагентов] f
 LEFT JOIN mis.[Silver_Справочники.Дилеры] d
-  ON d.[Дилеры Владелец] = f.[ФилиалыКонтрагентов ID];
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_PartnersBranch.sql
-----------------------------------------------------------------------------------------------------
+  ON d.[Дилеры Владелец] = f.[ФилиалыКонтрагентов ID];';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Dim_PartnersBranch.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_BudgetExperts.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Fact_BudgetExperts.sql
+    -- =============================================
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_BudgetExperts]', 'U') IS NOT NULL
+    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Fact_BudgetExperts]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_BudgetExperts];
-GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_BudgetExperts] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Fact_BudgetExperts]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Fact_BudgetExperts];
+CREATE TABLE [mis].[2tbl_Gold_Fact_BudgetExperts](
     [EmployeeID]          VARCHAR(36) NOT NULL,
     [Employee]            NVARCHAR(40) NULL,
     [AmountIssued]        DECIMAL(18,2) NULL,
@@ -795,7 +804,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_BudgetExperts] (
     [TotalPAR0]           INT NULL,
     [NonBusinessPAR30]    INT NULL
 );
-GO
 
 INSERT INTO mis.[2tbl_Gold_Fact_BudgetExperts]
 SELECT
@@ -825,25 +833,26 @@ SELECT
 FROM [ATK].[dbo].[Документы.БюджетПоСотрудникам.Сотрудники] s
 LEFT JOIN [ATK].[dbo].[Документы.БюджетПоСотрудникам] d
     ON s.[БюджетПоСотрудникам ID] = d.[БюджетПоСотрудникам ID]
-WHERE d.[БюджетПоСотрудникам Дата] >= '2023-01-01';
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_BudgetExperts.sql
-----------------------------------------------------------------------------------------------------
+WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-01-01'';';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Fact_BudgetExperts.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_CerereCredit.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Fact_CerereCredit.sql
+    -- =============================================
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_CerereCredit]', 'U') IS NOT NULL
+    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Fact_CerereCredit]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_CerereCredit];
-GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_CerereCredit] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Fact_CerereCredit]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Fact_CerereCredit];
+CREATE TABLE [mis].[2tbl_Gold_Fact_CerereCredit](
     AppID                VARCHAR(36)   NOT NULL,
     Date                 DATETIME      NULL,
     Nr                   NVARCHAR(50)  NULL,
@@ -896,7 +905,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereCredit] (
     LoanPurpose          NVARCHAR(100) NULL,
     IsGreenLoan          NVARCHAR(36)  NULL
 );
-GO
 
 INSERT INTO mis.[2tbl_Gold_Fact_CerereCredit] (
     AppID, Date, Nr, Posted, Author, Agro, AlternativeSector,
@@ -929,33 +937,35 @@ SELECT
     [ЗаявкаНаКредит Финансовый Продукт], [ЗаявкаНаКредит Цель Кредита], [ЗаявкаНаКредит Это Зеленый Кредит]
 FROM [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит]
 WHERE [ЗаявкаНаКредит Проведен] = 1
-AND [ЗаявкаНаКредит Дата] >= '2023-01-01';
-GO
+AND [ЗаявкаНаКредит Дата] >= ''2023-01-01'';
 
 CREATE NONCLUSTERED INDEX IX_CC_Date   ON mis.[2tbl_Gold_Fact_CerereCredit](Date);
 CREATE NONCLUSTERED INDEX IX_CC_Client ON mis.[2tbl_Gold_Fact_CerereCredit](ClientID) 
-    INCLUDE (LoanAmount, Status);
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_CerereCredit.sql
-----------------------------------------------------------------------------------------------------
+    INCLUDE (LoanAmount, Status);';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Fact_CerereCredit.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_CerereOnline.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
-SET NOCOUNT ON;
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Fact_CerereOnline.sql
+    -- =============================================
+
+    SET @sql = N'SET NOCOUNT ON;
 
 -- Drop table if exists
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_CerereOnline]', 'U') IS NOT NULL
+IF OBJECT_ID(''mis.[2tbl_Gold_Fact_CerereOnline]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_CerereOnline];
-GO
 
--- Create table with shortened English-style column names
-CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline] (
+-- IF OBJECT_ID(N''[mis].[with shortened English]'',''U'') IS NOT NULL DROP TABLE [mis].[with shortened English];
+CREATE TABLE [mis].[with shortened English]-style column names
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Fact_CerereOnline]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Fact_CerereOnline];
+CREATE TABLE [mis].[2tbl_Gold_Fact_CerereOnline](
     [WebID]                 VARCHAR(36)    NOT NULL,
     [WebDate]               DATETIME       NULL,
     [WebNr]                 NVARCHAR(50)   NULL,
@@ -997,7 +1007,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline] (
 	[RefusalReason]        NVARCHAR(200)   NULL,
     CONSTRAINT PK_2tbl_Gold_Fact_CerereOnline PRIMARY KEY CLUSTERED ([WebID])
 );
-GO
 
 -- CTE to assign row numbers per client and detect New/Existing
 ;WITH WithCreditFlag AS (
@@ -1054,7 +1063,7 @@ GO
     FROM [ATK].[mis].[Silver_Документы.ОбъединеннаяИнтернетЗаявка] o
     LEFT JOIN [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит] z
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
-    WHERE o.[ОбъединеннаяИнтернетЗаявка Дата] >= '2023-01-01'
+    WHERE o.[ОбъединеннаяИнтернетЗаявка Дата] >= ''2023-01-01''
 )
 INSERT INTO mis.[2tbl_Gold_Fact_CerereOnline]
 (
@@ -1137,14 +1146,12 @@ SELECT
     [IsGreen],
     [ClientID],
 CASE
-     WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N'Cancelled'
-     WHEN ClientOrder = 1 THEN N'New'
-     ELSE N'Existing'
+     WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N''Cancelled''
+     WHEN ClientOrder = 1 THEN N''New''
+     ELSE N''Existing''
 END AS [NewExisting_Client],
        [RefusalReason]
 FROM WithCreditFlag;
-    
-GO
 
 -- Indexes
 CREATE NONCLUSTERED INDEX IX_CO_Date
@@ -1155,28 +1162,29 @@ CREATE NONCLUSTERED INDEX IX_CO_Client
     INCLUDE ([NewExisting_Client],[WebCreditAmount]);
 
 CREATE NONCLUSTERED INDEX IX_CO_Status
-    ON mis.[2tbl_Gold_Fact_CerereOnline]([WebStatus]);
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_CerereOnline.sql
-----------------------------------------------------------------------------------------------------
+    ON mis.[2tbl_Gold_Fact_CerereOnline]([WebStatus]);';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Fact_CerereOnline.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_CerereOnline_1.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
-SET NOCOUNT ON;
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Fact_CerereOnline_1.sql
+    -- =============================================
+
+    SET @sql = N'SET NOCOUNT ON;
 
 -- Drop table if exists
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_CerereOnline_1]', 'U') IS NOT NULL
+IF OBJECT_ID(''mis.[2tbl_Gold_Fact_CerereOnline_1]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_CerereOnline_1];
-GO
 
--- Create table
-CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline_1] (
+-- IF OBJECT_ID(N''[CREATE TABLE mis].[2tbl_Gold_Fact_CerereOnline_1]'',''U'') IS NOT NULL DROP TABLE [CREATE TABLE mis].[2tbl_Gold_Fact_CerereOnline_1];
+CREATE TABLE [CREATE TABLE mis].[2tbl_Gold_Fact_CerereOnline_1](
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
     [Status]                NVARCHAR(256)  NULL,
@@ -1219,7 +1227,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline_1] (
     [WebBranchID]           VARCHAR(36)    NULL,
     CONSTRAINT PK_2tbl_Gold_Fact_CerereOnline_1 PRIMARY KEY CLUSTERED ([WebID])
 );
-GO
 
 ;WITH Base AS (
     -- 1️⃣ Credit requests with optional linked online requests
@@ -1274,7 +1281,7 @@ GO
     FROM [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит] z
     LEFT JOIN [ATK].[mis].[Silver_Документы.ОбъединеннаяИнтернетЗаявка] o
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
-        AND o.[ОбъединеннаяИнтернетЗаявка Дата] >= '2023-01-01'
+        AND o.[ОбъединеннаяИнтернетЗаявка Дата] >= ''2023-01-01''
 
     UNION ALL
 
@@ -1320,7 +1327,7 @@ GO
     LEFT JOIN [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит] z
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
     WHERE z.[ЗаявкаНаКредит ID] IS NULL
-       OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = '00000000000000000000000000000000'
+       OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = ''00000000000000000000000000000000''
 )
 -- Insert final
 INSERT INTO mis.[2tbl_Gold_Fact_CerereOnline_1]
@@ -1328,12 +1335,12 @@ SELECT
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID], [Purpose],[IsGreen],[ClientID],
     CASE
-         WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N'Cancelled'
+         WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N''Cancelled''
          WHEN ROW_NUMBER() OVER (
                  PARTITION BY ClientKey
                  ORDER BY WebDate
-             ) = 1 THEN N'New'
-         ELSE N'Existing'
+             ) = 1 THEN N''New''
+         ELSE N''Existing''
     END AS [NewExisting_Client],
     [RefusalReason],
     [WebID],[WebDate],[WebNr],[WebPosted],[WebAuthorID],[WebAuthor],[WebIncomeTypeOnline],
@@ -1345,26 +1352,26 @@ SELECT
     [WebStatus],[WebCreditTerm],
 	--[WebCreditAmount],
 	[WebBranchID]
-FROM Base;
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_CerereOnline_1.sql
-----------------------------------------------------------------------------------------------------
+FROM Base;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Fact_CerereOnline_1.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
+    -- =============================================
 
-
-IF OBJECT_ID('mis.[2tbl_Gold_CreditsInShadowBranches]', 'U') IS NOT NULL
+    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_CreditsInShadowBranches]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_CreditsInShadowBranches];
-GO
 
-CREATE TABLE mis.[2tbl_Gold_CreditsInShadowBranches] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_CreditsInShadowBranches]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_CreditsInShadowBranches];
+CREATE TABLE [mis].[2tbl_Gold_CreditsInShadowBranches](
     Period DATETIME NULL,
     --Registrar_TRef NVARCHAR(100) NULL,
     ID VARCHAR(32) NOT NULL,
@@ -1378,7 +1385,6 @@ CREATE TABLE mis.[2tbl_Gold_CreditsInShadowBranches] (
     CreditExpert NVARCHAR(100) NULL,
     DateTo DATETIME NULL
 );
-GO
 
 ;WITH src AS (
     SELECT
@@ -1394,7 +1400,7 @@ GO
           rs.[КредитыВТеневыхФилиалах Кредитный Эксперт ID]   AS CreditExpertID,
           rs.[КредитыВТеневыхФилиалах Кредитный Эксперт]      AS CreditExpert
     FROM [ATK].[mis].[Silver_РегистрыСведений.КредитыВТеневыхФилиалах] rs
-	WHERE rs.[КредитыВТеневыхФилиалах Период] >= '2023-01-01'
+	WHERE rs.[КредитыВТеневыхФилиалах Период] >= ''2023-01-01''
 ),
 calc AS (
     SELECT
@@ -1440,37 +1446,37 @@ SELECT
       CreditExpertID,
       CreditExpert,
       DateTo
-FROM calc;
+FROM calc;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
-----------------------------------------------------------------------------------------------------
+    -- End of: mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
+    -- =============================================
 
-GO
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Fact_Disbursement.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_Disbursement.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
-
-/* ============================
+    SET @sql = N'/* ============================
    Clean up
    ============================ */
-IF OBJECT_ID('tempdb..#Base')   IS NOT NULL DROP TABLE #Base;
-IF OBJECT_ID('tempdb..#Status') IS NOT NULL DROP TABLE #Status;
-IF OBJECT_ID('tempdb..#Final')  IS NOT NULL DROP TABLE #Final;
+IF OBJECT_ID(''tempdb..#Base'')   IS NOT NULL DROP TABLE #Base;
+IF OBJECT_ID(''tempdb..#Status'') IS NOT NULL DROP TABLE #Status;
+IF OBJECT_ID(''tempdb..#Final'')  IS NOT NULL DROP TABLE #Final;
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_Disbursement]', 'U') IS NOT NULL
+IF OBJECT_ID(''mis.[2tbl_Gold_Fact_Disbursement]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_Disbursement];
-GO
 
 /* ============================
    Target table
    (ID lengths aligned to 36)
    ============================ */
-CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Fact_Disbursement]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Fact_Disbursement];
+CREATE TABLE [mis].[2tbl_Gold_Fact_Disbursement](
     CreditID           NVARCHAR(36)   NOT NULL,
     ClientID           NVARCHAR(36)   NULL,
     DisbursementDate   DATETIME2      NULL,
@@ -1488,7 +1494,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] (
     NewExisting_Client NVARCHAR(20)   NULL,
     CreatedAt          DATETIME       NOT NULL DEFAULT GETDATE()
 );
-GO
 
 /* ============================
    Base rows
@@ -1564,17 +1569,15 @@ OUTER APPLY (
     WHERE doc.[УстановкаДанныхКредита Кредит ID] = d.[ДанныеКредитовВыданных Кредит ID]
     ORDER BY doc.[УстановкаДанныхКредита Дата] DESC
 ) irr
-WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N'Medier%'
-  AND d.[ДанныеКредитовВыданных Дата Выдачи] >= '2024-01-01';
-GO
+WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N''Medier%''
+  AND d.[ДанныеКредитовВыданных Дата Выдачи] >= ''2024-01-01'';
 
 SELECT COUNT(*) AS BaseRows FROM #Base;
-GO
 
 /* ============================
    Status (cancel/restore)
-   - cancel = '01'  -> negative row
-   - restore = '00' -> positive row
+   - cancel = ''01''  -> negative row
+   - restore = ''00'' -> positive row
    Build only for credits present in #Base
    ============================ */
 WITH BaseIDs AS (
@@ -1585,7 +1588,7 @@ Cancels AS (
            MAX(a.[АнулированныеКредитыПартнеров Период]) AS CancelPeriod
     FROM [ATK].[mis].[Silver_РегистрыСведений.АнулированныеКредитыПартнеров] a
     INNER JOIN BaseIDs b ON b.CreditID = a.[АнулированныеКредитыПартнеров Кредит ID]
-    WHERE a.[АнулированныеКредитыПартнеров Кредит Анулирован] = N'01'
+    WHERE a.[АнулированныеКредитыПартнеров Кредит Анулирован] = N''01''
     GROUP BY a.[АнулированныеКредитыПартнеров Кредит ID]
 ),
 Restores AS (
@@ -1593,7 +1596,7 @@ Restores AS (
            MAX(a.[АнулированныеКредитыПартнеров Период]) AS RestorePeriod
     FROM [ATK].[mis].[Silver_РегистрыСведений.АнулированныеКредитыПартнеров] a
     INNER JOIN BaseIDs b ON b.CreditID = a.[АнулированныеКредитыПартнеров Кредит ID]
-    WHERE a.[АнулированныеКредитыПартнеров Кредит Восстановлен] = N'00'
+    WHERE a.[АнулированныеКредитыПартнеров Кредит Восстановлен] = N''00''
     GROUP BY a.[АнулированныеКредитыПартнеров Кредит ID]
 )
 SELECT b.CreditID,
@@ -1603,10 +1606,8 @@ INTO #Status
 FROM BaseIDs b
 LEFT JOIN Cancels  c ON c.CreditID = b.CreditID
 LEFT JOIN Restores r ON r.CreditID = b.CreditID;
-GO
 
 SELECT COUNT(*) AS StatusRows FROM #Status;
-GO
 
 /* ============================
    Build #Final
@@ -1644,10 +1645,8 @@ JOIN #Base b ON b.CreditID = s.CreditID AND b.rn = 1
 WHERE s.RestorePeriod IS NOT NULL
   AND s.RestorePeriod >= b.DisbursementDate
   AND (s.CancelPeriod IS NULL OR s.RestorePeriod > s.CancelPeriod);
-GO
 
 SELECT COUNT(*) AS FinalRows FROM #Final;
-GO
 
 /* ============================
    Insert to target
@@ -1672,12 +1671,11 @@ SELECT
     CreditCurrency, FirstFilialID, FirstExpertID, LastFilialID, LastExpertID,
     IRR, IRR_Client, Qty,
     CASE
-        WHEN CreditAmount > 0 AND rn_all = 1 THEN N'New'
-        WHEN CreditAmount > 0 THEN N'Existing'
-        ELSE N'Cancelled'
+        WHEN CreditAmount > 0 AND rn_all = 1 THEN N''New''
+        WHEN CreditAmount > 0 THEN N''Existing''
+        ELSE N''Cancelled''
     END AS NewExisting_Client
 FROM AllSeq;
-GO
 
 /* ============================
    Indexes
@@ -1699,33 +1697,36 @@ ON mis.[2tbl_Gold_Fact_Disbursement] (NewExisting_Client);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_ClientID
 ON mis.[2tbl_Gold_Fact_Disbursement] (ClientID);
-GO
 
 /* ============================
    Cleanup
    ============================ */
 DROP TABLE #Base;
 DROP TABLE #Status;
-DROP TABLE #Final;
-GO
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_Disbursement.sql
-----------------------------------------------------------------------------------------------------
+DROP TABLE #Final;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
-GO
+    -- End of: mis.2tbl_Gold_Fact_Disbursement.sql
+    -- =============================================
 
-----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_Sold_Par.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-SET NOCOUNT ON;
+    -- =============================================
+    -- Start of: mis.2tbl_Gold_Fact_Sold_Par.sql
+    -- =============================================
 
-DECLARE @DateFrom DATE = '2024-01-01';
+    SET @sql = N'SET NOCOUNT ON;
+
+DECLARE @DateFrom DATE = ''2024-01-01'';
 
 -- Drop & recreate main GOLD table
 DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par];
 
-CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Fact_Sold_Par]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Fact_Sold_Par];
+CREATE TABLE [mis].[2tbl_Gold_Fact_Sold_Par](
     SoldDate      DATE         NOT NULL,
     CreditID      VARCHAR(36)  NOT NULL,
     SoldAmount    DECIMAL(18,2) NULL,
@@ -1743,7 +1744,7 @@ WITH (DATA_COMPRESSION = PAGE);
 -----------------------------------------------------
 -- Step 1: Max Past Days (explicit temp table)
 -----------------------------------------------------
-IF OBJECT_ID('tempdb..#MaxPastDays') IS NOT NULL DROP TABLE #MaxPastDays;
+IF OBJECT_ID(''tempdb..#MaxPastDays'') IS NOT NULL DROP TABLE #MaxPastDays;
 CREATE TABLE #MaxPastDays (
     OwnerID   VARCHAR(36) NOT NULL,
     ParDate   DATE        NOT NULL,
@@ -1767,7 +1768,7 @@ CREATE UNIQUE NONCLUSTERED INDEX IX_MaxPastDays_Owner_ParDate ON #MaxPastDays (O
 -----------------------------------------------------
 -- Step 2: Shadow Branch (explicit temp table)
 -----------------------------------------------------
-IF OBJECT_ID('tempdb..#ShadowBranch') IS NOT NULL DROP TABLE #ShadowBranch;
+IF OBJECT_ID(''tempdb..#ShadowBranch'') IS NOT NULL DROP TABLE #ShadowBranch;
 CREATE TABLE #ShadowBranch (
     CreditID     VARCHAR(36)  NOT NULL,
     BranchShadow NVARCHAR(100) NULL,
@@ -1786,7 +1787,7 @@ CREATE NONCLUSTERED INDEX IX_Shadow_Credit_Period ON #ShadowBranch (CreditID, Pe
 -----------------------------------------------------
 -- Step 3: Responsible / Expert (explicit temp table)
 -----------------------------------------------------
-IF OBJECT_ID('tempdb..#Responsible') IS NOT NULL DROP TABLE #Responsible;
+IF OBJECT_ID(''tempdb..#Responsible'') IS NOT NULL DROP TABLE #Responsible;
 CREATE TABLE #Responsible (
     CreditID VARCHAR(36) NOT NULL,
     ExpertID VARCHAR(36) NULL,
@@ -1807,7 +1808,7 @@ CREATE NONCLUSTERED INDEX IX_Resp_Credit_Period ON #Responsible (CreditID, Perio
 -----------------------------------------------------
 -- Step 4: IRR last (explicit temp table)
 -----------------------------------------------------
-IF OBJECT_ID('tempdb..#IRR') IS NOT NULL DROP TABLE #IRR;
+IF OBJECT_ID(''tempdb..#IRR'') IS NOT NULL DROP TABLE #IRR;
 CREATE TABLE #IRR (
     CreditID VARCHAR(36) NOT NULL,
     IRR_Year DECIMAL(18,6) NULL,
@@ -1923,10 +1924,16 @@ CREATE CLUSTERED COLUMNSTORE INDEX CCSI_2tbl_Gold_Fact_Sold_Par
 ON mis.[2tbl_Gold_Fact_Sold_Par];
 
 -- Drop temp tables
-DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranch, #Responsible, #IRR;
-----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_Sold_Par.sql
-----------------------------------------------------------------------------------------------------
+DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranch, #Responsible, #IRR;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW; -- bubble up for Agent visibility
+    END CATCH;
 
+    -- End of: mis.2tbl_Gold_Fact_Sold_Par.sql
+    -- =============================================
+
+END
 GO
-

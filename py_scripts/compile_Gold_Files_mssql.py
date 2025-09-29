@@ -21,19 +21,50 @@ logging.basicConfig(
 )
 logging.info("=== Starting Gold SQL Compilation Job ===")
 
-# ---- Regexes ----
+# --------------------------------------------------------------------
+# Regexes
+# --------------------------------------------------------------------
 GO_LINE_RE   = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
 USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | re.MULTILINE)
-OBJ_NAME     = r'([\w\.\[\]" ]+)'
-CREATE_VIEW_RE  = re.compile(r"\bCREATE\s+VIEW\s+" + OBJ_NAME, re.IGNORECASE)
-CREATE_PROC_RE  = re.compile(r"\bCREATE\s+PROCEDURE\s+" + OBJ_NAME, re.IGNORECASE)
-CREATE_FUNC_RE  = re.compile(r"\bCREATE\s+FUNCTION\s+" + OBJ_NAME, re.IGNORECASE)
-CREATE_TABLE_RE = re.compile(r"\bCREATE\s+TABLE\s+" + OBJ_NAME, re.IGNORECASE)
+
+# SQL comments
+LINE_COMMENT_RE  = re.compile(r"--[^\r\n]*")
+BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+
+# Robust name pattern: allows [bracketed], "quoted", or bare parts separated by dots
+# - A part is either: [ ... ]  |  " ... "  |  bare-no-whitespace/dot/bracket/quote
+NAME_PART   = r'(?:\[[^\]]+\]|"[^"]+"|[^\s\(\[\]"\.]+)'
+NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*"
+
+# Anchored, multiline patterns for programmable objects and tables
+CREATE_VIEW_RE  = re.compile(rf"(?im)^[ \t]*CREATE[ \t]+VIEW[ \t]+({NAME_PATTERN})")
+CREATE_PROC_RE  = re.compile(rf"(?im)^[ \t]*CREATE[ \t]+PROCEDURE[ \t]+({NAME_PATTERN})")
+CREATE_FUNC_RE  = re.compile(rf"(?im)^[ \t]*CREATE[ \t]+FUNCTION[ \t]+({NAME_PATTERN})")
+
+# Require '(' right after the table name (ignoring spaces) so we only hit real headers
+CREATE_TABLE_RE = re.compile(rf"(?im)^[ \t]*CREATE[ \t]+TABLE[ \t]+({NAME_PATTERN})[ \t]*(?=\()")
+
+def strip_sql_comments(sql: str) -> str:
+    """
+    Remove SQL block and line comments, preserving newlines to avoid
+    shifting line numbers too much.
+    """
+    # Replace block comments with spaces/newlines preserved
+    def _block_repl(m):
+        text = m.group(0)
+        # keep \r and \n, blank other chars to spaces
+        return re.sub(r"[^\r\n]", " ", text)
+    sql = BLOCK_COMMENT_RE.sub(_block_repl, sql)
+    # Remove line comments
+    sql = LINE_COMMENT_RE.sub("", sql)
+    return sql
 
 def normalize_object_name(name: str, default_schema: str) -> str:
     n = name.strip()
+    # If double-quoted, assume caller knows what they're doing
     if '"' in n:
         return n
+    # Temp tables or local names without schema
     if '.' not in n:
         part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
         return f'[{default_schema}].{part}'
@@ -47,40 +78,56 @@ def normalize_object_name(name: str, default_schema: str) -> str:
     return '.'.join(norm)
 
 def qualify_programmable_object(create_stmt: str, regex: re.Pattern) -> str:
+    """
+    Turn 'CREATE VIEW/PROCEDURE/FUNCTION <name>' into
+    'CREATE OR ALTER <TYPE> <schema-qualified name>'.
+    """
     def repl(m):
         raw = m.group(1).strip()
-        if '.' in raw or '"' in raw:
+        # Already qualified? keep; else add default schema
+        if '.' in raw or '"' in raw or (raw.startswith('[') and '].[' in raw):
             qualified = raw
         else:
             qualified = f'[{DEFAULT_SCHEMA}].' + (raw if (raw.startswith('[') and raw.endswith(']')) else f'[{raw}]')
-        prefix = "CREATE OR ALTER " + (
-            "VIEW" if regex is CREATE_VIEW_RE else
-            "PROCEDURE" if regex is CREATE_PROC_RE else
-            "FUNCTION"
-        )
-        return f"{prefix} {qualified}"
+        # Determine keyword from which regex we’re using
+        if regex is CREATE_VIEW_RE:
+            kind = "VIEW"
+        elif regex is CREATE_PROC_RE:
+            kind = "PROCEDURE"
+        else:
+            kind = "FUNCTION"
+        return f"CREATE OR ALTER {kind} {qualified}"
     return regex.sub(repl, create_stmt)
 
 def make_idempotent(sql: str) -> str:
+    # 1) Remove comments first (prevents matching prose like "Create the table" in comments)
+    sql = strip_sql_comments(sql)
+
+    # 2) Remove GO and USE
     sql = GO_LINE_RE.sub("", sql)
     sql = USE_RE.sub("", sql)
+
+    # 3) Programmable objects -> CREATE OR ALTER + schema-qualify
     sql = qualify_programmable_object(sql, CREATE_VIEW_RE)
     sql = qualify_programmable_object(sql, CREATE_PROC_RE)
     sql = qualify_programmable_object(sql, CREATE_FUNC_RE)
 
+    # 4) Tables -> drop-if-exists + create; ignore temp tables
     def table_repl(m):
         raw = m.group(1).strip()
-        if raw.lstrip().startswith('#'):
+        if raw.lstrip().startswith('#'):  # temp table
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
         return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
     sql = CREATE_TABLE_RE.sub(table_repl, sql)
+
     return sql.strip()
 
 try:
     sql_files = sorted([f for f in os.listdir(source_folder) if f.lower().endswith('.sql')])
     logging.info(f"Found {len(sql_files)} SQL files in {source_folder}")
 
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
     with open(output_file, 'w', encoding='utf-8-sig') as f_out:
         # Header
         f_out.write("-- =============================================\n")

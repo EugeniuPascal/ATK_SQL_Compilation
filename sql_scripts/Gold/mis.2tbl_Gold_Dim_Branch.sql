@@ -9,7 +9,7 @@ GO
 -- Create the table
 CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
     BranchID VARCHAR(36) NOT NULL,
-    BranchCode DECIMAL(2, 0) NULL,
+    BranchCode DECIMAL(3, 0) NULL,
     BranchName NVARCHAR(100) NULL,
     DistrictName NVARCHAR(50) NULL,
     ActivityType NVARCHAR(100) NULL,

@@ -14,7 +14,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [BranchID]              VARCHAR(36)    NULL,
     [IsDeleted]             VARCHAR(36)    NULL,
     [IsGroup]               VARCHAR(36)    NULL,
-    [ClientCode]            NCHAR(13)      NULL,
+    [ClientCode]            NCHAR(50)      NULL,
     [ClientName]            NVARCHAR(100)  NULL,
     [IsBlocked]             VARCHAR(36)    NULL,
     [Visibility]            INT            NULL,
@@ -29,8 +29,8 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [Gender]                NVARCHAR(256)  NULL,
     [PostalAddress]         NVARCHAR(85)   NULL,
     [Country]               NVARCHAR(30)   NULL,
-    [MobilePhone1]          NVARCHAR(9)    NULL,
-    [MobilePhone2]          NVARCHAR(9)    NULL,
+    [MobilePhone1]          NVARCHAR(50)    NULL,
+    [MobilePhone2]          NVARCHAR(50)    NULL,
     [Phones]                NVARCHAR(50)   NULL,
     [FiscalCode]            NVARCHAR(20)   NULL,
     [LegalAddress]          NVARCHAR(85)   NULL,
@@ -40,7 +40,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [NoPromoSMS]            VARCHAR(36)    NULL,
     [OrganizationType]      NVARCHAR(52)   NULL,
     [IsGroupOwner]          BIT            NULL,
-    [GroupID]               NVARCHAR(5)    NULL,
+    [GroupID]               NVARCHAR(20)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO

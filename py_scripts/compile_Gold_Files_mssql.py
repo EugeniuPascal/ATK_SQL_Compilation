@@ -1,4 +1,4 @@
-# compile_gold_tables_job_proc_idempotent.py
+# compile_gold_tables_job_proc_idempotent_clean.py
 import os
 import re
 import logging
@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 logging.info("=== Starting Gold SQL Compilation Job ===")
 
-# --- Regexes (Unicode-friendly) ---
+# ---- Regexes ----
 GO_LINE_RE   = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
 USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | re.MULTILINE)
 OBJ_NAME     = r'([\w\.\[\]" ]+)'
@@ -73,8 +73,7 @@ def make_idempotent(sql: str) -> str:
         if raw.lstrip().startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
-        return (f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\n"
-                f"CREATE TABLE {norm}")
+        return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
     sql = CREATE_TABLE_RE.sub(table_repl, sql)
     return sql.strip()
 
@@ -83,6 +82,7 @@ try:
     logging.info(f"Found {len(sql_files)} SQL files in {source_folder}")
 
     with open(output_file, 'w', encoding='utf-8-sig') as f_out:
+        # Header
         f_out.write("-- =============================================\n")
         f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
@@ -93,33 +93,33 @@ try:
         f_out.write("-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER\n")
         f_out.write("-- =============================================\n\n")
 
+        # Database
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
+
+        # Drop & create procedure
         f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_CompileGoldTables', 'P') IS NOT NULL\n")
         f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_CompileGoldTables;\nGO\n\n")
         f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_CompileGoldTables\nAS\nBEGIN\n")
-        f_out.write("    SET NOCOUNT ON;\n")
-        f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
+        f_out.write("    SET NOCOUNT ON;\n\n")
 
+        # Insert each file directly (no dynamic SQL)
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf}")
                 with open(os.path.join(source_folder, sf), 'r', encoding='utf-8-sig') as f_in:
                     content = f_in.read()
                     transformed = make_idempotent(content)
-                    safe = transformed.replace("'", "''")
                     f_out.write(f"    -- Start of: {sf}\n")
-                    f_out.write("    SET @sql = N'" + safe + "';\n")
-                    f_out.write("    BEGIN TRY\n")
-                    f_out.write("        EXEC sys.sp_executesql @sql;\n")
-                    f_out.write("    END TRY\n")
-                    f_out.write("    BEGIN CATCH\n")
-                    f_out.write("        THROW;\n")
-                    f_out.write("    END CATCH;\n\n")
+                    # indent each line by 4 spaces
+                    for line in transformed.splitlines():
+                        f_out.write("    " + line + "\n")
+                    f_out.write(f"    -- End of: {sf}\n\n")
                 logging.info(f"Finished file: {sf}")
             except Exception as e:
                 logging.error(f"Error processing {sf}: {e}")
                 raise
 
+        # End procedure
         f_out.write("END\nGO\n")
 
     logging.info(f"✅ Stored procedure script generated successfully: {output_file}")

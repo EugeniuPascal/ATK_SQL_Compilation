@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-09-26 14:10:49
+-- Generated: 2025-09-29 13:58:06
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (14):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -76,7 +76,7 @@ GO
 -- Create the table
 CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
     BranchID VARCHAR(36) NOT NULL,
-    BranchCode DECIMAL(2, 0) NULL,
+    BranchCode DECIMAL(3, 0) NULL,
     BranchName NVARCHAR(100) NULL,
     DistrictName NVARCHAR(50) NULL,
     ActivityType NVARCHAR(100) NULL,
@@ -164,7 +164,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [BranchID]              VARCHAR(36)    NULL,
     [IsDeleted]             VARCHAR(36)    NULL,
     [IsGroup]               VARCHAR(36)    NULL,
-    [ClientCode]            NCHAR(13)      NULL,
+    [ClientCode]            NCHAR(50)      NULL,
     [ClientName]            NVARCHAR(100)  NULL,
     [IsBlocked]             VARCHAR(36)    NULL,
     [Visibility]            INT            NULL,
@@ -179,8 +179,8 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [Gender]                NVARCHAR(256)  NULL,
     [PostalAddress]         NVARCHAR(85)   NULL,
     [Country]               NVARCHAR(30)   NULL,
-    [MobilePhone1]          NVARCHAR(9)    NULL,
-    [MobilePhone2]          NVARCHAR(9)    NULL,
+    [MobilePhone1]          NVARCHAR(50)    NULL,
+    [MobilePhone2]          NVARCHAR(50)    NULL,
     [Phones]                NVARCHAR(50)   NULL,
     [FiscalCode]            NVARCHAR(20)   NULL,
     [LegalAddress]          NVARCHAR(85)   NULL,
@@ -190,7 +190,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [NoPromoSMS]            VARCHAR(36)    NULL,
     [OrganizationType]      NVARCHAR(52)   NULL,
     [IsGroupOwner]          BIT            NULL,
-    [GroupID]               NVARCHAR(5)    NULL,
+    [GroupID]               NVARCHAR(20)    NULL,
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
@@ -359,10 +359,10 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [ContractDate] DATE NULL,
     [IncomeSegment] NVARCHAR(255) NULL,
     [UsagePurpose] NVARCHAR(500) NULL,
-    [PurposeDescription] NVARCHAR(904) NULL,
+    [PurposeDescription] NVARCHAR(1000) NULL,
     [ProductType] NVARCHAR(255) NULL,
     [UsageArea] NVARCHAR(255) NULL,
-    [SigningSource] NVARCHAR(256) NULL,
+    [SigningSource] NVARCHAR(500) NULL,
     [FinancialProductsMainGroup] NVARCHAR(255) NULL,
     [IssuedCreditsStatus] NVARCHAR(50) NULL,
     [CreditApplicationPartnerID] VARCHAR(36) NULL,
@@ -878,10 +878,10 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereCredit] (
     CreditProdID         VARCHAR(36)   NULL,
     CreditExpertID       VARCHAR(36)   NULL,
     CreditExpert         NVARCHAR(50)  NULL,
-    RefusalReason        NVARCHAR(200) NULL,
+    RefusalReason        NVARCHAR(500) NULL,
     CommitteeProtID      VARCHAR(36)   NULL,
     CommitteeProt        NVARCHAR(100) NULL,
-    CommitteeDecision    NVARCHAR(256) NULL,
+    CommitteeDecision    NVARCHAR(500) NULL,
     EconSector           NVARCHAR(150) NULL,
     FinalScore           DECIMAL(10,2) NULL,
     Status               NVARCHAR(256) NULL,
@@ -1185,30 +1185,35 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline_1] (
     [Type]                  NVARCHAR(100)  NULL,
     [HistoryType]           NVARCHAR(256)  NULL,
     [CreditID]              VARCHAR(36)    NULL,
-    [AuthorID]              VARCHAR(36)    NULL,
-    [Purpose]               NVARCHAR(150)  NULL,
+    [AuthorID]           	VARCHAR(36)    NULL,
+    [Author]                NVARCHAR(100)   NULL,
+	[Purpose]               NVARCHAR(150)  NULL,
     [IsGreen]               NVARCHAR(36)   NULL,
     [ClientID]              VARCHAR(36)    NULL,
     [NewExisting_Client]    NVARCHAR(20)   NULL,
     [RefusalReason]         NVARCHAR(200)  NULL,
+	[ProductID]             VARCHAR(36)    NULL,
+	[InternetID]            VARCHAR(36)    NULL,
+	[CreditProductID]       VARCHAR(36)    NULL,
+	[CreditProduct]         NVARCHAR(150)   NULL,
     [WebID]                 VARCHAR(36)    NOT NULL,
     [WebDate]               DATETIME       NULL,
     [WebNr]                 NVARCHAR(50)   NULL,
     [WebPosted]             VARCHAR(36)    NULL,
-    [WebAuthorID]           VARCHAR(36)    NULL,
-    [WebAuthor]             NVARCHAR(100)  NULL,
+    --[WebAuthorID]           VARCHAR(36)    NULL,
+    --[WebAuthor]             NVARCHAR(100)  NULL,
     [WebIncomeTypeOnline]   NVARCHAR(200)  NULL,
-    [WebType]               NVARCHAR(256)  NULL,
+    --[WebType]               NVARCHAR(256)  NULL,
     [WebAge]                INT            NULL,
     [WebSubmissionDate]     DATETIME       NULL,
-    [WebCreditID]           VARCHAR(36)    NULL,
+    --[WebCreditID]           VARCHAR(36)    NULL,
     [WebCredit]             NVARCHAR(100)  NULL,
     [WebIdentifier]         NVARCHAR(50)   NULL,
     --[WebCompanyFiscalCode]  NVARCHAR(50)   NULL,
     --[WebPartnerConsultant]  NVARCHAR(100)  NULL,
-    [WebCreditProductID]    VARCHAR(36)    NULL,
-    [WebCreditProduct]      NVARCHAR(150)  NULL,
-    [WebCreditExpertID]     VARCHAR(36)    NULL,
+    --[WebCreditProductID]    VARCHAR(36)    NULL,
+    --[WebCreditProduct]      NVARCHAR(150)  NULL,
+    --[WebCreditExpertID]     VARCHAR(36)    NULL,
     [WebCreditExpert]       NVARCHAR(50)   NULL,
     [WebMobilePhone]        NVARCHAR(20)   NULL,
     [WebSentForReview]      NVARCHAR(36)   NULL,
@@ -1233,29 +1238,36 @@ GO
         z.[ЗаявкаНаКредит Вид Кредитной Истории] AS [HistoryType],
         z.[ЗаявкаНаКредит Кредит ID] AS [CreditID],
 		z.[ЗаявкаНаКредит Автор ID] AS [AuthorID],
+		z.[ЗаявкаНаКредит Автор] AS [Author],
         z.[ЗаявкаНаКредит Цель Кредита] AS [Purpose],
         z.[ЗаявкаНаКредит Это Зеленый Кредит] AS [IsGreen],
         z.[ЗаявкаНаКредит Клиент ID] AS [ClientID],
         z.[ЗаявкаНаКредит Сумма Кредита] AS [CreditAmount],
         z.[ЗаявкаНаКредит Причина Отказа] AS [RefusalReason],
+		z.[ЗаявкаНаКредит Финансовый Продукт ID] AS ProductID,
+		z.[ЗаявкаНаКредит Кредитный Эксперт ID] AS ExpertID,
+		z.[ЗаявкаНаКредит Филиал ID] AS BranchID,
+		z.[ЗаявкаНаКредит Заявка Клиента Интернет ID] AS InternetID,
+		z.[ЗаявкаНаКредит Кредитный Продукт ID] AS CreditProductID,
+		z.[ЗаявкаНаКредит Кредитный Продукт] AS CreditProduct, 
         COALESCE(o.[ОбъединеннаяИнтернетЗаявка ID], CAST(NEWID() AS VARCHAR(36))) AS [WebID],
         o.[ОбъединеннаяИнтернетЗаявка Дата] AS [WebDate],
         o.[ОбъединеннаяИнтернетЗаявка Номер] AS [WebNr],
         o.[ОбъединеннаяИнтернетЗаявка Проведен] AS [WebPosted],
-        o.[ОбъединеннаяИнтернетЗаявка Автор ID] AS [WebAuthorID],
-        o.[ОбъединеннаяИнтернетЗаявка Автор] AS [WebAuthor],
+        --o.[ОбъединеннаяИнтернетЗаявка Автор ID] AS [WebAuthorID],
+        --o.[ОбъединеннаяИнтернетЗаявка Автор] AS [WebAuthor],
         o.[ОбъединеннаяИнтернетЗаявка Вид Доходов Онлайн] AS [WebIncomeTypeOnline],
-        o.[ОбъединеннаяИнтернетЗаявка Вид Интернет Заявки] AS [WebType],
+        --o.[ОбъединеннаяИнтернетЗаявка Вид Интернет Заявки] AS [WebType],
         o.[ОбъединеннаяИнтернетЗаявка Возраст] AS [WebAge],
         o.[ОбъединеннаяИнтернетЗаявка Дата Отправки на Рассмотрение] AS [WebSubmissionDate],
-        o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] AS [WebCreditID],
+        --o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] AS [WebCreditID],
         o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит] AS [WebCredit],
         o.[ОбъединеннаяИнтернетЗаявка Идентификатор] AS [WebIdentifier],
         --o.[ОбъединеннаяИнтернетЗаявка Компания Фиск Код] AS [WebCompanyFiscalCode],
         --o.[ОбъединеннаяИнтернетЗаявка Консультант Партнера] AS [WebPartnerConsultant],
-        o.[ОбъединеннаяИнтернетЗаявка Кредитный Продукт WEB ID] AS [WebCreditProductID],
-        o.[ОбъединеннаяИнтернетЗаявка Кредитный Продукт WEB] AS [WebCreditProduct],
-        o.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS [WebCreditExpertID],
+        --o.[ОбъединеннаяИнтернетЗаявка Кредитный Продукт WEB ID] AS [WebCreditProductID],
+        --o.[ОбъединеннаяИнтернетЗаявка Кредитный Продукт WEB] AS [WebCreditProduct],
+        --o.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS [WebCreditExpertID],
         o.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт] AS [WebCreditExpert],
         o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный] AS [WebMobilePhone],
         o.[ОбъединеннаяИнтернетЗаявка Отправлена на Рассмотрение] AS [WebSentForReview],
@@ -1282,26 +1294,27 @@ GO
     SELECT
         NULL AS [ID], NULL AS [Date], NULL AS [Status], NULL AS [Posted],
         NULL AS [BusinessSector], NULL AS [Type], NULL AS [HistoryType],
-        NULL AS [CreditID], NULL AS [AuthorID],  NULL AS [Purpose], NULL AS [IsGreen],
-        NULL AS [ClientID], NULL AS [CreditAmount], NULL AS [RefusalReason],
+        NULL AS [CreditID], NULL AS [AuthorID], NULL AS [Author],  NULL AS [Purpose], NULL AS [IsGreen],
+        NULL AS [ClientID], NULL AS [CreditAmount], NULL AS [RefusalReason], NULL AS [ProductID],
+		NULL AS [ExpertID], NULL AS BranchID, NULL AS InternetID, NULL AS CreditProductID, NULL AS CreditProduct,
         COALESCE(o.[ОбъединеннаяИнтернетЗаявка ID], CAST(NEWID() AS VARCHAR(36))) AS [WebID],
         o.[ОбъединеннаяИнтернетЗаявка Дата] AS [WebDate],
         o.[ОбъединеннаяИнтернетЗаявка Номер] AS [WebNr],
         o.[ОбъединеннаяИнтернетЗаявка Проведен] AS [WebPosted],
-        o.[ОбъединеннаяИнтернетЗаявка Автор ID] AS [WebAuthorID],
-        o.[ОбъединеннаяИнтернетЗаявка Автор] AS [WebAuthor],
+        --o.[ОбъединеннаяИнтернетЗаявка Автор ID] AS [WebAuthorID],
+        --o.[ОбъединеннаяИнтернетЗаявка Автор] AS [WebAuthor],
         o.[ОбъединеннаяИнтернетЗаявка Вид Доходов Онлайн] AS [WebIncomeTypeOnline],
-        o.[ОбъединеннаяИнтернетЗаявка Вид Интернет Заявки] AS [WebType],
+        --o.[ОбъединеннаяИнтернетЗаявка Вид Интернет Заявки] AS [WebType],
         o.[ОбъединеннаяИнтернетЗаявка Возраст] AS [WebAge],
         o.[ОбъединеннаяИнтернетЗаявка Дата Отправки на Рассмотрение] AS [WebSubmissionDate],
-        o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] AS [WebCreditID],
+        --o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] AS [WebCreditID],
         o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит] AS [WebCredit],
         o.[ОбъединеннаяИнтернетЗаявка Идентификатор] AS [WebIdentifier],
         --o.[ОбъединеннаяИнтернетЗаявка Компания Фиск Код] AS [WebCompanyFiscalCode],
         --o.[ОбъединеннаяИнтернетЗаявка Консультант Партнера] AS [WebPartnerConsultant],
-        o.[ОбъединеннаяИнтернетЗаявка Кредитный Продукт WEB ID] AS [WebCreditProductID],
-        o.[ОбъединеннаяИнтернетЗаявка Кредитный Продукт WEB] AS [WebCreditProduct],
-        o.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS [WebCreditExpertID],
+        --o.[ОбъединеннаяИнтернетЗаявка Кредитный Продукт WEB ID] AS [WebCreditProductID],
+        --o.[ОбъединеннаяИнтернетЗаявка Кредитный Продукт WEB] AS [WebCreditProduct],
+        --o.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS [WebCreditExpertID],
         o.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт] AS [WebCreditExpert],
         o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный] AS [WebMobilePhone],
         o.[ОбъединеннаяИнтернетЗаявка Отправлена на Рассмотрение] AS [WebSentForReview],
@@ -1324,29 +1337,30 @@ GO
 )
 -- Insert final
 INSERT INTO mis.[2tbl_Gold_Fact_CerereOnline_1]
+(
+    [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
+    [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],[NewExisting_Client],
+    [RefusalReason],[ProductID],[InternetID],[CreditProductID],[CreditProduct],
+    [WebID],[WebDate],[WebNr],[WebPosted],[WebIncomeTypeOnline],[WebAge],
+    [WebSubmissionDate],[WebCredit],[WebIdentifier],[WebCreditExpert],[WebMobilePhone],
+    [WebSentForReview],[WebGender],[WebStatus],[WebCreditTerm],[WebBranchID]
+)
 SELECT
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
-    [CreditID],[AuthorID], [Purpose],[IsGreen],[ClientID],
+    [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
     CASE
-         WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N'Cancelled'
-         WHEN ROW_NUMBER() OVER (
-                 PARTITION BY ClientKey
-                 ORDER BY WebDate
-             ) = 1 THEN N'New'
-         ELSE N'Existing'
+        WHEN CreditAmount IS NULL OR CreditAmount <= 0 THEN N'Cancelled'
+        WHEN ROW_NUMBER() OVER (
+            PARTITION BY ClientKey
+            ORDER BY WebDate
+        ) = 1 THEN N'New'
+        ELSE N'Existing'
     END AS [NewExisting_Client],
-    [RefusalReason],
-    [WebID],[WebDate],[WebNr],[WebPosted],[WebAuthorID],[WebAuthor],[WebIncomeTypeOnline],
-    [WebType],[WebAge],[WebSubmissionDate],[WebCreditID],[WebCredit],[WebIdentifier],
-    --[WebCompanyFiscalCode],
-	--[WebPartnerConsultant],
-	[WebCreditProductID],[WebCreditProduct],
-    [WebCreditExpertID],[WebCreditExpert],[WebMobilePhone],[WebSentForReview],[WebGender],
-    [WebStatus],[WebCreditTerm],
-	--[WebCreditAmount],
-	[WebBranchID]
+    [RefusalReason],[ProductID],[InternetID],[CreditProductID],[CreditProduct],
+    [WebID],[WebDate],[WebNr],[WebPosted],[WebIncomeTypeOnline],[WebAge],
+    [WebSubmissionDate],[WebCredit],[WebIdentifier],[WebCreditExpert],[WebMobilePhone],
+    [WebSentForReview],[WebGender],[WebStatus],[WebCreditTerm],[WebBranchID]
 FROM Base;
-GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Fact_CerereOnline_1.sql
 ----------------------------------------------------------------------------------------------------

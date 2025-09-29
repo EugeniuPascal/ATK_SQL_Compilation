@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-09-26 14:10:37.794351
+-- Generated: 2025-09-29 09:13:31.481578
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 14
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -33,10 +33,7 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @sql NVARCHAR(MAX);
 
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Dim_AppUsers.sql
-    -- =============================================
-
     SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Dim_AppUsers]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_AppUsers];
 
@@ -70,16 +67,10 @@ FROM [ATK].[mis].[Silver_РегистрыСведений.СведенияОПо
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Dim_AppUsers.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Dim_Branch.sql
-    -- =============================================
-
     SET @sql = N'-- Drop the table if it exists
 IF OBJECT_ID(N''mis.[2tbl_Gold_Dim_Branch]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Branch];
@@ -153,16 +144,10 @@ LEFT JOIN LastSvedeniya s
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Dim_Branch.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Dim_Clients.sql
-    -- =============================================
-
     SET @sql = N'SET NOCOUNT ON;
 
 -- Drop the table if it exists
@@ -333,16 +318,10 @@ CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](Is
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Dim_Clients.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Dim_Credits.sql
-    -- =============================================
-
     SET @sql = N'-- Drop table if exists
 IF OBJECT_ID(N''mis.[2tbl_Gold_Dim_Credits]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Credits];
@@ -570,16 +549,10 @@ LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID;';
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Dim_Credits.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Dim_Experts.sql
-    -- =============================================
-
     SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Dim_Experts]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Experts];
 
@@ -632,16 +605,10 @@ FROM [ATK].[dbo].[Справочники.Сотрудники];';
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Dim_Experts.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Dim_ExpertsHistory.sql
-    -- =============================================
-
     SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Dim_ExpertsHistory]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_ExpertsHistory];
 
@@ -696,16 +663,10 @@ FROM [ATK].[mis].[Silver_РегистрыСведений.Ответственн
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Dim_ExpertsHistory.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Dim_PartnersBranch.sql
-    -- =============================================
-
     SET @sql = N'-- Drop the gold table if it exists
 IF OBJECT_ID(''mis.[2tbl_Gold_Dim_PartnersBranch]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_PartnersBranch];
@@ -765,16 +726,10 @@ LEFT JOIN mis.[Silver_Справочники.Дилеры] d
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Dim_PartnersBranch.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Fact_BudgetExperts.sql
-    -- =============================================
-
     SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Fact_BudgetExperts]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_BudgetExperts];
 
@@ -838,16 +793,10 @@ WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-01-01'';';
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Fact_BudgetExperts.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Fact_CerereCredit.sql
-    -- =============================================
-
     SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Fact_CerereCredit]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_CerereCredit];
 
@@ -946,16 +895,10 @@ CREATE NONCLUSTERED INDEX IX_CC_Client ON mis.[2tbl_Gold_Fact_CerereCredit](Clie
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Fact_CerereCredit.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Fact_CerereOnline.sql
-    -- =============================================
-
     SET @sql = N'SET NOCOUNT ON;
 
 -- Drop table if exists
@@ -1167,16 +1110,10 @@ CREATE NONCLUSTERED INDEX IX_CO_Status
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Fact_CerereOnline.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Fact_CerereOnline_1.sql
-    -- =============================================
-
     SET @sql = N'SET NOCOUNT ON;
 
 -- Drop table if exists
@@ -1357,16 +1294,10 @@ FROM Base;';
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Fact_CerereOnline_1.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
-    -- =============================================
-
     SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_CreditsInShadowBranches]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_CreditsInShadowBranches];
 
@@ -1451,16 +1382,10 @@ FROM calc;';
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Fact_Disbursement.sql
-    -- =============================================
-
     SET @sql = N'/* ============================
    Clean up
    ============================ */
@@ -1708,16 +1633,10 @@ DROP TABLE #Final;';
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
 
-    -- End of: mis.2tbl_Gold_Fact_Disbursement.sql
-    -- =============================================
-
-    -- =============================================
     -- Start of: mis.2tbl_Gold_Fact_Sold_Par.sql
-    -- =============================================
-
     SET @sql = N'SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = ''2024-01-01'';
@@ -1929,11 +1848,8 @@ DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranch, #Responsible, #IRR;';
         EXEC sys.sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        THROW; -- bubble up for Agent visibility
+        THROW;
     END CATCH;
-
-    -- End of: mis.2tbl_Gold_Fact_Sold_Par.sql
-    -- =============================================
 
 END
 GO

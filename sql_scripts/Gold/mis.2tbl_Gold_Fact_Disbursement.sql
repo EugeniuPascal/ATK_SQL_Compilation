@@ -197,7 +197,8 @@ SELECT COUNT(*) AS FinalRows FROM #Final;
 GO
 
 /* ============================
-   Insert to target
+   Build final dataset and insert
+   Exclude test clients (Контрагенты Тестовый Контрагент = 00)
    ============================ */
 WITH AllSeq AS (
     SELECT
@@ -215,15 +216,18 @@ INSERT INTO mis.[2tbl_Gold_Fact_Disbursement]
     IRR, IRR_Client, Qty, NewExisting_Client
 )
 SELECT
-    CreditID, ClientID, DisbursementDate, CurrencyID, CreditAmount, CreditAmountInMDL,
-    CreditCurrency, FirstFilialID, FirstExpertID, LastFilialID, LastExpertID,
-    IRR, IRR_Client, Qty,
+    a.CreditID, a.ClientID, a.DisbursementDate, a.CurrencyID, a.CreditAmount, a.CreditAmountInMDL,
+    a.CreditCurrency, a.FirstFilialID, a.FirstExpertID, a.LastFilialID, a.LastExpertID,
+    a.IRR, a.IRR_Client, a.Qty,
     CASE
-        WHEN CreditAmount > 0 AND rn_all = 1 THEN N'New'
-        WHEN CreditAmount > 0 THEN N'Existing'
+        WHEN a.CreditAmount > 0 AND a.rn_all = 1 THEN N'New'
+        WHEN a.CreditAmount > 0 THEN N'Existing'
         ELSE N'Cancelled'
     END AS NewExisting_Client
-FROM AllSeq;
+FROM AllSeq AS a
+LEFT JOIN dbo.[Справочники.Контрагенты] AS c
+    ON a.ClientID = c.[Контрагенты ID]
+WHERE c.[Контрагенты Тестовый Контрагент] = 00;
 GO
 
 /* ============================

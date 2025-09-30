@@ -1,54 +1,57 @@
 import pyodbc
-import win32com.client as win32
 from datetime import datetime
-import time
 
 # ----------------- CONFIG -----------------
 DB_SERVER = 'MI-DEV-SQL01'
-DB_NAME = 'ATK'
+DB_NAME = 'msdb'  # we query MSDB for job history
 PROCEDURE_NAME = 'usp_CompileGoldTables'
-
-CHECK_INTERVAL_MINUTES = 10
-EMAIL_TO = 'eugeniu.pascal@microinvest.md'
 # ------------------------------------------
 
-def send_email(subject, body):
-    outlook = win32.Dispatch('Outlook.Application')
-    mail = outlook.CreateItem(0)
-    mail.To = EMAIL_TO
-    mail.Subject = subject
-    mail.Body = body
-    mail.Send()
-    print(f"Email sent: {subject}")
-
-def run_procedure():
+def get_last_execution():
     conn_str = (
         r"DRIVER={ODBC Driver 17 for SQL Server};"
         f"SERVER={DB_SERVER};DATABASE={DB_NAME};Trusted_Connection=yes;"
     )
-    try:
-        with pyodbc.connect(conn_str, timeout=30) as conn:
-            cursor = conn.cursor()
-            print(f"Executing procedure {PROCEDURE_NAME}...")
-            cursor.execute(f"EXEC {PROCEDURE_NAME}")
-            cursor.commit()
-        send_email(f"Procedure {PROCEDURE_NAME} Finished Successfully",
-                   f"The procedure ran successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.")
-        print("Procedure executed successfully.")
-        return True
-    except Exception as e:
-        send_email(f"Procedure {PROCEDURE_NAME} Failed",
-                   f"The procedure failed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.\nError: {e}")
-        print(f"Procedure failed: {e}")
-        return False
-
-def wait_for_procedure():
-    while True:
-        success = run_procedure()
-        if success:
-            break
-        print(f"Retrying in {CHECK_INTERVAL_MINUTES} minutes...")
-        time.sleep(CHECK_INTERVAL_MINUTES * 60)
+    query = f"""
+    SELECT TOP 1
+           j.name AS JobName,
+           s.step_name AS StepName,
+           h.run_status,   -- 0=Fail, 1=Success
+           h.run_date,
+           h.run_time,
+           h.run_duration
+    FROM sysjobhistory h
+    JOIN sysjobs j
+      ON h.job_id = j.job_id
+    JOIN sysjobsteps s
+      ON h.job_id = s.job_id
+     AND h.step_id = s.step_id
+    WHERE s.command LIKE '%{PROCEDURE_NAME}%'
+    ORDER BY h.run_date DESC, h.run_time DESC;
+    """
+    with pyodbc.connect(conn_str, timeout=30) as conn:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if not row:
+            return None
+        run_date = datetime.strptime(str(row.run_date), "%Y%m%d").date()
+        run_time = f"{row.run_time:06d}"
+        run_time = f"{run_time[0:2]}:{run_time[2:4]}:{run_time[4:6]}"
+        return {
+            "job": row.JobName,
+            "step": row.StepName,
+            "status": "Success" if row.run_status == 1 else "Fail",
+            "date": run_date,
+            "time": run_time,
+            "duration": row.run_duration
+        }
 
 if __name__ == "__main__":
-    wait_for_procedure()
+    result = get_last_execution()
+    if result:
+        print(f"Job: {result['job']} Step: {result['step']}")
+        print(f"Last run: {result['date']} {result['time']} (Duration {result['duration']})")
+        print(f"Status: {result['status']}")
+    else:
+        print("No executions found.")

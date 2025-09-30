@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-09-29 13:58:13.326078
+-- Generated: 2025-09-30 09:50:06.044507
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 14
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -1392,8 +1392,8 @@ IF OBJECT_ID(''tempdb..#Final'')  IS NOT NULL DROP TABLE #Final;
 IF OBJECT_ID(''mis.[2tbl_Gold_Fact_Disbursement]'', ''U'') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_Disbursement];
 
-IF OBJECT_ID(N''[mis].[2tbl_Gold_Fact_Disbursement]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Fact_Disbursement];
-CREATE TABLE [mis].[2tbl_Gold_Fact_Disbursement](
+CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] 
+(
     CreditID           NVARCHAR(36)   NOT NULL,
     ClientID           NVARCHAR(36)   NULL,
     DisbursementDate   DATETIME2      NULL,

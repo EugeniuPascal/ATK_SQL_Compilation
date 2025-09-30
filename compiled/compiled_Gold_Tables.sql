@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-09-29 13:58:06
+-- Generated: 2025-09-30 09:50:11
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (14):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -1484,7 +1484,8 @@ GO
    Target table
    (ID lengths aligned to 36)
    ============================ */
-CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] (
+CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] 
+(
     CreditID           NVARCHAR(36)   NOT NULL,
     ClientID           NVARCHAR(36)   NULL,
     DisbursementDate   DATETIME2      NULL,

@@ -1,8 +1,9 @@
-# compile_silver_tables_job_proc_idempotent.py
 import os
 import re
 import logging
 from datetime import datetime
+import smtplib
+from email.message import EmailMessage
 
 # ---- Settings ----
 DB_NAME        = "ATK"
@@ -10,6 +11,13 @@ DEFAULT_SCHEMA = "mis"
 source_folder  = r"C:\ATK_Project\sql_scripts\Silver"
 output_file    = r"C:\ATK_Project\compiled\compiled_silver_job_proc.sql"
 log_file       = r"C:\ATK_Project\logs\compile_silver.log"
+
+EMAIL_TO       = "eugeniu.pascal@microinvest.md"
+EMAIL_FROM     = "your.email@domain.com"  # change to a valid sender
+SMTP_SERVER    = "smtp.domain.com"        # change to your SMTP server
+SMTP_PORT      = 587                       # change if needed
+SMTP_USER      = "your.email@domain.com"
+SMTP_PASS      = "your_password"
 
 # ---- Logging ----
 os.makedirs(os.path.dirname(log_file), exist_ok=True)
@@ -62,6 +70,20 @@ def make_idempotent(sql: str) -> str:
     sql = CREATE_TABLE_RE.sub(table_repl, sql)
     return sql.strip()
 
+def send_email(subject: str, body: str):
+    msg = EmailMessage()
+    msg['Subject'] = subject
+    msg['From'] = EMAIL_FROM
+    msg['To'] = EMAIL_TO
+    msg.set_content(body)
+
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASS)
+        server.send_message(msg)
+        logging.info(f"Email sent: {subject}")
+
+# ---- Main compilation ----
 try:
     sql_files = sorted([f for f in os.listdir(source_folder) if f.lower().endswith('.sql')])
     logging.info(f"Found {len(sql_files)} SQL files in {source_folder}")
@@ -107,7 +129,12 @@ try:
         f_out.write("END\nGO\n")
 
     logging.info(f"✅ Stored procedure script generated successfully: {output_file}")
+    send_email("✅ Silver Compilation Success", f"The Silver compilation job completed successfully.\nOutput file: {output_file}")
 
 except Exception as e:
     logging.exception("💥 Fatal error during compilation")
+    try:
+        send_email("💥 Silver Compilation Failed", f"The Silver compilation job failed.\nError: {e}")
+    except Exception as email_err:
+        logging.exception(f"Failed to send failure email: {email_err}")
     raise

@@ -16,7 +16,8 @@ GO
    Target table
    (ID lengths aligned to 36)
    ============================ */
-CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] (
+CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] 
+(
     CreditID           NVARCHAR(36)   NOT NULL,
     ClientID           NVARCHAR(36)   NULL,
     DisbursementDate   DATETIME2      NULL,

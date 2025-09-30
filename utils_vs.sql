@@ -49,3 +49,8 @@ SELECT [Кредиты ID], COUNT(*) AS cnt
 FROM [Dim_Credits]
 GROUP BY [Кредиты ID]
 HAVING COUNT(*) > 1;
+
+--check if jobs RAN
+EXEC msdb.dbo.sp_help_jobhistory 
+    @job_name = 'usp_CompileSilverTables',
+    @mode = 'FULL';

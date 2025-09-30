@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-09-30 14:02:55.943186
+-- Generated: 2025-09-30 15:40:01.701946
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 13
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -1257,7 +1257,7 @@ OUTER APPLY (
                 0), 2)
     FROM [ATK].[mis].[Silver_Документы.УстановкаДанныхКредита] doc
     WHERE doc.[УстановкаДанныхКредита Кредит ID] = d.[ДанныеКредитовВыданных Кредит ID]
-    ORDER BY doc.[УстановкаДанныхКредита Дата] DESC
+    ORDER BY doc.[УстановкаДанныхКредита Дата] ASC
 ) irr
 WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N''Medier%''
   AND d.[ДанныеКредитовВыданных Дата Выдачи] >= ''2024-01-01'';
@@ -1428,7 +1428,7 @@ SELECT
 FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 LEFT JOIN mis.[Silver_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-  WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
 GROUP BY k.[Кредиты Владелец], sd.[СуммыЗадолженностиПоПериодамПросрочки Дата];
 
@@ -1532,9 +1532,9 @@ SELECT
     ROUND(
         COALESCE(
             CASE 
-                WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 
-                    THEN ir.IRR_Year
-                ELSE ir.IRR_Client
+                WHEN irr.IRR_Year IS NOT NULL AND irr.IRR_Year < 100 
+                    THEN irr.IRR_Year
+                ELSE irr.IRR_Client
             END,
             0
         )
@@ -1546,7 +1546,7 @@ SELECT
     
     
     r.ExpertID,
-    r.BranchID AS BranchID,
+    r.BranchID,
     
     
     CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_0_IFRS,
@@ -1576,14 +1576,11 @@ LEFT JOIN ShadowRanges sh
    AND (sh.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < sh.ValidTo)
 
 
-OUTER APPLY (
-    SELECT TOP(1) i.IRR_Year, i.IRR_Client
-    FROM #IRR i
-    WHERE i.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-    ORDER BY i.IRRDate DESC
-) ir
+LEFT JOIN #IRR irr
+    ON irr.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= irr.IRRDate
 
-  WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
 
 

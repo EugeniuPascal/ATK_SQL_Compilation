@@ -39,7 +39,7 @@ SELECT
 FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 LEFT JOIN mis.[Silver_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-  WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
 GROUP BY k.[Кредиты Владелец], sd.[СуммыЗадолженностиПоПериодамПросрочки Дата];
 
@@ -86,7 +86,7 @@ FROM mis.[Silver_РегистрыСведений.ОтветственныеПо
 CREATE NONCLUSTERED INDEX IX_Resp_Credit_Period ON #Responsible (CreditID, Period);
 
 -----------------------------------------------------
--- Step 4: IRR last (explicit temp table)
+-- Step 4: IRR (keep all records)
 -----------------------------------------------------
 IF OBJECT_ID('tempdb..#IRR') IS NOT NULL DROP TABLE #IRR;
 CREATE TABLE #IRR (
@@ -127,7 +127,7 @@ ShadowRanges AS (
     FROM #ShadowBranch
 )
 -----------------------------------------------------
--- Step 5: Main Insert (range-join approach)
+-- Step 5: Main Insert (range-join approach, all IRR)
 -----------------------------------------------------
 INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
 (
@@ -139,25 +139,25 @@ SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
     
-    -- IRR Values with conditional logic
+    -- IRR Values (all applicable records)
     ROUND(
         COALESCE(
             CASE 
-                WHEN ir.IRR_Year IS NOT NULL AND ir.IRR_Year < 100 
-                    THEN ir.IRR_Year
-                ELSE ir.IRR_Client
+                WHEN irr.IRR_Year IS NOT NULL AND irr.IRR_Year < 100 
+                    THEN irr.IRR_Year
+                ELSE irr.IRR_Client
             END,
             0
         )
         * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
     ) AS IRR_Values,
     
-    -- BranchShadow from ranges (valid from Period until next change)
+    -- BranchShadow from ranges
     sh.BranchShadow,
     
-    -- ExpertID and BranchID from ranges (valid from Period until next change)
+    -- ExpertID and BranchID from ranges
     r.ExpertID,
-    r.BranchID AS BranchID,
+    r.BranchID,
     
     -- ParNas IFRS
     CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_0_IFRS,
@@ -174,27 +174,24 @@ LEFT JOIN #MaxPastDays mpd
   ON mpd.OwnerID = k.[Кредиты Владелец]
  AND mpd.ParDate = sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
 
--- Responsible: range join using RespRanges
+-- Responsible: range join
 LEFT JOIN RespRanges r
     ON r.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
    AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= r.ValidFrom
    AND (r.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < r.ValidTo)
 
--- Shadow Branch: range join using ShadowRanges
+-- Shadow Branch: range join
 LEFT JOIN ShadowRanges sh
     ON sh.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
    AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= sh.ValidFrom
    AND (sh.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < sh.ValidTo)
 
--- IRR latest (keeps your original OUTER APPLY style for IRR)
-OUTER APPLY (
-    SELECT TOP(1) i.IRR_Year, i.IRR_Client
-    FROM #IRR i
-    WHERE i.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-    ORDER BY i.IRRDate DESC
-) ir
+-- IRR: all records
+LEFT JOIN #IRR irr
+    ON irr.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= irr.IRRDate
 
-  WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
 
 -----------------------------------------------------

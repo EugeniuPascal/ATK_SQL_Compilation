@@ -1,24 +1,8 @@
 ﻿-- =============================================
--- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2025-09-30 16:41:18.487428
+-- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent + Logging
+-- Generated: 2025-10-01 09:22:28.362695
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 16
---   Silver_Документы.ЗаявкаНаКредит.sql
---   Silver_Документы.ОбъединеннаяИнтернетЗаявка.sql
---   Silver_Документы.УстановкаДанныхКредита.sql
---   Silver_РегистрыСведений.АнулированныеКредитыПартнеров.sql
---   Silver_РегистрыСведений.Валюта.sql
---   Silver_РегистрыСведений.ДанныеКредитовВыданных.sql
---   Silver_РегистрыСведений.КредитыВТеневыхФилиалах.sql
---   Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным.sql
---   Silver_РегистрыСведений.СведенияОПользователяхМобильногоПриложения.sql
---   Silver_РегистрыСведений.СтатусыКредитовВыданных.sql
---   Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки.sql
---   Silver_Справочники.Дилеры.sql
---   Silver_Справочники.Контрагенты.sql
---   Silver_Справочники.Кредиты.sql
---   Silver_Справочники.ФилиалыКонтрагентов.sql
---   Silver_Справочники.ФинансовыеПродукты.sql
 -- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER
 -- =============================================
 
@@ -216,8 +200,12 @@ SELECT
 FROM [ATK].[dbo].[Документы.ЗаявкаНаКредит];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -342,8 +330,12 @@ FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗ�
 ;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -379,8 +371,12 @@ FROM [ATK].[dbo].[Документы.УстановкаДанныхКредит�
 WHERE [УстановкаДанныхКредита Проведен] = 01;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -413,8 +409,12 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.АнулированныеКредитыПартнеров];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -452,8 +452,12 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.Валюта];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -494,8 +498,12 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.ДанныеКредитовВыданных];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -546,8 +554,12 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.КредитыВТеневыхФилиалах];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -599,8 +611,12 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.ОтветственныеПоКредитамВыданным];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -637,8 +653,12 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.СведенияОПользователяхМобильногоПриложения];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -676,8 +696,12 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.СтатусыКредитовВыданных];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -715,8 +739,12 @@ FROM [ATK].[dbo].[РегистрыСведений.СуммыЗадолженн�
 WHERE [СуммыЗадолженностиПоПериодамПросрочки Дата] >= ''2023-01-01'';';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -767,8 +795,12 @@ SELECT
 FROM [ATK].[dbo].[Справочники.Дилеры];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -881,8 +913,12 @@ SELECT
 FROM [ATK].[dbo].[Справочники.Контрагенты];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -976,8 +1012,12 @@ FROM [ATK].[dbo].[Справочники.Кредиты]
 ;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -1019,8 +1059,12 @@ SELECT
 FROM [ATK].[dbo].[Справочники.ФилиалыКонтрагентов];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 
@@ -1046,8 +1090,12 @@ SELECT
 FROM [ATK].[dbo].[Справочники.ФинансовыеПродукты];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)
+        VALUES ('usp_CompileSilverTables', 'Success');
     END TRY
     BEGIN CATCH
+        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)
+        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());
         THROW;
     END CATCH;
 

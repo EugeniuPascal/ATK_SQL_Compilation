@@ -1,57 +1,41 @@
+# send_procedure_status_email.py
 import pyodbc
-from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
 
-# ----------------- CONFIG -----------------
-DB_SERVER = 'MI-DEV-SQL01'
-DB_NAME = 'msdb'  # we query MSDB for job history
-PROCEDURE_NAME = 'usp_CompileGoldTables'
-# ------------------------------------------
+# ---- Settings ----
+DB_CONN = "Driver={SQL Server};Server=YOUR_SERVER;Database=ATK;Trusted_Connection=yes;"
+SMTP_SERVER = "smtp.yourcompany.com"
+SMTP_FROM = "sqlserver@yourcompany.com"
+SMTP_TO = "your.email@example.com"
 
-def get_last_execution():
-    conn_str = (
-        r"DRIVER={ODBC Driver 17 for SQL Server};"
-        f"SERVER={DB_SERVER};DATABASE={DB_NAME};Trusted_Connection=yes;"
-    )
-    query = f"""
-    SELECT TOP 1
-           j.name AS JobName,
-           s.step_name AS StepName,
-           h.run_status,   -- 0=Fail, 1=Success
-           h.run_date,
-           h.run_time,
-           h.run_duration
-    FROM sysjobhistory h
-    JOIN sysjobs j
-      ON h.job_id = j.job_id
-    JOIN sysjobsteps s
-      ON h.job_id = s.job_id
-     AND h.step_id = s.step_id
-    WHERE s.command LIKE '%{PROCEDURE_NAME}%'
-    ORDER BY h.run_date DESC, h.run_time DESC;
-    """
-    with pyodbc.connect(conn_str, timeout=30) as conn:
-        cursor = conn.cursor()
-        cursor.execute(query)
-        row = cursor.fetchone()
-        if not row:
-            return None
-        run_date = datetime.strptime(str(row.run_date), "%Y%m%d").date()
-        run_time = f"{row.run_time:06d}"
-        run_time = f"{run_time[0:2]}:{run_time[2:4]}:{run_time[4:6]}"
-        return {
-            "job": row.JobName,
-            "step": row.StepName,
-            "status": "Success" if row.run_status == 1 else "Fail",
-            "date": run_date,
-            "time": run_time,
-            "duration": row.run_duration
-        }
+# Connect to SQL Server
+conn = pyodbc.connect(DB_CONN)
+cursor = conn.cursor()
 
-if __name__ == "__main__":
-    result = get_last_execution()
-    if result:
-        print(f"Job: {result['job']} Step: {result['step']}")
-        print(f"Last run: {result['date']} {result['time']} (Duration {result['duration']})")
-        print(f"Status: {result['status']}")
-    else:
-        print("No executions found.")
+# Get the latest run of the compiled procedure
+cursor.execute("""
+    SELECT TOP 1 ProcedureName, RunTime, Status, ErrorMessage
+    FROM mis.ProcedureStatusLog
+    ORDER BY RunTime DESC
+""")
+row = cursor.fetchone()
+cursor.close()
+conn.close()
+
+# Build email
+subject = f"Procedure {row.ProcedureName} finished: {row.Status}"
+body = f"Procedure: {row.ProcedureName}\nTime: {row.RunTime}\nStatus: {row.Status}"
+if row.ErrorMessage:
+    body += f"\nError: {row.ErrorMessage}"
+
+msg = MIMEText(body)
+msg['Subject'] = subject
+msg['From'] = SMTP_FROM
+msg['To'] = SMTP_TO
+
+# Send email
+with smtplib.SMTP(SMTP_SERVER) as server:
+    server.sendmail(SMTP_FROM, [SMTP_TO], msg.as_string())
+
+print(f"Email sent for procedure {row.ProcedureName}: {row.Status}")

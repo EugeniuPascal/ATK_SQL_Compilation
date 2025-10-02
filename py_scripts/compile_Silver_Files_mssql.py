@@ -20,7 +20,7 @@ logging.basicConfig(
 )
 logging.info("=== Starting Silver SQL Compilation Job ===")
 
-# --- Regexes
+# --- Regexes (Unicode-friendly) ---
 GO_LINE_RE   = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
 USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | re.MULTILINE)
 OBJ_NAME     = r'([\w\.\[\]" ]+)'
@@ -68,10 +68,12 @@ try:
 
     with open(output_file, 'w', encoding='utf-8-sig') as f_out:
         f_out.write("-- =============================================\n")
-        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent + Logging\n")
+        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
         f_out.write(f"-- Source folder: {source_folder}\n")
         f_out.write(f"-- Files included: {len(sql_files)}\n")
+        for sf in sql_files:
+            f_out.write(f"--   {sf}\n")
         f_out.write("-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER\n")
         f_out.write("-- =============================================\n\n")
 
@@ -83,26 +85,27 @@ try:
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 
         for sf in sql_files:
-            logging.info(f"Processing file: {sf}")
-            with open(os.path.join(source_folder, sf), 'r', encoding='utf-8-sig') as f_in:
-                content = f_in.read()
-                transformed = make_idempotent(content)
-                safe = transformed.replace("'", "''")
-                f_out.write(f"    -- Start of: {sf}\n")
-                f_out.write("    SET @sql = N'" + safe + "';\n")
-                f_out.write("    BEGIN TRY\n")
-                f_out.write("        EXEC sys.sp_executesql @sql;\n")
-                f_out.write("        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status)\n")
-                f_out.write("        VALUES ('usp_CompileSilverTables', 'Success');\n")
-                f_out.write("    END TRY\n")
-                f_out.write("    BEGIN CATCH\n")
-                f_out.write("        INSERT INTO mis.ProcedureStatusLog(ProcedureName, Status, ErrorMessage)\n")
-                f_out.write("        VALUES ('usp_CompileSilverTables', 'Failed', ERROR_MESSAGE());\n")
-                f_out.write("        THROW;\n")
-                f_out.write("    END CATCH;\n\n")
-            logging.info(f"Finished file: {sf}")
+            try:
+                logging.info(f"Processing file: {sf}")
+                with open(os.path.join(source_folder, sf), 'r', encoding='utf-8-sig') as f_in:
+                    content = f_in.read()
+                    transformed = make_idempotent(content)
+                    safe = transformed.replace("'", "''")
+                    f_out.write(f"    -- Start of: {sf}\n")
+                    f_out.write("    SET @sql = N'" + safe + "';\n")
+                    f_out.write("    BEGIN TRY\n")
+                    f_out.write("        EXEC sys.sp_executesql @sql;\n")
+                    f_out.write("    END TRY\n")
+                    f_out.write("    BEGIN CATCH\n")
+                    f_out.write("        THROW;\n")
+                    f_out.write("    END CATCH;\n\n")
+                logging.info(f"Finished file: {sf}")
+            except Exception as e:
+                logging.error(f"Error processing {sf}: {e}")
+                raise
 
         f_out.write("END\nGO\n")
+
     logging.info(f"✅ Stored procedure script generated successfully: {output_file}")
 
 except Exception as e:

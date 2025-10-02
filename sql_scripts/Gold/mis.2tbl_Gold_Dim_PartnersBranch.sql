@@ -17,8 +17,8 @@ CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
     [PartnerBranchAddress]          NVARCHAR(100) NULL,
 
     [DealerID]                      VARCHAR(36) NULL,
-    [DealerDefaultExpertID]         VARCHAR(36) NULL,
-    [DealerDefaultExpertName]       NVARCHAR(50) NULL,
+    [DealerDefaultEmployeeID]         VARCHAR(36) NULL,
+    [DealerDefaultEmployeeName]       NVARCHAR(50) NULL,
     [DealerOrgRepID]                VARCHAR(36) NULL,
     [DealerOrgRepName]              NVARCHAR(50) NULL
 
@@ -36,8 +36,8 @@ INSERT INTO mis.[2tbl_Gold_Dim_PartnersBranch]
     [PartnerBranchAddress],
 
     [DealerID],
-    [DealerDefaultExpertID],
-    [DealerDefaultExpertName],
+    [DealerDefaultEmployeeID],
+    [DealerDefaultEmployeeName],
     [DealerOrgRepID],
     [DealerOrgRepName]
 )
@@ -50,8 +50,8 @@ SELECT
     f.[ФилиалыКонтрагентов Адрес] AS PartnerBranchAddress,
 
     d.[Дилеры ID] AS DealerID,
-    d.[Дилеры Эксперт по Умолчанию ID] AS DealerDefaultExpertID ,
-    d.[Дилеры Эксперт по Умолчанию] AS DealerDefaultExpertName,
+    d.[Дилеры Эксперт по Умолчанию ID] AS DealerDefaultEmployeeID ,
+    d.[Дилеры Эксперт по Умолчанию] AS DealerDefaultEmployeeName,
     d.[Дилеры Представитель Организации ID] AS DealerOrgRepID,
     d.[Дилеры Представитель Организации] AS DealerOrgRepName
 FROM mis.[Silver_Справочники.ФилиалыКонтрагентов] f

@@ -2,14 +2,14 @@ USE [ATK];
 GO
 
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_Experts]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Experts];
+IF OBJECT_ID('mis.[2tbl_Gold_Dim_Employees]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Dim_Employees];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Experts] (
-    [ExpertID] VARCHAR(36) NOT NULL,
-    [ExpertCode] INT NULL,
-    [ExpertName] NVARCHAR(40) NULL,
+CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
+    [EmployeeID] VARCHAR(36) NOT NULL,
+    [EmployeeCode] INT NULL,
+    [EmployeeName] NVARCHAR(40) NULL,
     [HireDate] DATETIME NULL,
     [BirthDate] DATETIME NULL,
     [DismissalDate] DATETIME NULL,
@@ -21,10 +21,10 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Experts] (
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_Experts] (
-    [ExpertID],
-    [ExpertCode],
-    [ExpertName],
+INSERT INTO mis.[2tbl_Gold_Dim_Employees] (
+    [EmployeeID],
+    [EmployeeCode],
+    [EmployeeName],
     [HireDate],
     [BirthDate],
     [DismissalDate],
@@ -35,9 +35,9 @@ INSERT INTO mis.[2tbl_Gold_Dim_Experts] (
     [EmploymentPeriod]
 )
 SELECT 
-    [Сотрудники ID] AS ExpertID,
-    [Сотрудники Код] AS ExpertCode,
-    [Сотрудники Наименование] AS ExpertName,
+    [Сотрудники ID] AS EmployeeID,
+    [Сотрудники Код] AS EmployeeCode,
+    [Сотрудники Наименование] AS EmployeeName,
     [Сотрудники Дата Приема] AS HireDate,
     [Сотрудники Дата Рождения] AS BirthDate,
     [Сотрудники Дата Увольнения] AS DismissalDate,

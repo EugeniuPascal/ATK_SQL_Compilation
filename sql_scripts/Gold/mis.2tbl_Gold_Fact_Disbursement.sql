@@ -2,7 +2,7 @@ USE [ATK];
 GO
 
 /* ============================
-   Clean up
+   Clean up temp tables & target table
    ============================ */
 IF OBJECT_ID('tempdb..#Base')   IS NOT NULL DROP TABLE #Base;
 IF OBJECT_ID('tempdb..#Status') IS NOT NULL DROP TABLE #Status;
@@ -13,8 +13,7 @@ IF OBJECT_ID('mis.[2tbl_Gold_Fact_Disbursement]', 'U') IS NOT NULL
 GO
 
 /* ============================
-   Target table
-   (ID lengths aligned to 36)
+   Create target table
    ============================ */
 CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] 
 (
@@ -26,22 +25,21 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement]
     CreditAmountInMDL  DECIMAL(18,2)  NULL,
     CreditCurrency     NVARCHAR(50)   NULL,
     FirstFilialID      NVARCHAR(36)   NULL,
-    FirstExpertID      NVARCHAR(36)   NULL,
+    FirstEmployeeID    NVARCHAR(36)   NULL,
     LastFilialID       NVARCHAR(36)   NULL,
-    LastExpertID       NVARCHAR(36)   NULL,
+    LastEmployeeID     NVARCHAR(36)   NULL,
     IRR                DECIMAL(18,2)  NULL,
     IRR_Client         DECIMAL(18,2)  NULL,
     Qty                INT            NULL,
     NewExisting_Client NVARCHAR(20)   NULL,
+    EmployeePositionID NVARCHAR(36)   NULL,
     CreatedAt          DATETIME       NOT NULL DEFAULT GETDATE()
 );
 GO
 
 /* ============================
-   Base rows
-   - one per disbursed tranche
-   - rn=1 = first tranche per credit
-   - last expert/filial as of end of disbursement month
+   Build #Base
+   Include EmployeePositionID directly
    ============================ */
 SELECT
     d.[ДанныеКредитовВыданных Кредит ID]                 AS CreditID,
@@ -49,15 +47,15 @@ SELECT
     d.[ДанныеКредитовВыданных Дата Выдачи]               AS DisbursementDate,
     d.[ДанныеКредитовВыданных Валюта Кредита ID]         AS CurrencyID,
     d.[ДанныеКредитовВыданных Сумма Кредита]             AS CreditAmount,
-    ROUND(d.[ДанныеКредитовВыданных Сумма Кредита] * ISNULL(rate.Rate, 1), 2)
-                                                         AS CreditAmountInMDL,
+    ROUND(d.[ДанныеКредитовВыданных Сумма Кредита] * ISNULL(rate.Rate, 1), 2) AS CreditAmountInMDL,
     d.[ДанныеКредитовВыданных Валюта Кредита]            AS CreditCurrency,
     firstR.[ФилиалID]                                     AS FirstFilialID,
-    firstR.[ЭкспертID]                                    AS FirstExpertID,
+    firstR.[ЭкспертID]                                    AS FirstEmployeeID,
     COALESCE(lastR_month.[ФилиалID], firstR.[ФилиалID])   AS LastFilialID,
-    COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID]) AS LastExpertID,
+    COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID]) AS LastEmployeeID,
     irr.IRR                                               AS IRR,
     irr.IRR_Client                                        AS IRR_Client,
+    emp.[СотрудникиДанныеПоЗарплате Должность ID]        AS EmployeePositionID,
     rn = ROW_NUMBER() OVER (
             PARTITION BY d.[ДанныеКредитовВыданных Кредит ID]
             ORDER BY d.[ДанныеКредитовВыданных Дата Выдачи]
@@ -74,7 +72,6 @@ OUTER APPLY (
     ORDER BY v.[Валюта Период] DESC
 ) rate
 OUTER APPLY (
-    /* earliest responsible overall */
     SELECT TOP 1
            r.[ОтветственныеПоКредитамВыданным Филиал ID]            AS [ФилиалID],
            r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]  AS [ЭкспертID]
@@ -83,7 +80,6 @@ OUTER APPLY (
     ORDER BY r.[ОтветственныеПоКредитамВыданным Период] ASC
 ) firstR
 OUTER APPLY (
-    /* last responsible AS OF end of disbursement month */
     SELECT TOP 1
            r.[ОтветственныеПоКредитамВыданным Филиал ID]            AS [ФилиалID],
            r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]  AS [ЭкспертID]
@@ -93,36 +89,27 @@ OUTER APPLY (
     ORDER BY r.[ОтветственныеПоКредитамВыданным Период] DESC
 ) lastR_month
 OUTER APPLY (
-    /* IRR with conditional: prefer IRR_Year (<100) else IRR_Client; round to 6dp; no TRY_CONVERT */
     SELECT TOP 1
-        IRR_Client = ROUND(
-            COALESCE(
-                doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая], 0), 2),
-        IRR = ROUND(
-            COALESCE(
+        IRR_Client = ROUND(COALESCE(doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая], 0), 2),
+        IRR = ROUND(COALESCE(
                 CASE
                     WHEN doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] IS NOT NULL
                      AND doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] < 100
                         THEN doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая]
                     ELSE doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая]
-                END,
-                0), 2)
+                END, 0), 2)
     FROM [ATK].[mis].[Silver_Документы.УстановкаДанныхКредита] doc
     WHERE doc.[УстановкаДанныхКредита Кредит ID] = d.[ДанныеКредитовВыданных Кредит ID]
     ORDER BY doc.[УстановкаДанныхКредита Дата] ASC
 ) irr
+LEFT JOIN [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] emp
+    ON emp.[СотрудникиДанныеПоЗарплате Сотрудник ID] = COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID])
 WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N'Medier%'
   AND d.[ДанныеКредитовВыданных Дата Выдачи] >= '2024-01-01';
 GO
 
-SELECT COUNT(*) AS BaseRows FROM #Base;
-GO
-
 /* ============================
-   Status (cancel/restore)
-   - cancel = '01'  -> negative row
-   - restore = '00' -> positive row
-   Build only for credits present in #Base
+   Build #Status (cancel/restore)
    ============================ */
 WITH BaseIDs AS (
     SELECT DISTINCT CreditID FROM #Base
@@ -152,40 +139,40 @@ LEFT JOIN Cancels  c ON c.CreditID = b.CreditID
 LEFT JOIN Restores r ON r.CreditID = b.CreditID;
 GO
 
-SELECT COUNT(*) AS StatusRows FROM #Status;
-GO
-
 /* ============================
    Build #Final
    ============================ */
 SELECT
     b.CreditID, b.ClientID, b.DisbursementDate, b.CurrencyID,
     b.CreditAmount, b.CreditAmountInMDL, b.CreditCurrency,
-    b.FirstFilialID, b.FirstExpertID, b.LastFilialID, b.LastExpertID,
-    b.IRR, b.IRR_Client, 1 AS Qty
+    b.FirstFilialID, b.FirstEmployeeID, b.LastFilialID, b.LastEmployeeID,
+    b.IRR, b.IRR_Client, 1 AS Qty,
+    b.EmployeePositionID
 INTO #Final
 FROM #Base b
 WHERE b.rn = 1;
 
--- Cancel rows (negative amounts) — only when cancel is on/after disbursement
+-- Cancel rows
 INSERT INTO #Final
 SELECT
     b.CreditID, b.ClientID, s.CancelPeriod, b.CurrencyID,
     -b.CreditAmount, -b.CreditAmountInMDL, b.CreditCurrency,
-    b.FirstFilialID, b.FirstExpertID, b.LastFilialID, b.LastExpertID,
-    b.IRR, b.IRR_Client, -1 AS Qty
+    b.FirstFilialID, b.FirstEmployeeID, b.LastFilialID, b.LastEmployeeID,
+    b.IRR, b.IRR_Client, -1 AS Qty,
+    b.EmployeePositionID
 FROM #Status s
 JOIN #Base b ON b.CreditID = s.CreditID AND b.rn = 1
 WHERE s.CancelPeriod IS NOT NULL
   AND s.CancelPeriod >= b.DisbursementDate;
 
--- Restore rows (positive amounts) — only if after cancel and on/after disbursement
+-- Restore rows
 INSERT INTO #Final
 SELECT
     b.CreditID, b.ClientID, s.RestorePeriod, b.CurrencyID,
     b.CreditAmount, b.CreditAmountInMDL, b.CreditCurrency,
-    b.FirstFilialID, b.FirstExpertID, b.LastFilialID, b.LastExpertID,
-    b.IRR, b.IRR_Client, 1 AS Qty
+    b.FirstFilialID, b.FirstEmployeeID, b.LastFilialID, b.LastEmployeeID,
+    b.IRR, b.IRR_Client, 1 AS Qty,
+    b.EmployeePositionID
 FROM #Status s
 JOIN #Base b ON b.CreditID = s.CreditID AND b.rn = 1
 WHERE s.RestorePeriod IS NOT NULL
@@ -193,12 +180,9 @@ WHERE s.RestorePeriod IS NOT NULL
   AND (s.CancelPeriod IS NULL OR s.RestorePeriod > s.CancelPeriod);
 GO
 
-SELECT COUNT(*) AS FinalRows FROM #Final;
-GO
-
 /* ============================
-   Build final dataset and insert
-   Exclude test clients (Контрагенты Тестовый Контрагент = 00)
+   Insert into final table
+   Exclude test clients
    ============================ */
 WITH AllSeq AS (
     SELECT
@@ -212,18 +196,19 @@ WITH AllSeq AS (
 INSERT INTO mis.[2tbl_Gold_Fact_Disbursement]
 (
     CreditID, ClientID, DisbursementDate, CurrencyID, CreditAmount, CreditAmountInMDL,
-    CreditCurrency, FirstFilialID, FirstExpertID, LastFilialID, LastExpertID,
-    IRR, IRR_Client, Qty, NewExisting_Client
+    CreditCurrency, FirstFilialID, FirstEmployeeID, LastFilialID, LastEmployeeID,
+    IRR, IRR_Client, Qty, NewExisting_Client, EmployeePositionID
 )
 SELECT
     a.CreditID, a.ClientID, a.DisbursementDate, a.CurrencyID, a.CreditAmount, a.CreditAmountInMDL,
-    a.CreditCurrency, a.FirstFilialID, a.FirstExpertID, a.LastFilialID, a.LastExpertID,
+    a.CreditCurrency, a.FirstFilialID, a.FirstEmployeeID, a.LastFilialID, a.LastEmployeeID,
     a.IRR, a.IRR_Client, a.Qty,
     CASE
         WHEN a.CreditAmount > 0 AND a.rn_all = 1 THEN N'New'
         WHEN a.CreditAmount > 0 THEN N'Existing'
         ELSE N'Cancelled'
-    END AS NewExisting_Client
+    END AS NewExisting_Client,
+    a.EmployeePositionID
 FROM AllSeq AS a
 LEFT JOIN dbo.[Справочники.Контрагенты] AS c
     ON a.ClientID = c.[Контрагенты ID]
@@ -253,7 +238,7 @@ ON mis.[2tbl_Gold_Fact_Disbursement] (ClientID);
 GO
 
 /* ============================
-   Cleanup
+   Cleanup temp tables
    ============================ */
 DROP TABLE #Base;
 DROP TABLE #Status;

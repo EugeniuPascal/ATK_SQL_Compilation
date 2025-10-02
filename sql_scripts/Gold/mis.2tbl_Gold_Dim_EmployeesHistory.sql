@@ -2,12 +2,12 @@ USE [ATK];
 GO
 
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_ExpertsHistory]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_ExpertsHistory];
+IF OBJECT_ID('mis.[2tbl_Gold_Dim_EmployeesHistory]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Dim_EmployeesHistory];
 GO
 
 
-CREATE TABLE mis.[2tbl_Gold_Dim_ExpertsHistory] (
+CREATE TABLE mis.[2tbl_Gold_Dim_EmployeesHistory] (
     Period       DATETIME      NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
@@ -16,13 +16,13 @@ CREATE TABLE mis.[2tbl_Gold_Dim_ExpertsHistory] (
     Credit       NVARCHAR(100) NULL,
     Filial_ID    VARCHAR(36)   NULL,
     Filial       NVARCHAR(100) NULL,
-    Expert_ID    VARCHAR(36)   NULL,
-    Expert       NVARCHAR(100) NULL,
+    Employee_ID    VARCHAR(36)   NULL,
+    Employee       NVARCHAR(100) NULL,
     DateTo       DATETIME      NULL
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_ExpertsHistory] (
+INSERT INTO mis.[2tbl_Gold_Dim_EmployeesHistory] (
     Period,
     ID,
     RowNumber,
@@ -31,8 +31,8 @@ INSERT INTO mis.[2tbl_Gold_Dim_ExpertsHistory] (
     Credit,
     Filial_ID,
     Filial,
-    Expert_ID,
-    Expert,
+    Employee_ID,
+    Employee,
     DateTo
 )
 SELECT
@@ -44,8 +44,8 @@ SELECT
     [ОтветственныеПоКредитамВыданным Кредит]                    AS Credit,
     [ОтветственныеПоКредитамВыданным Филиал ID]                 AS Filial_ID,
     [ОтветственныеПоКредитамВыданным Филиал]                    AS Filial,
-    [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]      AS Expert_ID,
-    [ОтветственныеПоКредитамВыданным Кредитный Эксперт]         AS Expert,
+    [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]      AS Employee_ID,
+    [ОтветственныеПоКредитамВыданным Кредитный Эксперт]         AS Employee,
     ISNULL(
         LEAD([ОтветственныеПоКредитамВыданным Период]) OVER (
             PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]

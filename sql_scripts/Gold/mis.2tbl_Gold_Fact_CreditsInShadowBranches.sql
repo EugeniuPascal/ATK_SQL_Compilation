@@ -16,8 +16,8 @@ CREATE TABLE mis.[2tbl_Gold_CreditsInShadowBranches] (
     Credit NVARCHAR(100) NULL,
     BranchID VARCHAR(32) NULL,
     Branch NVARCHAR(100) NULL,
-    CreditExpertID VARCHAR(32) NULL,
-    CreditExpert NVARCHAR(100) NULL,
+    CreditEmployeeID VARCHAR(32) NULL,
+    CreditEmployee NVARCHAR(100) NULL,
     DateTo DATETIME NULL
 );
 GO
@@ -33,8 +33,8 @@ GO
           rs.[КредитыВТеневыхФилиалах Кредит]                 AS Credit,
           rs.[КредитыВТеневыхФилиалах Филиал ID]              AS BranchID,
           rs.[КредитыВТеневыхФилиалах Филиал]                 AS Branch,
-          rs.[КредитыВТеневыхФилиалах Кредитный Эксперт ID]   AS CreditExpertID,
-          rs.[КредитыВТеневыхФилиалах Кредитный Эксперт]      AS CreditExpert
+          rs.[КредитыВТеневыхФилиалах Кредитный Эксперт ID]   AS CreditEmployeeID,
+          rs.[КредитыВТеневыхФилиалах Кредитный Эксперт]      AS CreditEmployee
     FROM [ATK].[mis].[Silver_РегистрыСведений.КредитыВТеневыхФилиалах] rs
 	WHERE rs.[КредитыВТеневыхФилиалах Период] >= '2023-01-01'
 ),
@@ -49,8 +49,8 @@ calc AS (
           Credit,
           BranchID,
           Branch,
-          CreditExpertID,
-          CreditExpert,
+          CreditEmployeeID,
+          CreditEmployee,
           LEAD(Period) OVER (
               PARTITION BY CreditID
               ORDER BY Period, RowNumber
@@ -66,8 +66,8 @@ INSERT INTO mis.[2tbl_Gold_CreditsInShadowBranches] (
       Credit,
       BranchID,
       Branch,
-      CreditExpertID,
-      CreditExpert,
+      CreditEmployeeID,
+      CreditEmployee,
       DateTo
 )
 SELECT
@@ -79,8 +79,8 @@ SELECT
       Credit,
       BranchID,
       Branch,
-      CreditExpertID,
-      CreditExpert,
+      CreditEmployeeID,
+      CreditEmployee,
       DateTo
 FROM calc;
 

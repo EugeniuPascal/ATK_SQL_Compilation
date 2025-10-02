@@ -1,11 +1,12 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_BudgetExperts]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_BudgetExperts];
+IF OBJECT_ID('mis.[2tbl_Gold_Fact_BudgetEmployees]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_BudgetEmployees];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_BudgetExperts] (
+CREATE TABLE mis.[2tbl_Gold_Fact_BudgetEmployees] 
+(
     [EmployeeID]          VARCHAR(36) NOT NULL,
     [Employee]            NVARCHAR(40) NULL,
     [AmountIssued]        DECIMAL(18,2) NULL,
@@ -32,7 +33,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_BudgetExperts] (
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Fact_BudgetExperts]
+INSERT INTO mis.[2tbl_Gold_Fact_BudgetEmployees]
 SELECT
     s.[БюджетПоСотрудникам ID] AS EmployeeID,
     s.[БюджетПоСотрудникам.Сотрудники Сотрудник] AS Employee,

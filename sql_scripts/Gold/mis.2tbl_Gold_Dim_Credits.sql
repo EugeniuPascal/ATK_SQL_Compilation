@@ -37,9 +37,9 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [IssuedCreditsStatus] NVARCHAR(50) NULL,
     [CreditApplicationPartnerID] VARCHAR(36) NULL,
     [FirstFilialID] VARCHAR(36) NULL,
-    [FirstExpertID] VARCHAR(36) NULL,
+    [FirstEmployeeID] VARCHAR(36) NULL,
     [LastFilialID] VARCHAR(36) NULL,
-    [LastExpertID] VARCHAR(36) NULL,
+    [LastEmployeeID] VARCHAR(36) NULL,
     [DealerID] VARCHAR(36) NULL,
     [Source] NVARCHAR(50) NULL,
     [LatestOutstandingAmount] DECIMAL(18,2) NULL,
@@ -50,7 +50,6 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [DigitalSign] NVARCHAR(50) NULL
 );
 GO
-
 
 WITH
 -- Latest credit per CreditID
@@ -63,7 +62,6 @@ Credits AS (
     ) t
     WHERE rn = 1
 ),
-
 -- Latest OIA row per Application (collapse multiple OIA rows to one per application)
 OIA_LatestPerApp AS (
     SELECT *
@@ -78,7 +76,6 @@ OIA_LatestPerApp AS (
     ) t
     WHERE rn = 1
 ),
-
 -- Latest credit request per CreditID (take latest Source via joined latest-per-application rows)
 CreditRequest AS (
     SELECT *
@@ -89,7 +86,7 @@ CreditRequest AS (
             oia.[ОбъединеннаяИнтернетЗаявка Дилер ID] AS DealerID,
             NULLIF(LTRIM(RTRIM(oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения])), '') AS Source,
             oia.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS FilialID,
-            oia.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS ExpertID,
+            oia.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS EmployeeID,
             ROW_NUMBER() OVER (
                 PARTITION BY znk.[ЗаявкаНаКредит Кредит ID]
                 ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
@@ -101,26 +98,23 @@ CreditRequest AS (
     ) t
     WHERE rn = 1
 ),
-
 -- First/Last Responsible
 Resp AS (
     SELECT
         [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
         MIN([ОтветственныеПоКредитамВыданным Филиал ID]) AS FirstFilialID,
-        MIN([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS FirstExpertID,
+        MIN([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS FirstEmployeeID,
         MAX([ОтветственныеПоКредитамВыданным Филиал ID]) AS LastFilialID,
-        MAX([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS LastExpertID
+        MAX([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS LastEmployeeID
     FROM [ATK].[mis].[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным]
     GROUP BY [ОтветственныеПоКредитамВыданным Кредит ID]
 ),
-
 -- Financial products main group
 FinProducts AS (
     SELECT [ФинансовыеПродукты ID] AS FinancialProductID,
            [ФинансовыеПродукты Основная Группа] AS FinancialProductsMainGroup
     FROM [ATK].[mis].[Silver_Справочники.ФинансовыеПродукты]
 ),
-
 -- Latest credit status
 Statuses AS (
     SELECT *
@@ -135,7 +129,6 @@ Statuses AS (
     ) t
     WHERE rn = 1
 ),
-
 -- Latest outstanding per credit
 LatestOutstanding AS (
     SELECT sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
@@ -150,7 +143,6 @@ LatestOutstanding AS (
       ON sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = md.CreditID
      AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] = md.MaxDate
 ),
-
 -- Segment revenue
 SegmentRevenue AS (
     SELECT [КредитныеПродукты ID] AS ProductID,
@@ -159,7 +151,6 @@ SegmentRevenue AS (
     WHERE [КредитныеПродукты Сегмент Доходов] IS NOT NULL
     GROUP BY [КредитныеПродукты ID]
 ),
-
 -- Committee info / Green Credit
 GreenCredit AS (
     SELECT *
@@ -175,7 +166,6 @@ GreenCredit AS (
     ) t
     WHERE rn = 1
 )
-
 -- Final insert
 INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
@@ -187,8 +177,8 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [UsagePurpose], [PurposeDescription],
     [ProductType], [UsageArea], [SigningSource],
     [FinancialProductsMainGroup], [IssuedCreditsStatus],
-    [CreditApplicationPartnerID], [FirstFilialID], [FirstExpertID],
-    [LastFilialID], [LastExpertID], [DealerID], [Source],
+    [CreditApplicationPartnerID], [FirstFilialID], [FirstEmployeeID],
+    [LastFilialID], [LastEmployeeID], [DealerID], [Source],
     [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit],
     [CommitteeProt_CrPurpose], [CommitteeProt_AMLRiskCat],
     [DigitalSign] 
@@ -197,7 +187,13 @@ SELECT
     c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
     c.[Кредиты Дата Выдачи], c.[Кредиты Срок Кредита], c.[Кредиты Сумма Кредита],
     c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], c.[Кредиты Финансовый Продукт],
-    c.[Кредиты Агро], c.[Кредиты Тип Местности], c.[Кредиты Валюта], c.[Кредиты Кредитный Продукт ID],
+    c.[Кредиты Агро], 
+	CASE c.[Кредиты Тип Местности]
+	     WHEN 'ГородБольшой' THEN 'bigCity'
+         WHEN 'Пригород' THEN 'suburb'
+	     WHEN 'Город' THEN 'city'
+	END AS LocalityType, 
+	c.[Кредиты Валюта], c.[Кредиты Кредитный Продукт ID],
     c.[Кредиты Кредитный Продукт], c.[Кредиты Цель Кредита], c.[Кредиты Удалить Источник Финансирования],
     c.[Кредиты Вид Контракта], c.[Кредиты Дата Контракта], c.[Кредиты Сегмент Доходов],
     c.[Кредиты Назначение Использования Кредита], c.[Кредиты Цель Кредита Описание],
@@ -206,10 +202,21 @@ SELECT
     st.IssuedCreditsStatus,
     cr.ApplicationPartnerID,
     COALESCE(r.FirstFilialID, cr.FilialID),
-    COALESCE(r.FirstExpertID, cr.ExpertID),
+    COALESCE(r.FirstEmployeeID, cr.EmployeeID),
     COALESCE(r.LastFilialID, cr.FilialID),
-    COALESCE(r.LastExpertID, cr.ExpertID),
-    cr.DealerID, cr.Source,
+    COALESCE(r.LastEmployeeID, cr.EmployeeID),
+    cr.DealerID,
+    CASE cr.Source
+       WHEN 'Партнер' THEN 'Parteners'
+       WHEN 'Кассир' THEN 'CCR'
+       WHEN 'СотрудникCallCenter' THEN 'CallCenter'
+       WHEN 'Сайт' THEN 'Web'
+       WHEN 'Плагин' THEN 'API'
+	   WHEN 'МобильноеПриложение' THEN 'MobileApp'
+	   WHEN 'КредитныйЭксперт' THEN 'Employee'
+	   WHEN 'Другой' THEN 'Other'
+       ELSE cr.Source
+    END AS Source,
     lo.LatestOutstandingAmount,
     seg.SegmentRevenue,
     gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat,

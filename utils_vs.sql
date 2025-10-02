@@ -66,3 +66,19 @@ HAVING COUNT(*) > 1;
 EXEC msdb.dbo.sp_help_jobhistory 
     @job_name = 'usp_CompileSilverTables',
     @mode = 'FULL';
+	
+SELECT *
+FROM [ATK].[mis].[2tbl_Gold_Dim_Employees]
+WHERE HireDate IS NOT NULL
+AND EmployeeID IS NOT NULL
+AND BirthDate IS NOT NULL
+AND DismissalDate IS NOT NULL
+AND Position IS NOT NULL
+AND TimesheetNumber IS NOT NULL
+AND ExperienceYears IS NOT NULL
+AND ExperienceMonths IS NOT NULL
+AND EmploymentPeriod IS NOT NULL
+AND EmployeePositionID IS NOT NULL
+AND EmployeePosition IS NOT NULL
+AND EmployeeCode IS NOT NULL
+AND EmployeeName IS NOT NULL

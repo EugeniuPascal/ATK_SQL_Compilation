@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-10-02 16:09:44
+-- Generated: 2025-10-02 17:12:32
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (13):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -619,11 +619,12 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
     [HireDate] DATETIME NULL,
     [BirthDate] DATETIME NULL,
     [DismissalDate] DATETIME NULL,
-    [Position] NVARCHAR(100) NULL,
     [TimesheetNumber] INT NULL,
     [ExperienceYears] INT NULL,
     [ExperienceMonths] INT NULL,
-    [EmploymentPeriod] NVARCHAR(50) NULL
+    [EmploymentPeriod] NVARCHAR(50) NULL,
+	[EmployeePositionID] VARCHAR(36) NULL,
+	[EmployeePosition] NVARCHAR(150)  NULL
 );
 GO
 
@@ -634,29 +635,33 @@ INSERT INTO mis.[2tbl_Gold_Dim_Employees] (
     [HireDate],
     [BirthDate],
     [DismissalDate],
-    [Position],
     [TimesheetNumber],
     [ExperienceYears],
     [ExperienceMonths],
-    [EmploymentPeriod]
+    [EmploymentPeriod],
+	[EmployeePositionID],
+	[EmployeePosition]
 )
 SELECT 
-    [Сотрудники ID] AS EmployeeID,
-    [Сотрудники Код] AS EmployeeCode,
-    [Сотрудники Наименование] AS EmployeeName,
-    [Сотрудники Дата Приема] AS HireDate,
-    [Сотрудники Дата Рождения] AS BirthDate,
-    [Сотрудники Дата Увольнения] AS DismissalDate,
-    [Сотрудники Должность Спр] AS Position,
-    [Сотрудники Табельный Номер] AS TimesheetNumber,
-    DATEDIFF(YEAR, [Сотрудники Дата Приема], GETDATE()) AS ExperienceYears,
-    DATEDIFF(MONTH, [Сотрудники Дата Приема], GETDATE()) % 12 AS ExperienceMonths,
+    a.[Сотрудники ID] AS EmployeeID,
+    a.[Сотрудники Код] AS EmployeeCode,
+    a.[Сотрудники Наименование] AS EmployeeName,
+    a.[Сотрудники Дата Приема] AS HireDate,
+    a.[Сотрудники Дата Рождения] AS BirthDate,
+    a.[Сотрудники Дата Увольнения] AS DismissalDate,
+    a.[Сотрудники Табельный Номер] AS TimesheetNumber,
+    DATEDIFF(YEAR, a.[Сотрудники Дата Приема], GETDATE()) AS ExperienceYears,
+    DATEDIFF(MONTH, a.[Сотрудники Дата Приема], GETDATE()) % 12 AS ExperienceMonths,
     CASE 
         WHEN [Сотрудники Дата Увольнения] IS NULL 
             THEN FORMAT([Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → Present'
         ELSE FORMAT([Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → ' + FORMAT([Сотрудники Дата Увольнения], 'yyyy-MM-dd')
-    END AS EmploymentPeriod
-FROM [ATK].[dbo].[Справочники.Сотрудники];
+    END AS EmploymentPeriod,
+	b.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
+	b.[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
+FROM [ATK].[dbo].[Справочники.Сотрудники] AS a
+LEFT JOIN [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] AS b
+	 ON a.[Сотрудники ID] = b.[СотрудникиДанныеПоЗарплате Сотрудник ID];
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Dim_Employees.sql

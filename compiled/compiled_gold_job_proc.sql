@@ -1,8 +1,8 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-10-02 17:12:36.038525
+-- Generated: 2025-10-03 16:49:00.905591
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files included: 13
+-- Files included: 14
 --   mis.2tbl_Gold_Dim_AppUsers.sql
 --   mis.2tbl_Gold_Dim_Branch.sql
 --   mis.2tbl_Gold_Dim_Clients.sql
@@ -11,6 +11,7 @@
 --   mis.2tbl_Gold_Dim_Employees.sql
 --   mis.2tbl_Gold_Dim_EmployeesHistory.sql
 --   mis.2tbl_Gold_Dim_PartnersBranch.sql
+--   mis.2tbl_Gold_Fact_ArchiveDocument.sql
 --   mis.2tbl_Gold_Fact_BudgetEmployees.sql
 --   mis.2tbl_Gold_Fact_CerereOnline.sql
 --   mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
@@ -297,8 +298,20 @@ SELECT
     ClientID, ParentID, BranchID,
     IsDeleted, IsGroup, ClientCode, ClientName, IsBlocked, Visibility,
     Age, AgeGroup, City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
-    Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
-    FiscalCode, LegalAddress, RegistrationDate, [Language],
+
+    CASE Gender
+        WHEN ''Ж'' THEN ''F''
+        WHEN N''М'' THEN ''M''  
+        ELSE Gender      
+    END AS Gender,
+	
+	PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
+    FiscalCode, LegalAddress, RegistrationDate, 
+	CASE [Language]
+	     WHEN ''Русский'' THEN ''Russian''
+		 WHEN N''Română'' THEN ''Romanian''
+		 ELSE [Language]
+    END AS [Language],
     NoEmailNotifications, NoPromoSMS, OrganizationType,
     IsGroupOwner, GroupID
 FROM Dedup
@@ -498,20 +511,198 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
 SELECT
     c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
     c.[Кредиты Дата Выдачи], c.[Кредиты Срок Кредита], c.[Кредиты Сумма Кредита],
-    c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], c.[Кредиты Финансовый Продукт],
-    c.[Кредиты Агро], 
+    c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], 
+	c.[Кредиты Финансовый Продукт],
+	                                     
+                                                                  
+                                                         
+                                                                                   
+                                                         
+                                                                                     
+                                                                                                    
+                                                                                    
+                                                                                            
+                                                                                
+                                                
+                                                                                       
+                                                                            
+                                                               
+                                                                                 
+                                                                                         
+                                                                                                                  
+                                                                                                               
+                                                         
+                                                      
+                                                                                                 
+                                                                   
+                                                                                  
+                                                      
+                                                              
+                                                                                           
+                                                                                                   
+                                                      
+                                                                    
+                                       
+                           
+    CASE c.[Кредиты Агро]
+	     WHEN ''Агро'' THEN ''Agro''
+         WHEN ''НеАгро'' THEN ''nonAgro''
+		 ELSE c.[Кредиты Агро]
+	END AS Agro, 
 	CASE c.[Кредиты Тип Местности]
 	     WHEN ''ГородБольшой'' THEN ''bigCity''
          WHEN ''Пригород'' THEN ''suburb''
 	     WHEN ''Город'' THEN ''city''
-	END AS LocalityType, 
-	c.[Кредиты Валюта], c.[Кредиты Кредитный Продукт ID],
-    c.[Кредиты Кредитный Продукт], c.[Кредиты Цель Кредита], c.[Кредиты Удалить Источник Финансирования],
-    c.[Кредиты Вид Контракта], c.[Кредиты Дата Контракта], c.[Кредиты Сегмент Доходов],
-    c.[Кредиты Назначение Использования Кредита], c.[Кредиты Цель Кредита Описание],
-    c.[Кредиты Тип Кредитного Продукта], c.[Кредиты Сфера Использования Кредита], c.[Кредиты Источник Подписания],
-    fp.FinancialProductsMainGroup,
-    st.IssuedCreditsStatus,
+		 ELSE c.[Кредиты Тип Местности]
+	END AS LocalityType,
+    c.[Кредиты Валюта],	
+	                         
+                           
+                          
+                   
+	c.[Кредиты Кредитный Продукт ID],
+    c.[Кредиты Кредитный Продукт],
+    c.[Кредиты Цель Кредита],	
+	                               
+                                                                                                
+                                                                  
+                                          
+                                                                           
+                                   
+                                       
+                                                                              
+                                                               
+                                                 
+                                 
+                                                                                    
+                                                    
+                                                                                                        
+                                                                                                 
+                                     
+                                                                    
+                                                           
+                                                                
+                                        
+                                                    
+                                                                                    
+                                                                                              
+                                                         
+                                     
+                                        
+                                                                
+                                                        
+                                                                                     
+                                                                      
+                                                         
+                                                                                  
+                                                     
+                                                        
+                                                                        
+                                                                              
+                                                             
+                                                                
+                                                                    
+                                
+                  
+	c.[Кредиты Удалить Источник Финансирования],
+    CASE c.[Кредиты Вид Контракта]
+	     WHEN ''Контракт'' THEN ''Contract''
+		 WHEN ''Приложение'' THEN ''App''
+		 ELSE c.[Кредиты Вид Контракта]
+	END AS ContractType, 
+	c.[Кредиты Дата Контракта],
+    c.[Кредиты Сегмент Доходов],	
+                                  
+                                                            
+                                                  
+                                                            
+                                   
+                                                        
+                                                     
+                                                                
+                                                                
+                                                      
+                                                                
+                                                                
+                                                                       
+                                                                   
+                                               
+                              
+                                                                
+                                               
+                                                                      
+                                             
+                                       
+                                                                
+                                        
+                                                                  
+                                                        
+                                          
+                                                        
+                                                          
+                                                              
+                                              
+                                                                      
+                                                            
+                                                  
+                                             
+                                                                
+                                                                            
+                                         
+                           
+	c.[Кредиты Назначение Использования Кредита],
+                                                       
+                                     
+                                                    
+                                                    
+                       	 	
+	c.[Кредиты Цель Кредита Описание],
+	c.[Кредиты Тип Кредитного Продукта],
+                                              
+                                                             
+                                                        
+                                                         
+                                  
+                                                       
+                                                  
+                                                       
+                                           
+                       
+    c.[Кредиты Сфера Использования Кредита],
+	                                              
+                                                 
+                                   
+                                   
+                                                     
+                                                                       
+                                              
+                                       
+                                                         
+                                         
+                                                 
+                                                           
+                                              
+                                               
+                    
+	CASE c.[Кредиты Источник Подписания]
+	     WHEN ''Приложение'' THEN ''MobileApp''
+		 WHEN ''Сайт'' THEN ''WebSite''
+		 ELSE c.[Кредиты Источник Подписания]
+	END AS SigningSource,
+	fp.FinancialProductsMainGroup,
+                                        
+                                                  
+                                  
+                                                                    
+                                                  
+                                     
+                                     
+    CASE st.IssuedCreditsStatus
+	     WHEN ''Закрыт'' THEN ''Closed''
+		 WHEN ''Выдан'' THEN ''Disbursed''
+		 WHEN ''Списан'' THEN ''Written off''
+	     ELSE st.IssuedCreditsStatus
+	END AS IssuedCreditsStatus,
     cr.ApplicationPartnerID,
     COALESCE(r.FirstFilialID, cr.FilialID),
     COALESCE(r.FirstEmployeeID, cr.EmployeeID),
@@ -519,19 +710,70 @@ SELECT
     COALESCE(r.LastEmployeeID, cr.EmployeeID),
     cr.DealerID,
     CASE cr.Source
-       WHEN ''Партнер'' THEN ''Parteners''
-       WHEN ''Кассир'' THEN ''CCR''
-       WHEN ''СотрудникCallCenter'' THEN ''CallCenter''
-       WHEN ''Сайт'' THEN ''Web''
-       WHEN ''Плагин'' THEN ''API''
-	   WHEN ''МобильноеПриложение'' THEN ''MobileApp''
-	   WHEN ''КредитныйЭксперт'' THEN ''Employee''
-	   WHEN ''Другой'' THEN ''Other''
-       ELSE cr.Source
+         WHEN ''Партнер'' THEN ''Parteners''
+         WHEN ''Кассир'' THEN ''CCR''
+         WHEN ''СотрудникCallCenter'' THEN ''CallCenter''
+         WHEN ''Сайт'' THEN ''WebSite''
+         WHEN ''Плагин'' THEN ''API''
+	     WHEN ''МобильноеПриложение'' THEN ''MobileApp''
+	     WHEN ''КредитныйЭксперт'' THEN ''Employee''
+	     WHEN ''Другой'' THEN ''Other''
+         ELSE cr.Source
     END AS Source,
     lo.LatestOutstandingAmount,
-    seg.SegmentRevenue,
-    gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat,
+	seg.SegmentRevenue,
+                             
+                                                    
+                                              
+                                                           
+                                   
+                                                    
+                                                       
+                                                                
+                                                           
+                                                 
+                                                           
+                                                           
+                                                                          
+                                                              
+                              
+                                                 
+                                                               
+                                               
+                                                                   
+                                             
+                                                                           
+                                       
+                                                           
+                                        
+                                                               
+                                                        
+                                          
+                                                        
+                                                     
+                                                                 
+                                              
+                                                                     
+                                                       
+                                                  
+                                             
+                                                       
+                                                                         
+                          
+                          
+    gc.GreenCredit,
+    gc.CommitteeProt_CrPurpose,	
+	                                 
+                                     
+                                                    
+                                         
+                                      
+	CASE gc.CommitteeProt_AMLRiskCat
+	   WHEN ''Высокий'' THEN ''High_Risk''
+       WHEN ''Средний'' THEN ''Medium_Risk''
+       WHEN ''Низкий'' THEN ''Low_Risk''
+	   ELSE  gc.CommitteeProt_AMLRiskCat
+	END AS CommitteeProt_AMLRiskCat,
     CASE WHEN c.[Кредиты Источник Подписания] IS NOT NULL 
 	     THEN ''True'' 
 		 ELSE ''False'' 
@@ -558,7 +800,7 @@ LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID;';
 CREATE TABLE mis.[2tbl_Gold_Dim_EmployeePayrollData]
 (
     EmployeePositionID VARCHAR(36) NOT NULL,
-    EmployeePosition NVARCHAR(150) NULL,
+    EmployeePosition NVARCHAR(150) NULL
 );
 
 INSERT INTO mis.[2tbl_Gold_Dim_EmployeePayrollData] 
@@ -567,8 +809,116 @@ INSERT INTO mis.[2tbl_Gold_Dim_EmployeePayrollData]
     EmployeePosition
 )
 SELECT 
-    [СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID, 
-    [СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
+    [СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
+	[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
+                                                 
+                                                                         
+                                              
+                                                   
+                                                            
+                                   
+                                                                                                                     
+                                                                 
+                                                                                    
+                                                                  
+                                                                    
+                                                                            
+                                   
+                                                                                      
+                                                                    
+                                                                        
+                                     
+                                                        
+                                       
+                                                                            
+                                                             
+                                                        
+                                                       
+                                           
+                                                                
+                                                  
+                                                       
+                                                                
+                                                                
+                                                       
+                                                       
+                                                       
+                                                                                                          
+                                                                                                         
+                                                            
+                                                    
+                                                    
+                                                          
+                                                                      
+                                                                               
+                                                                                                               
+                                                         
+                                                                                                                                      
+                                                                 
+                                                      
+                                                                
+                                         
+                                                   
+                                                           
+                                                  
+                                                                   
+                                                                              
+                                                            
+                                                                     
+                                                                                                                                 
+                                                          
+                                                         
+                                                                     
+                                                    
+                                                               
+                                           
+                                                  
+                                                                                              
+                                    
+                                                 
+                                                                                                       
+                                                                             
+                                                                               
+                                                                                                
+                                                                    
+                                                                                                    
+                                                                
+                                                  
+                                                          
+                                             
+                                                                    
+                                                               
+                                    
+                                                     
+                                                              
+                                                                                           
+                                       
+                                                                                                      
+                                                                                                       
+                                       
+                                                                       
+                                                                          
+                                         
+                                                                     
+                                                                                                
+                                           
+                                                  
+                                                                                                                                                                             
+                                            
+                                                 
+                                                                                                    
+                                         
+                                                                                   
+                                                                                                       
+                                                       
+                                                                                      
+                                                                  
+                                                   
+                                                                                           
+                                                                                  
+                                               
+                       
+  
 
 FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате];';
     BEGIN TRY
@@ -594,8 +944,8 @@ CREATE TABLE [mis].[2tbl_Gold_Dim_Employees](
     [ExperienceYears] INT NULL,
     [ExperienceMonths] INT NULL,
     [EmploymentPeriod] NVARCHAR(50) NULL,
-	[EmployeePositionID] VARCHAR(36) NULL,
-	[EmployeePosition] NVARCHAR(150)  NULL
+    [EmployeePositionID] VARCHAR(36) NULL,
+    [EmployeePosition] NVARCHAR(150)  NULL
 );
 
 INSERT INTO mis.[2tbl_Gold_Dim_Employees] (
@@ -609,8 +959,8 @@ INSERT INTO mis.[2tbl_Gold_Dim_Employees] (
     [ExperienceYears],
     [ExperienceMonths],
     [EmploymentPeriod],
-	[EmployeePositionID],
-	[EmployeePosition]
+    [EmployeePositionID],
+    [EmployeePosition]
 )
 SELECT 
     a.[Сотрудники ID] AS EmployeeID,
@@ -623,15 +973,19 @@ SELECT
     DATEDIFF(YEAR, a.[Сотрудники Дата Приема], GETDATE()) AS ExperienceYears,
     DATEDIFF(MONTH, a.[Сотрудники Дата Приема], GETDATE()) % 12 AS ExperienceMonths,
     CASE 
-        WHEN [Сотрудники Дата Увольнения] IS NULL 
-            THEN FORMAT([Сотрудники Дата Приема], ''yyyy-MM-dd'') + N'' → Present''
-        ELSE FORMAT([Сотрудники Дата Приема], ''yyyy-MM-dd'') + N'' → '' + FORMAT([Сотрудники Дата Увольнения], ''yyyy-MM-dd'')
+        WHEN a.[Сотрудники Дата Увольнения] IS NULL 
+        THEN FORMAT(a.[Сотрудники Дата Приема], ''yyyy-MM-dd'') + N'' → Present''
+        ELSE FORMAT(a.[Сотрудники Дата Приема], ''yyyy-MM-dd'') + N'' → '' + FORMAT(a.[Сотрудники Дата Увольнения], ''yyyy-MM-dd'')
     END AS EmploymentPeriod,
-	b.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
-	b.[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
+    lastPos.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
+    lastPos.[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
 FROM [ATK].[dbo].[Справочники.Сотрудники] AS a
-LEFT JOIN [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] AS b
-	 ON a.[Сотрудники ID] = b.[СотрудникиДанныеПоЗарплате Сотрудник ID];';
+OUTER APPLY (
+    SELECT TOP 1 *
+    FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] AS b
+    WHERE b.[СотрудникиДанныеПоЗарплате Сотрудник ID] = a.[Сотрудники ID]
+    ORDER BY b.[СотрудникиДанныеПоЗарплате Период] DESC
+) AS lastPos;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY
@@ -749,6 +1103,132 @@ SELECT
 FROM mis.[Silver_Справочники.ФилиалыКонтрагентов] f
 LEFT JOIN mis.[Silver_Справочники.Дилеры] d
   ON d.[Дилеры Владелец] = f.[ФилиалыКонтрагентов ID];';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
+
+    -- Start of: mis.2tbl_Gold_Fact_ArchiveDocument.sql
+    SET @sql = N'USE [ATK]
+
+IF OBJECT_ID(''mis.[2tbl_Gold_Fact_ArchiveDocument]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_ArchiveDocument];
+
+IF OBJECT_ID(N''[mis].[2tbl_Gold_Fact_ArchiveDocument]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_Fact_ArchiveDocument];
+CREATE TABLE [mis].[2tbl_Gold_Fact_ArchiveDocument](
+    [АктыПередачиКредитныхДел Период]         DATETIME NULL,
+    [АктыПередачиКредитныхДел ID]             VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Номер Строки]   INT NULL,
+    [АктыПередачиКредитныхДел Активность]     VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Кредит Tип]     VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Кредит Вид]     VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Кредит ID]      VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Контрагент ID]  VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Контрагент]     NVARCHAR(250) NULL,
+    [АктыПередачиКредитныхДел Вид Акта]       NVARCHAR(256) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Tип] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Вид] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции ID] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Документ Tип] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Документ Вид] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Документ ID] VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Вид Акта Передачи Кредитных Дел] NVARCHAR(256) NULL,
+    [АктыПередачиКредитныхДел Статус Досье] NVARCHAR(256) NULL,
+    [АктыПередачиКредитныхДел Статус Акта] NVARCHAR(256) NULL,
+    [АктыПередачиКредитныхДел Получатель Tип] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Получатель Вид] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Получатель ID] VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Дата Получения] DATETIME NULL,
+    [АктыПередачиКредитныхДел Дата Проверки] DATETIME NULL,
+    [АктыПередачиКредитныхДел Комментарий] NVARCHAR(1000) NULL,
+    [АктыПередачиКредитныхДел Автор ID] VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Автор] NVARCHAR(250) NULL,
+    [АктыПередачиКредитныхДел Дедлайн] DATETIME NULL,
+
+    [ОтветственныеПоКредитнымДелам Период] DATETIME NULL,
+    [ОтветственныеПоКредитнымДелам ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Номер Строки] INT NULL,
+    [ОтветственныеПоКредитнымДелам Активность] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Кредит Tип] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Кредит Вид] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Кредит ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Ответственный Tип] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Ответственный Вид] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Ответственный ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Дата Проверки] DATETIME NULL,
+    [ОтветственныеПоКредитнымДелам Комментарий] NVARCHAR(1000) NULL,
+    [ОтветственныеПоКредитнымДелам УДАЛИТЬ _ Статус Досье] NVARCHAR(256) NULL,
+    [ОтветственныеПоКредитнымДелам Телефон] NVARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Филиал ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Филиал] NVARCHAR(250) NULL,
+    [ОтветственныеПоКредитнымДелам Вид Акта Передачи Кредитных Дел] NVARCHAR(256) NULL,
+    [ОтветственныеПоКредитнымДелам Отправитель ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Отправитель] NVARCHAR(100) NULL,
+    [ОтветственныеПоКредитнымДелам Ссылка на Документ ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Ссылка на Документ] NVARCHAR(150) NULL,
+    [ОтветственныеПоКредитнымДелам Статус Акта] NVARCHAR(256) NULL
+);
+
+INSERT INTO mis.[2tbl_Gold_Fact_ArchiveDocument]
+SELECT
+    r.[АктыПередачиКредитныхДел Период],
+    r.[АктыПередачиКредитныхДел ID],
+    r.[АктыПередачиКредитныхДел Номер Строки],
+    r.[АктыПередачиКредитныхДел Активность],
+    r.[АктыПередачиКредитныхДел Кредит Tип],
+    r.[АктыПередачиКредитныхДел Кредит Вид],
+    r.[АктыПередачиКредитныхДел Кредит ID],
+    r.[АктыПередачиКредитныхДел Контрагент ID],
+    r.[АктыПередачиКредитныхДел Контрагент],
+    r.[АктыПередачиКредитныхДел Вид Акта],
+    r.[АктыПередачиКредитныхДел Вид Операции Tип],
+    r.[АктыПередачиКредитныхДел Вид Операции Вид],
+    r.[АктыПередачиКредитныхДел Вид Операции ID],
+    r.[АктыПередачиКредитныхДел Вид Операции Документ Tип],
+    r.[АктыПередачиКредитныхДел Вид Операции Документ Вид],
+    r.[АктыПередачиКредитныхДел Вид Операции Документ ID],
+    r.[АктыПередачиКредитныхДел Вид Акта Передачи Кредитных Дел],
+    r.[АктыПередачиКредитныхДел Статус Досье],
+    r.[АктыПередачиКредитныхДел Статус Акта],
+    r.[АктыПередачиКредитныхДел Получатель Tип],
+    r.[АктыПередачиКредитныхДел Получатель Вид],
+    r.[АктыПередачиКредитныхДел Получатель ID],
+    r.[АктыПередачиКредитныхДел Дата Получения],
+    r.[АктыПередачиКредитныхДел Дата Проверки],
+    r.[АктыПередачиКредитныхДел Комментарий],
+    r.[АктыПередачиКредитныхДел Автор ID],
+    r.[АктыПередачиКредитныхДел Автор],
+    r.[АктыПередачиКредитныхДел Дедлайн],
+
+    o.[ОтветственныеПоКредитнымДелам Период],
+    o.[ОтветственныеПоКредитнымДелам ID],
+    o.[ОтветственныеПоКредитнымДелам Номер Строки],
+    o.[ОтветственныеПоКредитнымДелам Активность],
+    o.[ОтветственныеПоКредитнымДелам Кредит Tип],
+    o.[ОтветственныеПоКредитнымДелам Кредит Вид],
+    o.[ОтветственныеПоКредитнымДелам Кредит ID],
+    o.[ОтветственныеПоКредитнымДелам Ответственный Tип],
+    o.[ОтветственныеПоКредитнымДелам Ответственный Вид],
+    o.[ОтветственныеПоКредитнымДелам Ответственный ID],
+    o.[ОтветственныеПоКредитнымДелам Дата Проверки],
+    o.[ОтветственныеПоКредитнымДелам Комментарий],
+    o.[ОтветственныеПоКредитнымДелам Телефон],
+    o.[ОтветственныеПоКредитнымДелам Филиал ID],
+    o.[ОтветственныеПоКредитнымДелам Филиал],
+    o.[ОтветственныеПоКредитнымДелам Вид Акта Передачи Кредитных Дел],
+    o.[ОтветственныеПоКредитнымДелам Отправитель ID],
+    o.[ОтветственныеПоКредитнымДелам Отправитель],
+    o.[ОтветственныеПоКредитнымДелам УДАЛИТЬ _ Дедлайн],
+    o.[ОтветственныеПоКредитнымДелам Ссылка на Документ ID],
+    o.[ОтветственныеПоКредитнымДелам Ссылка на Документ],
+    o.[ОтветственныеПоКредитнымДелам Статус Акта]
+FROM [ATK].[dbo].[РегистрыСведений.АктыПередачиКредитныхДел] r
+LEFT JOIN [ATK].[dbo].[РегистрыСведений.ОтветственныеПоКредитнымДелам] o
+       ON o.[ОтветственныеПоКредитнымДелам ID] = r.[АктыПередачиКредитныхДел ID]
+       AND o.[ОтветственныеПоКредитнымДелам Кредит ID] = r.[АктыПередачиКредитныхДел Кредит ID]
+WHERE r.[АктыПередачиКредитныхДел Период] >= ''2024-01-01'';';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

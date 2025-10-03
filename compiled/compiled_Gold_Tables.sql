@@ -1,7 +1,7 @@
 -- Compiled SQL bundle
--- Generated: 2025-10-02 17:12:32
+-- Generated: 2025-10-03 16:48:48
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files (13):
+-- Files (14):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
 --   mis.2tbl_Gold_Dim_Branch.sql
 --   mis.2tbl_Gold_Dim_Clients.sql
@@ -10,6 +10,7 @@
 --   mis.2tbl_Gold_Dim_Employees.sql
 --   mis.2tbl_Gold_Dim_EmployeesHistory.sql
 --   mis.2tbl_Gold_Dim_PartnersBranch.sql
+--   mis.2tbl_Gold_Fact_ArchiveDocument.sql
 --   mis.2tbl_Gold_Fact_BudgetEmployees.sql
 --   mis.2tbl_Gold_Fact_CerereOnline.sql
 --   mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
@@ -304,8 +305,20 @@ SELECT
     ClientID, ParentID, BranchID,
     IsDeleted, IsGroup, ClientCode, ClientName, IsBlocked, Visibility,
     Age, AgeGroup, City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
-    Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
-    FiscalCode, LegalAddress, RegistrationDate, [Language],
+
+    CASE Gender
+        WHEN 'Ж' THEN 'F'
+        WHEN N'М' THEN 'M'  -- Cyrillic M
+        ELSE Gender      
+    END AS Gender,
+	
+	PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
+    FiscalCode, LegalAddress, RegistrationDate, 
+	CASE [Language]
+	     WHEN 'Русский' THEN 'Russian'
+		 WHEN N'Română' THEN 'Romanian'
+		 ELSE [Language]
+    END AS [Language],
     NoEmailNotifications, NoPromoSMS, OrganizationType,
     IsGroupOwner, GroupID
 FROM Dedup
@@ -515,20 +528,198 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
 SELECT
     c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
     c.[Кредиты Дата Выдачи], c.[Кредиты Срок Кредита], c.[Кредиты Сумма Кредита],
-    c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], c.[Кредиты Финансовый Продукт],
-    c.[Кредиты Агро], 
+    c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], 
+	c.[Кредиты Финансовый Продукт],
+	/*CASE c.[Кредиты Финансовый Продукт]
+	     WHEN 'Credite auto denominate in Euro' THEN 'Auto Loans EUR'
+         WHEN 'Credite ipotecare MDL' THEN 'Mortgage MDL'
+         WHEN 'Credite auto denominate in moneda nationala' THEN 'Auto Loans Local'
+         WHEN 'Credite ipotecare USD' THEN 'Mortgage USD'
+         WHEN 'Creditare directa denominata in moneda Euro' THEN 'Direct Lending EUR'
+         WHEN 'Credite pentru conditii de trai denominate in Euro' THEN 'Living Condition Loans EUR'
+         WHEN 'Creditare directa denominata in moneda USD' THEN 'Direct Lending USD'
+         WHEN 'Creditare directa denominata in moneda nationala' THEN 'Direct Lending Local'
+         WHEN 'Creditarea in parteneriat cu comerciantii' THEN 'Partner Lending'
+         WHEN 'Creditare auto' THEN 'Auto Loans'
+         WHEN 'Credite studii  denominate in moneda nationala' THEN 'Study Loans Local'
+         WHEN 'Credite calatorii  denominate in Eur' THEN 'Travel Loans EUR'
+         WHEN 'Garantii financiare' THEN 'Financial Guarantees'
+         WHEN 'Credite HIL denominate in moneda nationala' THEN 'HIL Loans Local'
+         WHEN 'Credite  istorice in valuta ( pina la 23.05.2008)' THEN 'Historical Loans'
+         WHEN 'Credite pentru conditii de trai denominate in moneda nationala' THEN 'Living Condition Loans Local'
+         WHEN 'Credite Consumer Non-Business denominate in moneda nationala' THEN 'Consumer Loans Non-Business'
+         WHEN 'Credite ipotecare EUR' THEN 'Mortgage EUR'
+         WHEN 'Capital de risc' THEN 'Venture Capital'
+         WHEN 'Credite work&travel denominate in moneda nationala' THEN 'Work&Travel Loans Local'
+         WHEN 'Credite HIL denominate in Euro' THEN 'HIL Loans EUR'
+         WHEN 'Credite work&travel denominate in USD' THEN 'Work&Travel Loans USD'
+         WHEN 'Credite angajati' THEN 'Employee Loans'
+         WHEN 'Creditare Asociatie' THEN 'Association Lending'
+         WHEN 'Credite calatorii  denominate in moneda nationala' THEN 'Travel Loans Local'
+         WHEN 'Credite pentru conditii de trai denominate in USD' THEN 'Living Condition Loans USD'
+         WHEN 'Creditare in grup' THEN 'Group Lending'
+         WHEN 'Credite auto denominate in USD' THEN 'Auto Loans USD'
+		 ELSE  c.[Кредиты Финансовый Продукт]
+	END AS FinancialProduct,*/
+    CASE c.[Кредиты Агро]
+	     WHEN 'Агро' THEN 'Agro'
+         WHEN 'НеАгро' THEN 'nonAgro'
+		 ELSE c.[Кредиты Агро]
+	END AS Agro, 
 	CASE c.[Кредиты Тип Местности]
 	     WHEN 'ГородБольшой' THEN 'bigCity'
          WHEN 'Пригород' THEN 'suburb'
 	     WHEN 'Город' THEN 'city'
-	END AS LocalityType, 
-	c.[Кредиты Валюта], c.[Кредиты Кредитный Продукт ID],
-    c.[Кредиты Кредитный Продукт], c.[Кредиты Цель Кредита], c.[Кредиты Удалить Источник Финансирования],
-    c.[Кредиты Вид Контракта], c.[Кредиты Дата Контракта], c.[Кредиты Сегмент Доходов],
-    c.[Кредиты Назначение Использования Кредита], c.[Кредиты Цель Кредита Описание],
-    c.[Кредиты Тип Кредитного Продукта], c.[Кредиты Сфера Использования Кредита], c.[Кредиты Источник Подписания],
-    fp.FinancialProductsMainGroup,
-    st.IssuedCreditsStatus,
+		 ELSE c.[Кредиты Тип Местности]
+	END AS LocalityType,
+    c.[Кредиты Валюта],	
+	/*CASE c.[Кредиты Валюта]
+	     WHEN 'Lei' THEN 'MDL'
+		 ELSE c.[Кредиты Валюта]
+	END AS Currency,*/
+	c.[Кредиты Кредитный Продукт ID],
+    c.[Кредиты Кредитный Продукт],
+    c.[Кредиты Цель Кредита],	
+	/*CASE c.[Кредиты Цель Кредита]
+	     WHEN 'Altele pentru activitate de antreprenoriat/profesională' THEN 'Other Prof. Activity'
+         WHEN 'Afacere Mijloace fixe' THEN 'Business Fixed Assets'
+         WHEN 'Tratament' THEN 'Treatment'
+         WHEN 'Procurare Imobil (teren sau constructii)' THEN 'Real Estate'
+         WHEN 'Altele' THEN 'Other'
+         WHEN 'Vacanta' THEN 'Vacation'
+         WHEN 'Refinantarea creditelor alte comp/p.f.' THEN 'Loan Refinancing'
+         WHEN 'Mixt cu Refinantare' THEN 'Mixed w/ Refinancing'
+         WHEN 'Mijloace fixe' THEN 'Fixed Assets'
+         WHEN 'Mixt' THEN 'Mixed'
+         WHEN 'Formare /rambursare împrumut față de fondator' THEN 'Loan to Founder'
+         WHEN 'Refinantare MI' THEN 'MI Refinancing'
+         WHEN 'Materiale de Constructie (reparatii, renovări si reconstructii)' THEN 'Construction Mat.'
+         WHEN 'Refinantare institutilor terte (si altele) prin viramente' THEN '3rd Party Refin.'
+         WHEN 'Autoturism' THEN 'Car'
+         WHEN 'Mixt Mijloace Circulante' THEN 'Mixed Current Assets'
+         WHEN 'Mobilier (categoria medie)' THEN 'Furniture'
+         WHEN 'Echipament pt Gospodarie' THEN 'Household Equip.'
+         WHEN 'Mediere' THEN 'Mediation'
+         WHEN 'Conditii de trai' THEN 'Living Cond.'
+         WHEN 'Alte imbunatatiri ale conditiilor de trai' THEN 'Living Improvements'
+         WHEN 'Formare /rambursare împrumut față de fondator / PF' THEN 'Loan to Founder/Ind.'
+         WHEN 'Mixt retroactive' THEN 'Retroactive Mixed'
+         WHEN 'Studii' THEN 'Studies'
+         WHEN 'Gadgeturi' THEN 'Gadgets'
+         WHEN 'Mixt cu Refinantare MI' THEN 'Mixed w/ MI Refin.'
+         WHEN 'Fix retroactive' THEN 'Retroactive Fixed'
+         WHEN 'Sisteme de Incalzire,conditionare, apa Canalizare' THEN 'HVAC & Water'
+         WHEN 'Ceremonii/ Eveniment organizat' THEN 'Event / Ceremony'
+         WHEN 'Mijloace circulante' THEN 'Current Assets'
+         WHEN 'Electrocasnice (Echipament si sisteme electrice)' THEN 'Appliances'
+         WHEN 'Nevoi personale' THEN 'Personal Needs'
+         WHEN 'Finantare retail' THEN 'Retail Financing'
+         WHEN 'Afacere Mijloace circulante' THEN 'Business Curr. Assets'
+         WHEN 'Mixt cu refinantare prin compensare' THEN 'Mixed Offset Refin.'
+         WHEN 'Necesitati curente' THEN 'Current Necessities'
+         WHEN 'Necesitati personale' THEN 'Personal Necessities'
+         WHEN 'Mixt cu esalonare/preluare' THEN 'Mixed Installments'
+		 ELSE c.[Кредиты Цель Кредита]
+	END AS Purpose,*/
+	c.[Кредиты Удалить Источник Финансирования],
+    CASE c.[Кредиты Вид Контракта]
+	     WHEN 'Контракт' THEN 'Contract'
+		 WHEN 'Приложение' THEN 'App'
+		 ELSE c.[Кредиты Вид Контракта]
+	END AS ContractType, 
+	c.[Кредиты Дата Контракта],
+    c.[Кредиты Сегмент Доходов],	
+/*CASE c.[Кредиты Сегмент Доходов]
+         WHEN 'Business Rapid MDL' THEN 'Business Rapid MDL'
+         WHEN 'Consum & HAI' THEN 'Consumer & HAI'
+         WHEN 'Retail fără comisioane' THEN 'Retail No Fees'
+         WHEN 'Altele' THEN 'Other'
+         WHEN 'FX Consum & HAI' THEN 'FX Consumer & HAI'
+         WHEN 'FX Creditare Auto' THEN 'FX Auto Loan'
+         WHEN 'Linia de credit retail' THEN 'Retail Credit Line'
+         WHEN 'Retail Standart 2/4%' THEN 'Retail Standard 2/4%'
+         WHEN 'Retail Standart' THEN 'Retail Standard'
+         WHEN 'HIL clienti business' THEN 'HIL Business Clients'
+         WHEN 'Retail standard 5/9%' THEN 'Retail Standard 5/9%'
+         WHEN 'HIL cu gaj clienti business' THEN 'HIL Pledged Business'
+         WHEN 'FX Business Oferta Afaceri' THEN 'FX Business Offer'
+         WHEN 'Creditare Auto' THEN 'Auto Loan'
+         WHEN 'HIL' THEN 'HIL'
+         WHEN 'Consum clienti business' THEN 'Business Consumer'
+         WHEN 'Retail Mixt' THEN 'Retail Mixed'
+         WHEN 'Business Creditare Directă' THEN 'Business Direct Loan'
+         WHEN 'Ipoteca FX' THEN 'FX Mortgage'
+         WHEN 'Ipoteca' THEN 'Mortgage'
+         WHEN 'FX Business Partners' THEN 'FX Business Partners'
+         WHEN 'Mediere' THEN 'Mediation'
+         WHEN 'Retail Gratie Comision' THEN 'Retail Comision Free'
+         WHEN 'B2B Partners EUR' THEN 'B2B Partners EUR'
+         WHEN 'Retail 0%' THEN 'Retail 0%'
+         WHEN 'B2B Partners MDL' THEN 'B2B Partners MDL'
+         WHEN 'Business partners' THEN 'Business Partners'
+         WHEN 'HIL FX clienti business' THEN 'HIL FX Business'
+         WHEN 'Online Cash' THEN 'Online Cash'
+         WHEN 'Consum FX clienti business' THEN 'FX Consumer Business'
+         WHEN 'Business Rapid EUR' THEN 'Business Rapid EUR'
+         WHEN 'Retail Double' THEN 'Retail Double'
+         WHEN 'HIL cu gaj' THEN 'HIL Pledged'
+         WHEN 'Consum non-business' THEN 'Non-Business Consumer'
+         WHEN 'FX Business Creditare Directă' THEN 'FX Business Direct Loan'
+         ELSE c.[Кредиты Сегмент Доходов]
+    END AS IncomeSegment,*/
+	c.[Кредиты Назначение Использования Кредита],
+    /*CASE c.[Кредиты Назначение Использования Кредита]
+		 WHEN 'Antreprenor' THEN 'Bussines'
+		 WHEN 'Necesitati personale' THEN 'Personal Needs'
+		 ELSE c.[Кредиты Назначение Использования Кредита]
+	END AS UsagePurpose,*/	 	
+	c.[Кредиты Цель Кредита Описание],
+	c.[Кредиты Тип Кредитного Продукта],
+    /*CASE c.[Кредиты Тип Кредитного Продукта]
+	     WHEN 'Dezvoltarea afacerii' THEN 'Business Development'
+         WHEN 'Credit prin partener' THEN 'Partner Loan'
+         WHEN 'Procurare imobil' THEN 'Property Purchase'
+         WHEN 'Credit' THEN 'Loan'
+         WHEN 'Procurare automobil' THEN 'Car Purchase'
+         WHEN 'Linia de credit' THEN 'Credit Line'
+         WHEN 'Necesitati curente' THEN 'Current Needs'
+		 ELSE c.[Кредиты Тип Кредитного Продукта]
+	END AS ProductType,*/ 
+    c.[Кредиты Сфера Использования Кредита],
+	/*CASE c.[Кредиты Сфера Использования Кредита]
+         WHEN 'Constructiile' THEN 'Construction'
+         WHEN 'Altele' THEN 'Other'
+         WHEN 'Comert' THEN 'Trade'
+         WHEN 'Prestarea serviciilor' THEN 'Services'
+         WHEN 'Transport si Telecomunicatii' THEN 'Transport & Telecom'
+         WHEN 'Agricultura' THEN 'Agriculture'
+         WHEN 'Ipoteca' THEN 'Mortgage'
+         WHEN 'Industria alimentara' THEN 'Food Industry'
+         WHEN 'Consum' THEN 'Consumption'
+         WHEN 'Antreprenori' THEN 'Entrepreneurs'
+         WHEN 'Industria energetica' THEN 'Energy Industry'
+         WHEN 'Producere' THEN 'Manufacturing'
+		 ELSE c.[Кредиты Сфера Использования Кредита]
+	END AS UsageArea,*/
+	CASE c.[Кредиты Источник Подписания]
+	     WHEN 'Приложение' THEN 'MobileApp'
+		 WHEN 'Сайт' THEN 'WebSite'
+		 ELSE c.[Кредиты Источник Подписания]
+	END AS SigningSource,
+	fp.FinancialProductsMainGroup,
+    /*CASE fp.FinancialProductsMainGroup
+	     WHEN 'Creditare Retail' THEN 'Retail Credit'
+		 WHEN 'Mediere' THEN 'Mediation'
+		 WHEN 'REPLACE Credite istorice' THEN 'Replace Historical Credits'
+         WHEN 'Restructurare' THEN 'Restructuring'
+		 ELSE fp.FinancialProductsMainGroup
+	END AS FinancialProductsMainGroup,*/
+    CASE st.IssuedCreditsStatus
+	     WHEN 'Закрыт' THEN 'Closed'
+		 WHEN 'Выдан' THEN 'Disbursed'
+		 WHEN 'Списан' THEN 'Written off'
+	     ELSE st.IssuedCreditsStatus
+	END AS IssuedCreditsStatus,
     cr.ApplicationPartnerID,
     COALESCE(r.FirstFilialID, cr.FilialID),
     COALESCE(r.FirstEmployeeID, cr.EmployeeID),
@@ -536,19 +727,70 @@ SELECT
     COALESCE(r.LastEmployeeID, cr.EmployeeID),
     cr.DealerID,
     CASE cr.Source
-       WHEN 'Партнер' THEN 'Parteners'
-       WHEN 'Кассир' THEN 'CCR'
-       WHEN 'СотрудникCallCenter' THEN 'CallCenter'
-       WHEN 'Сайт' THEN 'Web'
-       WHEN 'Плагин' THEN 'API'
-	   WHEN 'МобильноеПриложение' THEN 'MobileApp'
-	   WHEN 'КредитныйЭксперт' THEN 'Employee'
-	   WHEN 'Другой' THEN 'Other'
-       ELSE cr.Source
+         WHEN 'Партнер' THEN 'Parteners'
+         WHEN 'Кассир' THEN 'CCR'
+         WHEN 'СотрудникCallCenter' THEN 'CallCenter'
+         WHEN 'Сайт' THEN 'WebSite'
+         WHEN 'Плагин' THEN 'API'
+	     WHEN 'МобильноеПриложение' THEN 'MobileApp'
+	     WHEN 'КредитныйЭксперт' THEN 'Employee'
+	     WHEN 'Другой' THEN 'Other'
+         ELSE cr.Source
     END AS Source,
     lo.LatestOutstandingAmount,
-    seg.SegmentRevenue,
-    gc.GreenCredit, gc.CommitteeProt_CrPurpose, gc.CommitteeProt_AMLRiskCat,
+	seg.SegmentRevenue,
+    /*CASE seg.SegmentRevenue
+	     WHEN 'Business Rapid MDL' THEN 'Biz Rapid MDL'
+         WHEN 'Consum & HAI' THEN 'Cons & HAI'
+         WHEN 'Retail fără comisioane' THEN 'Retail No Fee'
+         WHEN 'Altele' THEN 'Other'
+         WHEN 'FX Consum & HAI' THEN 'FX Cons & HAI'
+         WHEN 'FX Creditare Auto' THEN 'FX Auto Credit'
+         WHEN 'Linia de credit retail' THEN 'Retail Credit Line'
+         WHEN 'Retail Standart 2/4%' THEN 'Retail Std 2/4%'
+         WHEN 'Retail Standart' THEN 'Retail Std'
+         WHEN 'HIL clienti business' THEN 'HIL Biz Clients'
+         WHEN 'Retail standard 5/9%' THEN 'Retail Std 5/9%'
+         WHEN 'HIL cu gaj clienti business' THEN 'HIL Secured Biz Clients'
+         WHEN 'FX Business Oferta Afaceri' THEN 'FX Biz Offer'
+         WHEN 'HIL' THEN 'HIL'
+         WHEN 'Creditare Auto' THEN 'Auto Credit'
+         WHEN 'Consum clienti business' THEN 'Cons Biz Clients'
+         WHEN 'Retail Mixt' THEN 'Retail Mixed'
+         WHEN 'Business Creditare Directă' THEN 'Biz Direct Credit'
+         WHEN 'Ipoteca FX' THEN 'FX Mortgage'
+         WHEN 'Business Oferta Specială Agro' THEN 'Biz Agro Special Offer'
+         WHEN 'Ipoteca' THEN 'Mortgage'
+         WHEN 'FX Business Partners' THEN 'FX Biz Partners'
+         WHEN 'Mediere' THEN 'Mediation'
+         WHEN 'Retail Gratie Comision' THEN 'Retail Fee Waived'
+         WHEN 'B2B Partners EUR' THEN 'B2B Partners EUR'
+         WHEN 'Retail 0%' THEN 'Retail 0%'
+         WHEN 'B2B Partners MDL' THEN 'B2B Partners MDL'
+         WHEN 'Business partners' THEN 'Biz Partners'
+         WHEN 'HIL FX clienti business' THEN 'HIL FX Biz Clients'
+         WHEN 'Online Cash' THEN 'Online Cash'
+         WHEN 'Consum FX clienti business' THEN 'Cons FX Biz Clients'
+         WHEN 'Business Rapid EUR' THEN 'Biz Rapid EUR'
+         WHEN 'Retail Double' THEN 'Retail Double'
+         WHEN 'HIL cu gaj' THEN 'HIL Secured'
+         WHEN 'Consum non-business' THEN 'Cons Non-Biz'
+         WHEN 'FX Business Creditare Directă' THEN 'FX Biz Direct Credit'
+		 ELSE seg.SegmentRevenue
+	END AS SegmentRevenue ,*/
+    gc.GreenCredit,
+    gc.CommitteeProt_CrPurpose,	
+	/*CASE gc.CommitteeProt_CrPurpose
+		 WHEN 'Antreprenor' THEN 'Bussines'
+		 WHEN 'Necesitati personale' THEN 'Personal Needs'
+         ELSE  gc.CommitteeProt_CrPurpose
+    END AS CommitteeProt_CrPurpose,*/ 
+	CASE gc.CommitteeProt_AMLRiskCat
+	   WHEN 'Высокий' THEN 'High_Risk'
+       WHEN 'Средний' THEN 'Medium_Risk'
+       WHEN 'Низкий' THEN 'Low_Risk'
+	   ELSE  gc.CommitteeProt_AMLRiskCat
+	END AS CommitteeProt_AMLRiskCat,
     CASE WHEN c.[Кредиты Источник Подписания] IS NOT NULL 
 	     THEN 'True' 
 		 ELSE 'False' 
@@ -574,27 +816,139 @@ GO
 USE [ATK];
 GO
 
+-- Drop table if exists
 IF OBJECT_ID('mis.[2tbl_Gold_Dim_EmployeePayrollData]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_EmployeePayrollData];
 GO
 
+-- Create table
 CREATE TABLE mis.[2tbl_Gold_Dim_EmployeePayrollData]
 (
     EmployeePositionID VARCHAR(36) NOT NULL,
-    EmployeePosition NVARCHAR(150) NULL,
+    EmployeePosition NVARCHAR(150) NULL
 );
 GO
 
+-- Insert normalized and mapped positions
 INSERT INTO mis.[2tbl_Gold_Dim_EmployeePayrollData] 
 (
     EmployeePositionID,
     EmployeePosition
 )
 SELECT 
-    [СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID, 
-    [СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
+    [СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
+	[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
+    /*CASE [СотрудникиДанныеПоЗарплате Должность]
+        WHEN 'consilier juridic/consilieră juridică' THEN 'Legal Advisor'
+        WHEN 'sofer autobuz' THEN 'Bus Driver'
+        WHEN 'contabil-sef' THEN 'Chief Accountant'
+        WHEN 'director comercial' THEN 'Commercial Director'
+        WHEN 'expert' THEN 'Expert'
+        WHEN 'manager (in serviciile de informatii si reclama)' THEN 'Manager (Information and Advertising Services)'
+        WHEN 'coordonator de proiecte' THEN 'Project Coordinator'
+        WHEN 'specialist imbunatatire procese' THEN 'Process Improvement Specialist'
+        WHEN 'contabil-şef/contabilă-șefă' THEN 'Chief Accountant'
+        WHEN 'secretar asistent director' THEN 'Executive Assistant'
+        WHEN 'manager relații financiare' THEN 'Financial Relations Manager'
+        WHEN 'avocat' THEN 'Lawyer'
+        WHEN 'specialist ocrotirea informatiei' THEN 'Information Security Specialist'
+        WHEN 'administrator sisteme informatice' THEN 'IT Sys Admin'
+        WHEN 'administrator/administratoare de sisteme' THEN 'Sys Admin'
+        WHEN 'auditor' THEN 'Auditor'
+        WHEN 'manager de proiect' THEN 'Project Manager'
+        WHEN 'arhivar' THEN 'Archivist'
+        WHEN 'manager (in activitatea comerciala)' THEN 'Commercial Manager'
+        WHEN 'analist/analistă credite' THEN 'Credit Analyst'
+        WHEN 'muncitor auxiliar' THEN 'Auxiliary Worker'
+        WHEN 'contabil-expert' THEN 'Expert Accountant'
+        WHEN 'fotograf' THEN 'Photographer'
+        WHEN 'functionar documentare' THEN 'Documentation Clerk'
+        WHEN 'casier expert' THEN 'Expert Cashier'
+        WHEN 'consilier juridic' THEN 'Legal Counselor'
+        WHEN 'colector/colectoare creanțe' THEN 'Debt Collector'
+        WHEN 'administrator credite' THEN 'Credit Administrator'
+        WHEN 'operator ghiseu banca' THEN 'Bank Teller'
+        WHEN 'specialist/specialistă' THEN 'Specialist'
+        WHEN 'consultant/consultantă' THEN 'Consultant'
+        WHEN 'sef sectie (dezvoltare tehnico-stiintifica)' THEN 'Head of Section (Scientific Development)'
+        WHEN 'ingrijitor incaperi de productie si de serviciu' THEN 'Production and Service Room Cleaner'
+        WHEN 'specialist resurse umane' THEN 'HR Specialist'
+        WHEN 'economist/economistă' THEN 'Economist'
+        WHEN 'analist credite' THEN 'Credit Analyst'
+        WHEN 'director executiv' THEN 'Executive Director'
+        WHEN 'expert financiar-bancar' THEN 'Financial-Banking Expert'
+        WHEN 'masinist (fochist) in sala de cazane' THEN 'Boiler Room Operator'
+        WHEN 'specialist/specialistă în management și organizare' THEN 'Management and Organization Specialist'
+        WHEN 'manager de formare' THEN 'Training Manager'
+        WHEN 'sef  departament/directie/sectie in asociatie, uniune, federatie' THEN 'Department Head in Association/Union/Federation'
+        WHEN 'jurisconsult/jurisconsultă' THEN 'Legal Consultant'
+        WHEN 'manager de oficiu' THEN 'Office Manager'
+        WHEN 'expert in certificare' THEN 'Certification Expert'
+        WHEN 'șef/șefă' THEN 'Head/Chief'
+        WHEN 'jurisconsult' THEN 'Legal Consultant'
+        WHEN 'coordonator/coordonatoare' THEN 'Coordinator'
+        WHEN 'șef/șefă secție' THEN 'Section Head'
+        WHEN 'îngrijitor/îngrijitoare încăperi' THEN 'Room Cleaner'
+        WHEN 'manager imbunatatire procese' THEN 'Process Improvement Manager'
+        WHEN 'director (sef) filiala' THEN 'Branch Director'
+        WHEN 'manager (in alte ramuri)' THEN 'Manager (Other Fields)'
+        WHEN 'manager (in servicii de personal, pregatirea personalului si alte relatii de munca)' THEN 'HR and Training Manager'
+        WHEN 'șef/șefă departament' THEN 'Department Head'
+        WHEN 'conducător/conducătoare auto' THEN 'Driver'
+        WHEN 'specialist control risc' THEN 'Risk Control Specialist'
+        WHEN 'conducator auto (șofer)' THEN 'Driver'
+        WHEN 'asistent programator' THEN 'Programmer Assistant'
+        WHEN 'expert/expertă' THEN 'Expert'
+        WHEN 'ofice-manager' THEN 'Office Manager'
+        WHEN 'funcționar administrativ/funcționară administrativă' THEN 'Administrative Clerk'
+        WHEN 'curier' THEN 'Courier'
+        WHEN 'referent/referentă' THEN 'Referent'
+        WHEN 'specialist/specialistă în securitatea informației' THEN 'Information Security Specialist'
+        WHEN 'muncitor auxiliar/muncitoare auxiliară' THEN 'Auxiliary Worker'
+        WHEN 'director executiv/directoare executivă' THEN 'Executive Director'
+        WHEN 'funcţionar/funcționară informaţii clienţi/cliente' THEN 'Customer Service Officer'
+        WHEN 'director (sef) departament' THEN 'Department Director'
+        WHEN 'manager (in alte compartimente [servicii] functionale)' THEN 'Functional Area Manager'
+        WHEN 'sef departament banca' THEN 'Bank Department Head'
+        WHEN 'agent de vinzari' THEN 'Sales Agent'
+        WHEN 'programator/programatoare' THEN 'Programmer'
+        WHEN 'sef sectie' THEN 'Section Head'
+        WHEN 'arhitect/arhitectă de sisteme' THEN 'System Architect'
+        WHEN 'specialist marketing' THEN 'Marketing Specialist'
+        WHEN 'casier' THEN 'Cashier'
+        WHEN 'manager proiect' THEN 'Project Manager'
+        WHEN 'sef sectie (informatica)' THEN 'IT Section Head'
+        WHEN 'șef/șefă secție în domeniul administrativ' THEN 'Administrative Section Head'
+        WHEN 'referent' THEN 'Referent'
+        WHEN 'sef directie (specializata in alte ramuri)' THEN 'Director (Other Specialized Branches)'
+        WHEN 'specialist/specialistă în îmbunătăţirea proceselor' THEN 'Process Improvement Specialist'
+        WHEN 'maturator' THEN 'Cleaner'
+        WHEN 'auditor intern/auditoare internă' THEN 'Internal Auditor'
+        WHEN 'consilier financiar-bancar' THEN 'Financial-Banking Advisor'
+        WHEN 'contabil' THEN 'Accountant'
+        WHEN 'director general intreprindere' THEN 'General Director'
+        WHEN 'manager (in compartimentele de dezvoltare stiintifico-tehnica)' THEN 'R&D Manager'
+        WHEN 'interpret' THEN 'Interpreter'
+        WHEN 'director/directoare' THEN 'Director'
+        WHEN 'presedinte consiliu (tehnico-stiintific, didactico-metodic, stiintific (medical-metodic), de cultura' THEN 'Council President (Scientific/Methodical/Cultural)'
+        WHEN 'programator' THEN 'Programmer'
+        WHEN 'administrator' THEN 'Administrator'
+        WHEN 'director (sef, imputernicit) directie' THEN 'Director (Authorized/Head of Department)'
+        WHEN 'secretara' THEN 'Secretary'
+        WHEN 'administrator/administratoare de credite' THEN 'Credit Administrator'
+        WHEN 'specialist/specialistă în domeniul bancar/nebancar' THEN 'Banking/Non-Banking Specialist'
+        WHEN 'manager de produs' THEN 'Product Manager'
+        WHEN 'ofițer antifraudă financiar-bancară' THEN 'Financial Anti-Fraud Officer'
+        WHEN 'funcționar/funcționară de birou' THEN 'Office Clerk'
+        WHEN 'contabil/contabilă' THEN 'Accountant'
+        WHEN 'sef serviciu (specializat in alte ramuri)' THEN 'Service Head (Other Fields)'
+        WHEN 'operator in sectia de pregatire' THEN 'Preparation Section Operator'
+    ELSE [СотрудникиДанныеПоЗарплате Должность]
+END AS EmployeePosition
+*/
 
 FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате];
+GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Dim_EmployeePayrollData.sql
 ----------------------------------------------------------------------------------------------------
@@ -606,7 +960,6 @@ GO
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
-
 
 IF OBJECT_ID('mis.[2tbl_Gold_Dim_Employees]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Employees];
@@ -623,8 +976,8 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
     [ExperienceYears] INT NULL,
     [ExperienceMonths] INT NULL,
     [EmploymentPeriod] NVARCHAR(50) NULL,
-	[EmployeePositionID] VARCHAR(36) NULL,
-	[EmployeePosition] NVARCHAR(150)  NULL
+    [EmployeePositionID] VARCHAR(36) NULL,
+    [EmployeePosition] NVARCHAR(150)  NULL
 );
 GO
 
@@ -639,8 +992,8 @@ INSERT INTO mis.[2tbl_Gold_Dim_Employees] (
     [ExperienceYears],
     [ExperienceMonths],
     [EmploymentPeriod],
-	[EmployeePositionID],
-	[EmployeePosition]
+    [EmployeePositionID],
+    [EmployeePosition]
 )
 SELECT 
     a.[Сотрудники ID] AS EmployeeID,
@@ -653,15 +1006,19 @@ SELECT
     DATEDIFF(YEAR, a.[Сотрудники Дата Приема], GETDATE()) AS ExperienceYears,
     DATEDIFF(MONTH, a.[Сотрудники Дата Приема], GETDATE()) % 12 AS ExperienceMonths,
     CASE 
-        WHEN [Сотрудники Дата Увольнения] IS NULL 
-            THEN FORMAT([Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → Present'
-        ELSE FORMAT([Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → ' + FORMAT([Сотрудники Дата Увольнения], 'yyyy-MM-dd')
+        WHEN a.[Сотрудники Дата Увольнения] IS NULL 
+        THEN FORMAT(a.[Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → Present'
+        ELSE FORMAT(a.[Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → ' + FORMAT(a.[Сотрудники Дата Увольнения], 'yyyy-MM-dd')
     END AS EmploymentPeriod,
-	b.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
-	b.[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
+    lastPos.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
+    lastPos.[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
 FROM [ATK].[dbo].[Справочники.Сотрудники] AS a
-LEFT JOIN [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] AS b
-	 ON a.[Сотрудники ID] = b.[СотрудникиДанныеПоЗарплате Сотрудник ID];
+OUTER APPLY (
+    SELECT TOP 1 *
+    FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] AS b
+    WHERE b.[СотрудникиДанныеПоЗарплате Сотрудник ID] = a.[Сотрудники ID]
+    ORDER BY b.[СотрудникиДанныеПоЗарплате Период] DESC
+) AS lastPos;
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Dim_Employees.sql
@@ -800,6 +1157,139 @@ LEFT JOIN mis.[Silver_Справочники.Дилеры] d
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Dim_PartnersBranch.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.2tbl_Gold_Fact_ArchiveDocument.sql
+----------------------------------------------------------------------------------------------------
+USE [ATK]
+GO
+
+-- Drop table if exists
+IF OBJECT_ID('mis.[2tbl_Gold_Fact_ArchiveDocument]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_ArchiveDocument];
+GO
+
+-- Step 1: Create the table structure (no data yet)
+CREATE TABLE mis.[2tbl_Gold_Fact_ArchiveDocument] (
+    [АктыПередачиКредитныхДел Период]         DATETIME NULL,
+    [АктыПередачиКредитныхДел ID]             VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Номер Строки]   INT NULL,
+    [АктыПередачиКредитныхДел Активность]     VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Кредит Tип]     VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Кредит Вид]     VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Кредит ID]      VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Контрагент ID]  VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Контрагент]     NVARCHAR(250) NULL,
+    [АктыПередачиКредитныхДел Вид Акта]       NVARCHAR(256) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Tип] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Вид] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции ID] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Документ Tип] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Документ Вид] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Вид Операции Документ ID] VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Вид Акта Передачи Кредитных Дел] NVARCHAR(256) NULL,
+    [АктыПередачиКредитныхДел Статус Досье] NVARCHAR(256) NULL,
+    [АктыПередачиКредитныхДел Статус Акта] NVARCHAR(256) NULL,
+    [АктыПередачиКредитныхДел Получатель Tип] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Получатель Вид] VARCHAR(50) NULL,
+    [АктыПередачиКредитныхДел Получатель ID] VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Дата Получения] DATETIME NULL,
+    [АктыПередачиКредитныхДел Дата Проверки] DATETIME NULL,
+    [АктыПередачиКредитныхДел Комментарий] NVARCHAR(1000) NULL,
+    [АктыПередачиКредитныхДел Автор ID] VARCHAR(36) NULL,
+    [АктыПередачиКредитныхДел Автор] NVARCHAR(250) NULL,
+    [АктыПередачиКредитныхДел Дедлайн] DATETIME NULL,
+
+    [ОтветственныеПоКредитнымДелам Период] DATETIME NULL,
+    [ОтветственныеПоКредитнымДелам ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Номер Строки] INT NULL,
+    [ОтветственныеПоКредитнымДелам Активность] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Кредит Tип] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Кредит Вид] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Кредит ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Ответственный Tип] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Ответственный Вид] VARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Ответственный ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Дата Проверки] DATETIME NULL,
+    [ОтветственныеПоКредитнымДелам Комментарий] NVARCHAR(1000) NULL,
+    [ОтветственныеПоКредитнымДелам УДАЛИТЬ _ Статус Досье] NVARCHAR(256) NULL,
+    [ОтветственныеПоКредитнымДелам Телефон] NVARCHAR(50) NULL,
+    [ОтветственныеПоКредитнымДелам Филиал ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Филиал] NVARCHAR(250) NULL,
+    [ОтветственныеПоКредитнымДелам Вид Акта Передачи Кредитных Дел] NVARCHAR(256) NULL,
+    [ОтветственныеПоКредитнымДелам Отправитель ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Отправитель] NVARCHAR(100) NULL,
+    [ОтветственныеПоКредитнымДелам Ссылка на Документ ID] VARCHAR(36) NULL,
+    [ОтветственныеПоКредитнымДелам Ссылка на Документ] NVARCHAR(150) NULL,
+    [ОтветственныеПоКредитнымДелам Статус Акта] NVARCHAR(256) NULL
+);
+GO
+
+-- Step 2: Insert data from 2024-01-01 onward
+INSERT INTO mis.[2tbl_Gold_Fact_ArchiveDocument]
+SELECT
+    r.[АктыПередачиКредитныхДел Период],
+    r.[АктыПередачиКредитныхДел ID],
+    r.[АктыПередачиКредитныхДел Номер Строки],
+    r.[АктыПередачиКредитныхДел Активность],
+    r.[АктыПередачиКредитныхДел Кредит Tип],
+    r.[АктыПередачиКредитныхДел Кредит Вид],
+    r.[АктыПередачиКредитныхДел Кредит ID],
+    r.[АктыПередачиКредитныхДел Контрагент ID],
+    r.[АктыПередачиКредитныхДел Контрагент],
+    r.[АктыПередачиКредитныхДел Вид Акта],
+    r.[АктыПередачиКредитныхДел Вид Операции Tип],
+    r.[АктыПередачиКредитныхДел Вид Операции Вид],
+    r.[АктыПередачиКредитныхДел Вид Операции ID],
+    r.[АктыПередачиКредитныхДел Вид Операции Документ Tип],
+    r.[АктыПередачиКредитныхДел Вид Операции Документ Вид],
+    r.[АктыПередачиКредитныхДел Вид Операции Документ ID],
+    r.[АктыПередачиКредитныхДел Вид Акта Передачи Кредитных Дел],
+    r.[АктыПередачиКредитныхДел Статус Досье],
+    r.[АктыПередачиКредитныхДел Статус Акта],
+    r.[АктыПередачиКредитныхДел Получатель Tип],
+    r.[АктыПередачиКредитныхДел Получатель Вид],
+    r.[АктыПередачиКредитныхДел Получатель ID],
+    r.[АктыПередачиКредитныхДел Дата Получения],
+    r.[АктыПередачиКредитныхДел Дата Проверки],
+    r.[АктыПередачиКредитныхДел Комментарий],
+    r.[АктыПередачиКредитныхДел Автор ID],
+    r.[АктыПередачиКредитныхДел Автор],
+    r.[АктыПередачиКредитныхДел Дедлайн],
+
+    o.[ОтветственныеПоКредитнымДелам Период],
+    o.[ОтветственныеПоКредитнымДелам ID],
+    o.[ОтветственныеПоКредитнымДелам Номер Строки],
+    o.[ОтветственныеПоКредитнымДелам Активность],
+    o.[ОтветственныеПоКредитнымДелам Кредит Tип],
+    o.[ОтветственныеПоКредитнымДелам Кредит Вид],
+    o.[ОтветственныеПоКредитнымДелам Кредит ID],
+    o.[ОтветственныеПоКредитнымДелам Ответственный Tип],
+    o.[ОтветственныеПоКредитнымДелам Ответственный Вид],
+    o.[ОтветственныеПоКредитнымДелам Ответственный ID],
+    o.[ОтветственныеПоКредитнымДелам Дата Проверки],
+    o.[ОтветственныеПоКредитнымДелам Комментарий],
+    o.[ОтветственныеПоКредитнымДелам Телефон],
+    o.[ОтветственныеПоКредитнымДелам Филиал ID],
+    o.[ОтветственныеПоКредитнымДелам Филиал],
+    o.[ОтветственныеПоКредитнымДелам Вид Акта Передачи Кредитных Дел],
+    o.[ОтветственныеПоКредитнымДелам Отправитель ID],
+    o.[ОтветственныеПоКредитнымДелам Отправитель],
+    o.[ОтветственныеПоКредитнымДелам УДАЛИТЬ _ Дедлайн],
+    o.[ОтветственныеПоКредитнымДелам Ссылка на Документ ID],
+    o.[ОтветственныеПоКредитнымДелам Ссылка на Документ],
+    o.[ОтветственныеПоКредитнымДелам Статус Акта]
+FROM [ATK].[dbo].[РегистрыСведений.АктыПередачиКредитныхДел] r
+LEFT JOIN [ATK].[dbo].[РегистрыСведений.ОтветственныеПоКредитнымДелам] o
+       ON o.[ОтветственныеПоКредитнымДелам ID] = r.[АктыПередачиКредитныхДел ID]
+       AND o.[ОтветственныеПоКредитнымДелам Кредит ID] = r.[АктыПередачиКредитныхДел Кредит ID]
+WHERE r.[АктыПередачиКредитныхДел Период] >= '2024-01-01';
+GO
+----------------------------------------------------------------------------------------------------
+-- End of:   mis.2tbl_Gold_Fact_ArchiveDocument.sql
 ----------------------------------------------------------------------------------------------------
 
 GO

@@ -155,8 +155,20 @@ SELECT
     ClientID, ParentID, BranchID,
     IsDeleted, IsGroup, ClientCode, ClientName, IsBlocked, Visibility,
     Age, AgeGroup, City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
-    Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
-    FiscalCode, LegalAddress, RegistrationDate, [Language],
+
+    CASE Gender
+        WHEN 'Ж' THEN 'F'
+        WHEN N'М' THEN 'M'  -- Cyrillic M
+        ELSE Gender      
+    END AS Gender,
+	
+	PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
+    FiscalCode, LegalAddress, RegistrationDate, 
+	CASE [Language]
+	     WHEN 'Русский' THEN 'Russian'
+		 WHEN N'Română' THEN 'Romanian'
+		 ELSE [Language]
+    END AS [Language],
     NoEmailNotifications, NoPromoSMS, OrganizationType,
     IsGroupOwner, GroupID
 FROM Dedup

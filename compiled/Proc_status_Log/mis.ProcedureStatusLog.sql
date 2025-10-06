@@ -1,9 +1,0 @@
-USE ATK
-GO
-CREATE TABLE mis.ProcedureStatusLog 
-(
-    ProcedureName NVARCHAR(100) NOT NULL,
-    RunTime DATETIME NOT NULL DEFAULT GETDATE(),
-    Status NVARCHAR(50) NOT NULL,
-    ErrorMessage NVARCHAR(MAX) NULL
-);

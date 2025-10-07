@@ -1,8 +1,8 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-10-06 08:32:16.517644
+-- Generated: 2025-10-07 12:48:00.993750
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files included: 14
+-- Files included: 15
 --   mis.2tbl_Gold_Dim_AppUsers.sql
 --   mis.2tbl_Gold_Dim_Branch.sql
 --   mis.2tbl_Gold_Dim_Clients.sql
@@ -11,6 +11,7 @@
 --   mis.2tbl_Gold_Dim_Employees.sql
 --   mis.2tbl_Gold_Dim_EmployeesHistory.sql
 --   mis.2tbl_Gold_Dim_PartnersBranch.sql
+--   mis.2tbl_Gold_Fact_AdminTasks.sql
 --   mis.2tbl_Gold_Fact_ArchiveDocument.sql
 --   mis.2tbl_Gold_Fact_BudgetEmployees.sql
 --   mis.2tbl_Gold_Fact_CerereOnline.sql
@@ -513,37 +514,7 @@ SELECT
     c.[Кредиты Дата Выдачи], c.[Кредиты Срок Кредита], c.[Кредиты Сумма Кредита],
     c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], 
 	c.[Кредиты Финансовый Продукт],
-	                                     
-                                                                  
-                                                         
-                                                                                   
-                                                         
-                                                                                     
-                                                                                                    
-                                                                                    
-                                                                                            
-                                                                                
-                                                
-                                                                                       
-                                                                            
-                                                               
-                                                                                 
-                                                                                         
-                                                                                                                  
-                                                                                                               
-                                                         
-                                                      
-                                                                                                 
-                                                                   
-                                                                                  
-                                                      
-                                                              
-                                                                                           
-                                                                                                   
-                                                      
-                                                                    
-                                       
-                           
+	
     CASE c.[Кредиты Агро]
 	     WHEN ''Агро'' THEN ''Agro''
          WHEN ''НеАгро'' THEN ''nonAgro''
@@ -556,54 +527,11 @@ SELECT
 		 ELSE c.[Кредиты Тип Местности]
 	END AS LocalityType,
     c.[Кредиты Валюта],	
-	                         
-                           
-                          
-                   
+	
 	c.[Кредиты Кредитный Продукт ID],
     c.[Кредиты Кредитный Продукт],
     c.[Кредиты Цель Кредита],	
-	                               
-                                                                                                
-                                                                  
-                                          
-                                                                           
-                                   
-                                       
-                                                                              
-                                                               
-                                                 
-                                 
-                                                                                    
-                                                    
-                                                                                                        
-                                                                                                 
-                                     
-                                                                    
-                                                           
-                                                                
-                                        
-                                                    
-                                                                                    
-                                                                                              
-                                                         
-                                     
-                                        
-                                                                
-                                                        
-                                                                                     
-                                                                      
-                                                         
-                                                                                  
-                                                     
-                                                        
-                                                                        
-                                                                              
-                                                             
-                                                                
-                                                                    
-                                
-                  
+	
 	c.[Кредиты Удалить Источник Финансирования],
     CASE c.[Кредиты Вид Контракта]
 	     WHEN ''Контракт'' THEN ''Contract''
@@ -612,91 +540,21 @@ SELECT
 	END AS ContractType, 
 	c.[Кредиты Дата Контракта],
     c.[Кредиты Сегмент Доходов],	
-                                  
-                                                            
-                                                  
-                                                            
-                                   
-                                                        
-                                                     
-                                                                
-                                                                
-                                                      
-                                                                
-                                                                
-                                                                       
-                                                                   
-                                               
-                              
-                                                                
-                                               
-                                                                      
-                                             
-                                       
-                                                                
-                                        
-                                                                  
-                                                        
-                                          
-                                                        
-                                                          
-                                                              
-                                              
-                                                                      
-                                                            
-                                                  
-                                             
-                                                                
-                                                                            
-                                         
-                           
+
 	c.[Кредиты Назначение Использования Кредита],
-                                                       
-                                     
-                                                    
-                                                    
-                       	 	
+    
 	c.[Кредиты Цель Кредита Описание],
 	c.[Кредиты Тип Кредитного Продукта],
-                                              
-                                                             
-                                                        
-                                                         
-                                  
-                                                       
-                                                  
-                                                       
-                                           
-                       
+   
     c.[Кредиты Сфера Использования Кредита],
-	                                              
-                                                 
-                                   
-                                   
-                                                     
-                                                                       
-                                              
-                                       
-                                                         
-                                         
-                                                 
-                                                           
-                                              
-                                               
-                    
+	
 	CASE c.[Кредиты Источник Подписания]
 	     WHEN ''Приложение'' THEN ''MobileApp''
 		 WHEN ''Сайт'' THEN ''WebSite''
 		 ELSE c.[Кредиты Источник Подписания]
 	END AS SigningSource,
 	fp.FinancialProductsMainGroup,
-                                        
-                                                  
-                                  
-                                                                    
-                                                  
-                                     
-                                     
+    
     CASE st.IssuedCreditsStatus
 	     WHEN ''Закрыт'' THEN ''Closed''
 		 WHEN ''Выдан'' THEN ''Disbursed''
@@ -722,52 +580,10 @@ SELECT
     END AS Source,
     lo.LatestOutstandingAmount,
 	seg.SegmentRevenue,
-                             
-                                                    
-                                              
-                                                           
-                                   
-                                                    
-                                                       
-                                                                
-                                                           
-                                                 
-                                                           
-                                                           
-                                                                          
-                                                              
-                              
-                                                 
-                                                               
-                                               
-                                                                   
-                                             
-                                                                           
-                                       
-                                                           
-                                        
-                                                               
-                                                        
-                                          
-                                                        
-                                                     
-                                                                 
-                                              
-                                                                     
-                                                       
-                                                  
-                                             
-                                                       
-                                                                         
-                          
-                          
+    
     gc.GreenCredit,
     gc.CommitteeProt_CrPurpose,	
-	                                 
-                                     
-                                                    
-                                         
-                                      
+	
 	CASE gc.CommitteeProt_AMLRiskCat
 	   WHEN ''Высокий'' THEN ''High_Risk''
        WHEN ''Средний'' THEN ''Medium_Risk''
@@ -811,114 +627,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_EmployeePayrollData]
 SELECT 
     [СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
 	[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
-                                                 
-                                                                         
-                                              
-                                                   
-                                                            
-                                   
-                                                                                                                     
-                                                                 
-                                                                                    
-                                                                  
-                                                                    
-                                                                            
-                                   
-                                                                                      
-                                                                    
-                                                                        
-                                     
-                                                        
-                                       
-                                                                            
-                                                             
-                                                        
-                                                       
-                                           
-                                                                
-                                                  
-                                                       
-                                                                
-                                                                
-                                                       
-                                                       
-                                                       
-                                                                                                          
-                                                                                                         
-                                                            
-                                                    
-                                                    
-                                                          
-                                                                      
-                                                                               
-                                                                                                               
-                                                         
-                                                                                                                                      
-                                                                 
-                                                      
-                                                                
-                                         
-                                                   
-                                                           
-                                                  
-                                                                   
-                                                                              
-                                                            
-                                                                     
-                                                                                                                                 
-                                                          
-                                                         
-                                                                     
-                                                    
-                                                               
-                                           
-                                                  
-                                                                                              
-                                    
-                                                 
-                                                                                                       
-                                                                             
-                                                                               
-                                                                                                
-                                                                    
-                                                                                                    
-                                                                
-                                                  
-                                                          
-                                             
-                                                                    
-                                                               
-                                    
-                                                     
-                                                              
-                                                                                           
-                                       
-                                                                                                      
-                                                                                                       
-                                       
-                                                                       
-                                                                          
-                                         
-                                                                     
-                                                                                                
-                                           
-                                                  
-                                                                                                                                                                             
-                                            
-                                                 
-                                                                                                    
-                                         
-                                                                                   
-                                                                                                       
-                                                       
-                                                                                      
-                                                                  
-                                                   
-                                                                                           
-                                                                                  
-                                               
-                       
-  
+    
 
 FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате];';
     BEGIN TRY
@@ -1103,6 +812,241 @@ SELECT
 FROM mis.[Silver_Справочники.ФилиалыКонтрагентов] f
 LEFT JOIN mis.[Silver_Справочники.Дилеры] d
   ON d.[Дилеры Владелец] = f.[ФилиалыКонтрагентов ID];';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
+
+    -- Start of: mis.2tbl_Gold_Fact_AdminTasks.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Fact_AdminTasks]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_AdminTasks];
+
+CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
+(
+    [AdminTask_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_RowVersion] ROWVERSION NULL,
+    [AdminTask_Deleted] VARCHAR(36) NOT NULL,
+    [AdminTask_Date] DATETIME NULL,
+    [AdminTask_Number] NVARCHAR(50) NOT NULL,
+    [AdminTask_Completed] VARCHAR(36) NOT NULL,
+    [AdminTask_Author_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Author] NVARCHAR(150) NOT NULL,
+    [AdminTask_Branch_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Branch] NVARCHAR(150) NULL,
+    [AdminTask_Category_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Category] NVARCHAR(250) NOT NULL,
+    [AdminTask_Type_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Type] NVARCHAR(250) NOT NULL,
+    [AdminTask_Description] NVARCHAR(1050) NOT NULL,
+    [AdminTask_Base_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Source_Type] VARCHAR(36) NOT NULL,
+    [AdminTask_Source_View] VARCHAR(36) NOT NULL,
+    [AdminTask_Source_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Client_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Client] NVARCHAR(150) NULL,
+    [AdminTask_Credit_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Credit] NVARCHAR(150) NULL,
+    [AdminTask_Limit_ID] VARCHAR(36) NOT NULL,
+    [AdminTask_Limit] NVARCHAR(150) NULL,
+    [AdminTask_CurrentStatus] NVARCHAR(256) NULL,
+    [AdminTask_CurrentStatus_ID] VARCHAR(36) NULL,
+    [AdminTask_CompletionDate] DATETIME NULL,
+    [AdminTask_CurrentComment] NVARCHAR(1000) NULL,
+    [AdminTask_SLA] INT NULL,
+    [AdminTask_KPI] DECIMAL(6,2) NULL,
+    [AdminTask_TaskCount] INT NULL,
+    [AdminTask_Priority] NVARCHAR(256) NULL,
+    [AdminTask_Priority_ID] VARCHAR(36) NULL,
+    [AdminTask_Executor] VARCHAR(36) NULL,
+
+    [TaskType_ID] VARCHAR(36) NULL,
+    [TaskType_Deleted] VARCHAR(36) NULL,
+    [TaskType_Parent_ID] VARCHAR(36) NULL,
+    [TaskType_IsGroup] BIT NULL,
+    [TaskType_Code] NVARCHAR(50) NULL,
+    [TaskType_Name] NVARCHAR(250) NULL,
+    [TaskType_Order] INT NULL,
+    [TaskType_SLA] INT NULL,
+    [TaskType_KPI] DECIMAL(6,2) NULL,
+    [TaskType_BlockEditCount] BIT NULL,
+    [TaskType_MaxTime] INT NULL,
+
+    [WaitHours] DECIMAL(18,2) NULL,
+    [TotalHours] DECIMAL(18,2) NULL,
+
+    [StatusHistory_ID] VARCHAR(36) NULL,
+    [StatusHistory_RowNumber] INT NULL,
+    [StatusHistory_Status] NVARCHAR(256) NULL,
+    [StatusHistory_StatusID] VARCHAR(36) NULL,
+    [StatusHistory_UserID] VARCHAR(36) NULL,
+    [StatusHistory_User] NVARCHAR(150) NULL,
+    [StatusHistory_StartDate] DATETIME NULL,
+    [StatusHistory_EndDate] DATETIME NULL,
+    [StatusHistory_Comment] NVARCHAR(1000) NULL,
+    [StatusHistory_Seconds] INT NULL
+);
+
+INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
+(
+    [AdminTask_ID],
+    [AdminTask_Deleted],
+    [AdminTask_Date],
+    [AdminTask_Number],
+    [AdminTask_Completed],
+    [AdminTask_Author_ID],
+    [AdminTask_Author],
+    [AdminTask_Branch_ID],
+    [AdminTask_Branch],
+    [AdminTask_Category_ID],
+    [AdminTask_Category],
+    [AdminTask_Type_ID],
+    [AdminTask_Type],
+    [AdminTask_Description],
+    [AdminTask_Base_ID],
+    [AdminTask_Source_Type],
+    [AdminTask_Source_View],
+    [AdminTask_Source_ID],
+    [AdminTask_Client_ID],
+    [AdminTask_Client],
+    [AdminTask_Credit_ID],
+    [AdminTask_Credit],
+    [AdminTask_Limit_ID],
+    [AdminTask_Limit],
+    [AdminTask_CurrentStatus],
+    [AdminTask_CurrentStatus_ID],
+    [AdminTask_CompletionDate],
+    [AdminTask_CurrentComment],
+    [AdminTask_SLA],
+    [AdminTask_KPI],
+    [AdminTask_TaskCount],
+    [AdminTask_Priority],
+    [AdminTask_Priority_ID],
+    [AdminTask_Executor],
+
+    [TaskType_ID],
+    [TaskType_Deleted],
+    [TaskType_Parent_ID],
+    [TaskType_IsGroup],
+    [TaskType_Code],
+    [TaskType_Name],
+    [TaskType_Order],
+    [TaskType_SLA],
+    [TaskType_KPI],
+    [TaskType_BlockEditCount],
+    [TaskType_MaxTime],
+
+    [WaitHours],
+    [TotalHours],
+
+    [StatusHistory_ID],
+    [StatusHistory_RowNumber],
+    [StatusHistory_Status],
+    [StatusHistory_StatusID],
+    [StatusHistory_UserID],
+    [StatusHistory_User],
+    [StatusHistory_StartDate],
+    [StatusHistory_EndDate],
+    [StatusHistory_Comment],
+    [StatusHistory_Seconds]
+)
+SELECT
+    a.[ЗадачаАдминистратораКредитов ID],
+    a.[ЗадачаАдминистратораКредитов Пометка Удаления],
+    a.[ЗадачаАдминистратораКредитов Дата],
+    a.[ЗадачаАдминистратораКредитов Номер],
+    a.[ЗадачаАдминистратораКредитов Выполнена],
+    a.[ЗадачаАдминистратораКредитов Автор ID],
+    a.[ЗадачаАдминистратораКредитов Автор],
+    a.[ЗадачаАдминистратораКредитов Филиал ID],
+    a.[ЗадачаАдминистратораКредитов Филиал],
+    a.[ЗадачаАдминистратораКредитов Категория Задачи ID],
+    a.[ЗадачаАдминистратораКредитов Категория Задачи],
+    a.[ЗадачаАдминистратораКредитов Тип Задачи ID],
+    a.[ЗадачаАдминистратораКредитов Тип Задачи],
+    a.[ЗадачаАдминистратораКредитов Описание Задачи],
+    a.[ЗадачаАдминистратораКредитов Задача Основание ID],
+    a.[ЗадачаАдминистратораКредитов Источник Тип],
+    a.[ЗадачаАдминистратораКредитов Источник Вид],
+    a.[ЗадачаАдминистратораКредитов Источник ID],
+    a.[ЗадачаАдминистратораКредитов Клиент ID],
+    a.[ЗадачаАдминистратораКредитов Клиент],
+    a.[ЗадачаАдминистратораКредитов Кредит ID],
+    a.[ЗадачаАдминистратораКредитов Кредит],
+    a.[ЗадачаАдминистратораКредитов Лимит ID],
+    a.[ЗадачаАдминистратораКредитов Лимит],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус ID],
+    a.[ЗадачаАдминистратораКредитов Дата Выполнения],
+    a.[ЗадачаАдминистратораКредитов Текущий Комментарий],
+    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей SLA],
+    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей KPI],
+    a.[ЗадачаАдминистратораКредитов Количество Задач],
+    a.[ЗадачаАдминистратораКредитов Приоритет Задачи],
+    a.[ЗадачаАдминистратораКредитов Приоритет Задачи ID],
+    a.[ЗадачаАдминистратораКредитов Исполнитель],
+
+    t.[ТипыЗадачАдминистратораКредитов ID],
+    t.[ТипыЗадачАдминистратораКредитов Пометка Удаления],
+    t.[ТипыЗадачАдминистратораКредитов Родитель ID],
+    t.[ТипыЗадачАдминистратораКредитов Это Группа],
+    t.[ТипыЗадачАдминистратораКредитов Код],
+    t.[ТипыЗадачАдминистратораКредитов Наименование],
+    t.[ТипыЗадачАдминистратораКредитов Реквизит Доп Упорядочивания],
+    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей SLA],
+    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей KPI],
+    t.[ТипыЗадачАдминистратораКредитов Запрет Редактирования Количества Задач],
+    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Максимальное Время Выполнения],
+
+    COALESCE(wait_hours.WaitHours, 0) AS WaitHours,
+    COALESCE(total_hours.TotalHours, 0) AS TotalHours,
+
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Номер Строки],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус ID],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Пользователь ID],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Пользователь],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Дата Начала],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Дата Окончания],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Комментарий],
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах]
+FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов] a
+LEFT JOIN [ATK].[mis].[Silver_Справочники.ТипыЗадачАдминистратораКредитов] t
+    ON a.[ЗадачаАдминистратораКредитов Тип Задачи ID] = t.[ТипыЗадачАдминистратораКредитов ID]
+OUTER APPLY
+(
+    
+    SELECT TOP 1 *
+    FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s
+    WHERE s.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
+    ORDER BY s.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Номер Строки] DESC
+) sh
+OUTER APPLY
+(
+    
+    SELECT SUM(CAST(s2.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS TotalHours
+    FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s2
+    WHERE s2.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
+) total_hours
+OUTER APPLY
+(
+    
+    SELECT SUM(CAST(s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS WaitHours
+    FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s3
+    WHERE s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
+      AND s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус] = N''ВОжидании''
+) wait_hours
+OUTER APPLY
+(
+    
+    SELECT TOP 1 *
+    FROM [ATK].[dbo].[Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей] hist
+    WHERE hist.[ТипыЗадачАдминистратораКредитов ID] = t.[ТипыЗадачАдминистратораКредитов ID]
+      AND hist.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Дата Изменения] <= a.[ЗадачаАдминистратораКредитов Дата]
+    ORDER BY hist.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Дата Изменения] DESC
+) hist_tasktype;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY
@@ -1513,7 +1457,6 @@ WHERE c.[Контрагенты Тестовый Контрагент] = 00;';
 IF OBJECT_ID(N''[mis].[2tbl_Gold_CreditsInShadowBranches]'',''U'') IS NOT NULL DROP TABLE [mis].[2tbl_Gold_CreditsInShadowBranches];
 CREATE TABLE [mis].[2tbl_Gold_CreditsInShadowBranches](
     Period DATETIME NULL,
-    
     ID VARCHAR(32) NOT NULL,
     RowNumber INT NULL,
     Active VARCHAR(36) NULL,
@@ -1529,7 +1472,6 @@ CREATE TABLE [mis].[2tbl_Gold_CreditsInShadowBranches](
 ;WITH src AS (
     SELECT
           rs.[КредитыВТеневыхФилиалах Период]                 AS Period,
-          
           rs.[КредитыВТеневыхФилиалах ID]                     AS ID,
           rs.[КредитыВТеневыхФилиалах Номер Строки]           AS RowNumber,
           rs.[КредитыВТеневыхФилиалах Активность]             AS Active,
@@ -1545,7 +1487,6 @@ CREATE TABLE [mis].[2tbl_Gold_CreditsInShadowBranches](
 calc AS (
     SELECT
           Period,
-          
           ID,
           RowNumber,
           Active,
@@ -1637,7 +1578,7 @@ SELECT
     COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID]) AS LastEmployeeID,
     irr.IRR                                               AS IRR,
     irr.IRR_Client                                        AS IRR_Client,
-    emp.[СотрудникиДанныеПоЗарплате Должность ID]        AS EmployeePositionID,
+    emp.EmployeePositionID                                 AS EmployeePositionID,
     rn = ROW_NUMBER() OVER (
             PARTITION BY d.[ДанныеКредитовВыданных Кредит ID]
             ORDER BY d.[ДанныеКредитовВыданных Дата Выдачи]
@@ -1684,8 +1625,13 @@ OUTER APPLY (
     WHERE doc.[УстановкаДанныхКредита Кредит ID] = d.[ДанныеКредитовВыданных Кредит ID]
     ORDER BY doc.[УстановкаДанныхКредита Дата] ASC
 ) irr
-LEFT JOIN [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] emp
-    ON emp.[СотрудникиДанныеПоЗарплате Сотрудник ID] = COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID])
+OUTER APPLY (
+    
+    SELECT TOP 1 e.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID
+    FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] e
+    WHERE e.[СотрудникиДанныеПоЗарплате Сотрудник ID] = COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID])
+    ORDER BY e.[СотрудникиДанныеПоЗарплате Период] DESC
+) emp
 WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N''Medier%''
   AND d.[ДанныеКредитовВыданных Дата Выдачи] >= ''2024-01-01'';
 

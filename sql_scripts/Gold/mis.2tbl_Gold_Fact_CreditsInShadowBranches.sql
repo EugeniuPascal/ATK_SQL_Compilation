@@ -8,7 +8,6 @@ GO
 
 CREATE TABLE mis.[2tbl_Gold_CreditsInShadowBranches] (
     Period DATETIME NULL,
-    --Registrar_TRef NVARCHAR(100) NULL,
     ID VARCHAR(32) NOT NULL,
     RowNumber INT NULL,
     Active VARCHAR(36) NULL,
@@ -25,7 +24,6 @@ GO
 ;WITH src AS (
     SELECT
           rs.[КредитыВТеневыхФилиалах Период]                 AS Period,
-          --rs.[КредитыВТеневыхФилиалах Регистратор _TRef]      AS Registrar_TRef,
           rs.[КредитыВТеневыхФилиалах ID]                     AS ID,
           rs.[КредитыВТеневыхФилиалах Номер Строки]           AS RowNumber,
           rs.[КредитыВТеневыхФилиалах Активность]             AS Active,
@@ -41,7 +39,6 @@ GO
 calc AS (
     SELECT
           Period,
-          --Registrar_TRef,
           ID,
           RowNumber,
           Active,

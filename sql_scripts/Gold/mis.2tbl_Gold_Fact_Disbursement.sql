@@ -39,7 +39,7 @@ GO
 
 /* ============================
    Build #Base
-   Include EmployeePositionID directly
+   Include last EmployeePositionID based on latest period
    ============================ */
 SELECT
     d.[ДанныеКредитовВыданных Кредит ID]                 AS CreditID,
@@ -55,7 +55,7 @@ SELECT
     COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID]) AS LastEmployeeID,
     irr.IRR                                               AS IRR,
     irr.IRR_Client                                        AS IRR_Client,
-    emp.[СотрудникиДанныеПоЗарплате Должность ID]        AS EmployeePositionID,
+    emp.EmployeePositionID                                 AS EmployeePositionID,
     rn = ROW_NUMBER() OVER (
             PARTITION BY d.[ДанныеКредитовВыданных Кредит ID]
             ORDER BY d.[ДанныеКредитовВыданных Дата Выдачи]
@@ -102,8 +102,13 @@ OUTER APPLY (
     WHERE doc.[УстановкаДанныхКредита Кредит ID] = d.[ДанныеКредитовВыданных Кредит ID]
     ORDER BY doc.[УстановкаДанныхКредита Дата] ASC
 ) irr
-LEFT JOIN [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] emp
-    ON emp.[СотрудникиДанныеПоЗарплате Сотрудник ID] = COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID])
+OUTER APPLY (
+    -- Get last EmployeePositionID based on latest period
+    SELECT TOP 1 e.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID
+    FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] e
+    WHERE e.[СотрудникиДанныеПоЗарплате Сотрудник ID] = COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID])
+    ORDER BY e.[СотрудникиДанныеПоЗарплате Период] DESC
+) emp
 WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N'Medier%'
   AND d.[ДанныеКредитовВыданных Дата Выдачи] >= '2024-01-01';
 GO

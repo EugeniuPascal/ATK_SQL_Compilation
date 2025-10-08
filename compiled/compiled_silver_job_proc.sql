@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2025-10-07 16:54:24.863988
+-- Generated: 2025-10-08 08:24:57.075876
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 21
 --   Silver_Документы.ЗаявкаНаКредит.sql
@@ -230,12 +230,12 @@ FROM [ATK].[dbo].[Документы.ЗаявкаНаКредит];';
     END CATCH;
 
     -- Start of: Silver_Документы.ОбъединеннаяИнтернетЗаявка.sql
-    SET @sql = N'-- Drop the table if it exists
-IF OBJECT_ID(''mis.[Silver_Документы.ОбъединеннаяИнтернетЗаявка]'', ''U'') IS NOT NULL
+    SET @sql = N'IF OBJECT_ID(''mis.[Silver_Документы.ОбъединеннаяИнтернетЗаявка]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Silver_Документы.ОбъединеннаяИнтернетЗаявка];
 
 IF OBJECT_ID(N''[mis].[[Silver_Документы].[ОбъединеннаяИнтернетЗаявка]]'',''U'') IS NOT NULL DROP TABLE mis.[Silver_Документы.ОбъединеннаяИнтернетЗаявка];
-CREATE TABLE mis.[Silver_Документы.ОбъединеннаяИнтернетЗаявка](
+CREATE TABLE mis.[Silver_Документы.ОбъединеннаяИнтернетЗаявка]
+(
     [ОбъединеннаяИнтернетЗаявка ID] VARCHAR(36) NULL,
     [ОбъединеннаяИнтернетЗаявка Дата] DATE NULL,
     [ОбъединеннаяИнтернетЗаявка Номер] NVARCHAR(50) NULL,
@@ -273,7 +273,8 @@ CREATE TABLE mis.[Silver_Документы.ОбъединеннаяИнтерн
 
 );
 
-INSERT INTO mis.[Silver_Документы.ОбъединеннаяИнтернетЗаявка] (
+INSERT INTO mis.[Silver_Документы.ОбъединеннаяИнтернетЗаявка] 
+(
     [ОбъединеннаяИнтернетЗаявка ID],
     [ОбъединеннаяИнтернетЗаявка Дата],
     [ОбъединеннаяИнтернетЗаявка Номер],
@@ -888,7 +889,7 @@ IF OBJECT_ID(N''[mis].[[Silver_Справочники].[ФинансовыеПр
 CREATE TABLE mis.[Silver_Справочники.ФинансовыеПродукты]
 (
 	[ФинансовыеПродукты ID]              VARCHAR(36) NOT NULL, 
-    [ФинансовыеПродукты Основная Группа] NVARCHAR(100) NULL,
+    [ФинансовыеПродукты Основная Группа] NVARCHAR(100) NULL
 );
 
 INSERT INTO mis.[Silver_Справочники.ФинансовыеПродукты] 
@@ -1317,7 +1318,7 @@ CREATE TABLE mis.[Silver_Справочники.ФилиалыКонтраген
     [ФилиалыКонтрагентов Владелец]         VARCHAR(36)   NOT NULL,
     [ФилиалыКонтрагентов Код]              NVARCHAR(3)   NOT NULL,
     [ФилиалыКонтрагентов Наименование]     NVARCHAR(150) NULL,
-    [ФилиалыКонтрагентов Адрес]            NVARCHAR(100) NULL,
+    [ФилиалыКонтрагентов Адрес]            NVARCHAR(100) NULL
 
 );
 
@@ -1354,7 +1355,7 @@ IF OBJECT_ID(N''[mis].[[Silver_Справочники].[ФинансовыеПр
 CREATE TABLE mis.[Silver_Справочники.ФинансовыеПродукты]
 (
 	[ФинансовыеПродукты ID]              VARCHAR(36) NOT NULL, 
-    [ФинансовыеПродукты Основная Группа] NVARCHAR(100) NULL,
+    [ФинансовыеПродукты Основная Группа] NVARCHAR(100) NULL
 );
 
 INSERT INTO mis.[Silver_Справочники.ФинансовыеПродукты] 

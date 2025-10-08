@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-10-07 12:48:00.993750
+-- Generated: 2025-10-07 16:54:29.083032
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 15
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -825,6 +825,7 @@ LEFT JOIN mis.[Silver_Справочники.Дилеры] d
 
 CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
 (
+    
     [AdminTask_ID] VARCHAR(36) NOT NULL,
     [AdminTask_RowVersion] ROWVERSION NULL,
     [AdminTask_Deleted] VARCHAR(36) NOT NULL,
@@ -861,7 +862,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
     [AdminTask_Priority_ID] VARCHAR(36) NULL,
     [AdminTask_Executor] VARCHAR(36) NULL,
 
-    [TaskType_ID] VARCHAR(36) NULL,
+    
     [TaskType_Deleted] VARCHAR(36) NULL,
     [TaskType_Parent_ID] VARCHAR(36) NULL,
     [TaskType_IsGroup] BIT NULL,
@@ -873,19 +874,33 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
     [TaskType_BlockEditCount] BIT NULL,
     [TaskType_MaxTime] INT NULL,
 
+    
     [WaitHours] DECIMAL(18,2) NULL,
     [TotalHours] DECIMAL(18,2) NULL,
 
+    
     [StatusHistory_ID] VARCHAR(36) NULL,
     [StatusHistory_RowNumber] INT NULL,
     [StatusHistory_Status] NVARCHAR(256) NULL,
-    [StatusHistory_StatusID] VARCHAR(36) NULL,
     [StatusHistory_UserID] VARCHAR(36) NULL,
     [StatusHistory_User] NVARCHAR(150) NULL,
     [StatusHistory_StartDate] DATETIME NULL,
     [StatusHistory_EndDate] DATETIME NULL,
     [StatusHistory_Comment] NVARCHAR(1000) NULL,
-    [StatusHistory_Seconds] INT NULL
+    [StatusHistory_Seconds] INT NULL,
+
+    
+    [НаправлениеSLA_ID] VARCHAR(36) NULL,
+    [НаправлениеSLA_Name] NVARCHAR(250) NULL,
+    [НаправлениеSLA_SLA] INT NULL,
+    [НаправлениеSLA_MaxTime] INT NULL,
+    [НаправлениеSLA_CreateDate] DATETIME NULL,
+    [НаправлениеSLA_WorkDate] DATETIME NULL,
+    [НаправлениеSLA_ApprovalDate] DATETIME NULL,
+    [НаправлениеSLA_DeletedDate] DATETIME NULL,
+    [НаправлениеSLA_TypeID] VARCHAR(36) NULL,
+    [НаправлениеSLA_TypeName] NVARCHAR(250) NULL,
+    [НаправлениеDoc_ID] VARCHAR(36) NULL
 );
 
 INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
@@ -925,7 +940,6 @@ INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
     [AdminTask_Priority_ID],
     [AdminTask_Executor],
 
-    [TaskType_ID],
     [TaskType_Deleted],
     [TaskType_Parent_ID],
     [TaskType_IsGroup],
@@ -943,13 +957,24 @@ INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
     [StatusHistory_ID],
     [StatusHistory_RowNumber],
     [StatusHistory_Status],
-    [StatusHistory_StatusID],
     [StatusHistory_UserID],
     [StatusHistory_User],
     [StatusHistory_StartDate],
     [StatusHistory_EndDate],
     [StatusHistory_Comment],
-    [StatusHistory_Seconds]
+    [StatusHistory_Seconds],
+
+    [НаправлениеSLA_ID],
+    [НаправлениеSLA_Name],
+    [НаправлениеSLA_SLA],
+    [НаправлениеSLA_MaxTime],
+    [НаправлениеSLA_CreateDate],
+    [НаправлениеSLA_WorkDate],
+    [НаправлениеSLA_ApprovalDate],
+    [НаправлениеSLA_DeletedDate],
+    [НаправлениеSLA_TypeID],
+    [НаправлениеSLA_TypeName],
+    [НаправлениеDoc_ID]
 )
 SELECT
     a.[ЗадачаАдминистратораКредитов ID],
@@ -987,7 +1012,6 @@ SELECT
     a.[ЗадачаАдминистратораКредитов Приоритет Задачи ID],
     a.[ЗадачаАдминистратораКредитов Исполнитель],
 
-    t.[ТипыЗадачАдминистратораКредитов ID],
     t.[ТипыЗадачАдминистратораКредитов Пометка Удаления],
     t.[ТипыЗадачАдминистратораКредитов Родитель ID],
     t.[ТипыЗадачАдминистратораКредитов Это Группа],
@@ -1005,19 +1029,30 @@ SELECT
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID],
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Номер Строки],
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус ID],
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Пользователь ID],
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Пользователь],
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Дата Начала],
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Дата Окончания],
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Комментарий],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах]
+    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах],
+
+    pay.[СведенияОНаправленияхНаВыплату Направление на Выплату ID],
+    pay.[СведенияОНаправленияхНаВыплату Направление на Выплату],
+    pay.[СведенияОНаправленияхНаВыплату SLA],
+    pay.[СведенияОНаправленияхНаВыплату Максимальное Время Выполнения],
+    pay.[СведенияОНаправленияхНаВыплату Дата Создания],
+    pay.[СведенияОНаправленияхНаВыплату Дата Взятия в Работу],
+    pay.[СведенияОНаправленияхНаВыплату Дата Утверждения],
+    pay.[СведенияОНаправленияхНаВыплату Дата Пометки Удаления],
+    pay.[СведенияОНаправленияхНаВыплату Тип Направления на Выплату ID],
+    pay.[СведенияОНаправленияхНаВыплату Тип Направления на Выплату],
+    doc.[НаправлениеНаВыплату ID] AS НаправлениеDoc_ID
+
 FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов] a
 LEFT JOIN [ATK].[mis].[Silver_Справочники.ТипыЗадачАдминистратораКредитов] t
     ON a.[ЗадачаАдминистратораКредитов Тип Задачи ID] = t.[ТипыЗадачАдминистратораКредитов ID]
 OUTER APPLY
 (
-    
     SELECT TOP 1 *
     FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s
     WHERE s.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
@@ -1025,14 +1060,12 @@ OUTER APPLY
 ) sh
 OUTER APPLY
 (
-    
     SELECT SUM(CAST(s2.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS TotalHours
     FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s2
     WHERE s2.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
 ) total_hours
 OUTER APPLY
 (
-    
     SELECT SUM(CAST(s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS WaitHours
     FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s3
     WHERE s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
@@ -1040,13 +1073,16 @@ OUTER APPLY
 ) wait_hours
 OUTER APPLY
 (
-    
     SELECT TOP 1 *
     FROM [ATK].[dbo].[Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей] hist
     WHERE hist.[ТипыЗадачАдминистратораКредитов ID] = t.[ТипыЗадачАдминистратораКредитов ID]
       AND hist.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Дата Изменения] <= a.[ЗадачаАдминистратораКредитов Дата]
     ORDER BY hist.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Дата Изменения] DESC
-) hist_tasktype;';
+) hist_tasktype
+LEFT JOIN [ATK].[dbo].[Документы.НаправлениеНаВыплату] AS doc
+    ON doc.[НаправлениеНаВыплату Кредит ID] = a.[ЗадачаАдминистратораКредитов Кредит ID]
+LEFT JOIN [ATK].[dbo].[РегистрыСведений.СведенияОНаправленияхНаВыплату] AS pay
+    ON pay.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] = doc.[НаправлениеНаВыплату ID];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

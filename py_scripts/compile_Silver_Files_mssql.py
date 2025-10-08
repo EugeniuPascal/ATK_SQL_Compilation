@@ -29,22 +29,31 @@ CREATE_PROC_RE  = re.compile(r"\bCREATE\s+PROCEDURE\s+" + OBJ_NAME, re.IGNORECAS
 CREATE_FUNC_RE  = re.compile(r"\bCREATE\s+FUNCTION\s+" + OBJ_NAME, re.IGNORECASE)
 CREATE_TABLE_RE = re.compile(r"\bCREATE\s+TABLE\s+" + OBJ_NAME, re.IGNORECASE)
 
+# ---- Normalize object name (handles dots inside object names) ----
 def normalize_object_name(name: str, default_schema: str) -> str:
     n = name.strip()
+
+    # If name contains quotes, leave as is
     if '"' in n:
         return n
-    if '.' not in n:
-        part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
-        return f'[{default_schema}].{part}'
-    parts = [p.strip() for p in n.split('.')]
-    norm = []
-    for p in parts:
-        if p.startswith('[') and p.endswith(']'):
-            norm.append(p)
-        else:
-            norm.append(f'[{p}]')
-    return '.'.join(norm)
 
+    # Split on first dot only (schema.object), keep rest as part of object name
+    if '.' in n:
+        schema, obj = n.split('.', 1)
+        schema = schema.strip()
+        obj = obj.strip()
+        # Wrap in brackets if needed
+        if not (schema.startswith('[') and schema.endswith(']')):
+            schema = f'[{schema}]'
+        if not (obj.startswith('[') and obj.endswith(']')):
+            obj = f'[{obj}]'
+        return f"{schema}.{obj}"
+
+    # No dot → prepend default schema
+    part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
+    return f'[{default_schema}].{part}'
+
+# ---- Make SQL idempotent ----
 def make_idempotent(sql: str) -> str:
     sql = GO_LINE_RE.sub("", sql)
     sql = USE_RE.sub("", sql)
@@ -57,11 +66,12 @@ def make_idempotent(sql: str) -> str:
         if raw.lstrip().startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
-        return (f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {raw};\n"
-                f"CREATE TABLE {raw}")
+        return (f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\n"
+                f"CREATE TABLE {norm}")
     sql = CREATE_TABLE_RE.sub(table_repl, sql)
     return sql.strip()
 
+# ---- Main compilation ----
 try:
     sql_files = sorted([f for f in os.listdir(source_folder) if f.lower().endswith('.sql')])
     logging.info(f"Found {len(sql_files)} SQL files in {source_folder}")

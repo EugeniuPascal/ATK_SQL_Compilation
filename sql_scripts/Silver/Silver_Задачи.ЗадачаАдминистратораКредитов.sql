@@ -1,12 +1,10 @@
 USE [ATK];
 GO
 
--- Drop table if it exists
 IF OBJECT_ID('mis.[Silver_Задачи.ЗадачаАдминистратораКредитов]', 'U') IS NOT NULL
     DROP TABLE mis.[Silver_Задачи.ЗадачаАдминистратораКредитов];
 GO
 
--- Create table
 CREATE TABLE mis.[Silver_Задачи.ЗадачаАдминистратораКредитов]
 (
     [ЗадачаАдминистратораКредитов ID] VARCHAR(36) NOT NULL,
@@ -47,7 +45,6 @@ CREATE TABLE mis.[Silver_Задачи.ЗадачаАдминистратораК
 );
 GO
 
--- Insert data from source table (exclude ROWVERSION column)
 INSERT INTO mis.[Silver_Задачи.ЗадачаАдминистратораКредитов]
 (
     [ЗадачаАдминистратораКредитов ID],

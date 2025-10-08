@@ -38,9 +38,10 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [Language]              NVARCHAR(25)   NULL,
     [NoEmailNotifications]  VARCHAR(36)    NULL,
     [NoPromoSMS]            VARCHAR(36)    NULL,
+	[EconomicSector]        NVARCHAR(200)  NULL,
     [OrganizationType]      NVARCHAR(52)   NULL,
     [IsGroupOwner]          BIT            NULL,
-    [GroupID]               NVARCHAR(20)    NULL,
+    [GroupID]               NVARCHAR(20)    NULL,	
     CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
@@ -75,6 +76,7 @@ GO
         s.[Контрагенты Язык] AS [Language],
         s.[Контрагенты Не Уведомлять Письмом] AS NoEmailNotifications,
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
+		s.[Контрагенты Сектор Экономики] AS EconomicSector,
         fp.[ФормыПредприятия Наименование] AS OrganizationType,
         CASE WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1 ELSE 0 END AS IsGroupOwner,
         ga.[ГруппыАффилированныхЛиц Код] AS GroupID,
@@ -128,7 +130,7 @@ Final AS (
         City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
         Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
         FiscalCode, LegalAddress, RegistrationDate, [Language],
-        NoEmailNotifications, NoPromoSMS, OrganizationType,
+        NoEmailNotifications, NoPromoSMS, EconomicSector, OrganizationType,
         IsGroupOwner, GroupID
     FROM AgeCalc
 ),
@@ -148,7 +150,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
     [Age],[AgeGroup],[City],[CreatedDate],[PartnerCode],[FullName],[IsNonResident],[NoPaymentNotification],
     [Gender],[PostalAddress],[Country],[MobilePhone1],[MobilePhone2],[Phones],
     [FiscalCode],[LegalAddress],[RegistrationDate],[Language],
-    [NoEmailNotifications],[NoPromoSMS],[OrganizationType],
+    [NoEmailNotifications],[NoPromoSMS], [EconomicSector], [OrganizationType],
     [IsGroupOwner],[GroupID]
 )
 SELECT
@@ -169,7 +171,7 @@ SELECT
 		 WHEN N'Română' THEN 'Romanian'
 		 ELSE [Language]
     END AS [Language],
-    NoEmailNotifications, NoPromoSMS, OrganizationType,
+    NoEmailNotifications, NoPromoSMS, EconomicSector, OrganizationType,
     IsGroupOwner, GroupID
 FROM Dedup
 WHERE rn = 1;

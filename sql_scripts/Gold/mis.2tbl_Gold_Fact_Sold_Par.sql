@@ -9,18 +9,19 @@ DECLARE @DateFrom DATE = '2024-01-01';
 DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par];
 
 CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
-    SoldDate      DATE         NOT NULL,
-    CreditID      VARCHAR(36)  NOT NULL,
-    SoldAmount    DECIMAL(18,2) NULL,
-    IRR_Values    DECIMAL(18,6) NULL,
-    BranchShadow  NVARCHAR(100) NULL,
-    EmployeeID      VARCHAR(36)  NULL,
-    BranchID      VARCHAR(36)  NULL,
-    EmployeePositionID VARCHAR(36) NULL,
-    Par_0_IFRS    DECIMAL(18,6) NULL,
-    Par_30_IFRS   DECIMAL(18,6) NULL,
-    Par_60_IFRS   DECIMAL(18,6) NULL,
-    Par_90_IFRS   DECIMAL(18,6) NULL
+    SoldDate                 DATE         NOT NULL,
+    CreditID                 VARCHAR(36)  NOT NULL,
+    SoldAmount               DECIMAL(18,2) NULL,
+	NumberOfOverdueDaysIFRS  DECIMAL(15,2) NULL,
+    IRR_Values               DECIMAL(18,6) NULL,
+    BranchShadow             NVARCHAR(100) NULL,
+    EmployeeID               VARCHAR(36)  NULL,
+    BranchID                 VARCHAR(36)  NULL,
+    EmployeePositionID       VARCHAR(36) NULL,
+    Par_0_IFRS               DECIMAL(18,6) NULL,
+    Par_30_IFRS              DECIMAL(18,6) NULL,
+    Par_60_IFRS              DECIMAL(18,6) NULL,
+    Par_90_IFRS              DECIMAL(18,6) NULL
 ) WITH (DATA_COMPRESSION = PAGE);
 
 -----------------------------------------------------
@@ -169,14 +170,14 @@ EmpPosRanges AS (
 )
 INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
 (
-    SoldDate, CreditID, SoldAmount, IRR_Values, BranchShadow, EmployeeID, BranchID, EmployeePositionID,
+    SoldDate, CreditID, SoldAmount, NumberOfOverdueDaysIFRS, IRR_Values, BranchShadow, EmployeeID, BranchID, EmployeePositionID,
     Par_0_IFRS, Par_30_IFRS, Par_60_IFRS, Par_90_IFRS
 )
 SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
-    
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО] AS NumberOfOverdueDaysIFRS,
     -- IRR Values: pick latest IRR (by datetime) whose date <= SoldDate (cast to date)
     ROUND(
         COALESCE(

@@ -15,7 +15,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [IssueDate] DATE NULL,
     [Term] INT NULL,
     [Amount] DECIMAL(18,2) NULL,
-    [EconomicSector] NVARCHAR(255) NULL,
+    [EconomicSectorDetailed] NVARCHAR(255) NULL,
     [FinancialProductID] VARCHAR(36) NULL,
     [FinancialProduct] NVARCHAR(255) NULL,
     [Agro] NVARCHAR(255) NULL,
@@ -31,7 +31,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [UsagePurpose] NVARCHAR(500) NULL,
     [PurposeDescription] NVARCHAR(1000) NULL,
     [ProductType] NVARCHAR(255) NULL,
-    [UsageArea] NVARCHAR(255) NULL,
+    [EconomicUsageArea] NVARCHAR(255) NULL,
     [SigningSource] NVARCHAR(500) NULL,
     [FinancialProductsMainGroup] NVARCHAR(255) NULL,
     [IssuedCreditsStatus] NVARCHAR(50) NULL,
@@ -47,7 +47,9 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [GreenCredit] VARCHAR(36) NULL,
     [CommitteeProt_CrPurpose] NVARCHAR(150) NULL,
     [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL,
-    [DigitalSign] NVARCHAR(50) NULL
+    [DigitalSign] NVARCHAR(50) NULL,
+	[EconomicSectorEFSE] NVARCHAR(50) NULL,
+	[EconomicSector] NVARCHAR(50) NULL
 );
 GO
 
@@ -170,18 +172,18 @@ GreenCredit AS (
 INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
-    [EconomicSector], [FinancialProductID], [FinancialProduct],
+    [EconomicSectorDetailed], [FinancialProductID], [FinancialProduct],
     [Agro], [LocalityType], [Currency], [ProductID],
     [Product], [Purpose], [RemoveFundingSource],
     [ContractType], [ContractDate], [IncomeSegment],
     [UsagePurpose], [PurposeDescription],
-    [ProductType], [UsageArea], [SigningSource],
+    [ProductType], [EconomicUsageArea], [SigningSource],
     [FinancialProductsMainGroup], [IssuedCreditsStatus],
     [CreditApplicationPartnerID], [FirstFilialID], [FirstEmployeeID],
     [LastFilialID], [LastEmployeeID], [DealerID], [Source],
     [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit],
     [CommitteeProt_CrPurpose], [CommitteeProt_AMLRiskCat],
-    [DigitalSign] 
+    [DigitalSign], [EconomicSectorEFSE], [EconomicSector] 
 )
 SELECT
     c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
@@ -267,7 +269,9 @@ SELECT
     CASE WHEN c.[Кредиты Источник Подписания] IS NOT NULL 
 	     THEN 'True' 
 		 ELSE 'False' 
-    END AS DigitalSign
+    END AS DigitalSign,
+	e.[СекторыЭкономики Сектор Экономики EFSE] AS EconomicSectorEFSE,
+	e.[СекторыЭкономики Основной Раздел] AS EconimicSector
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.[Кредиты ID] = cr.CreditID
 LEFT JOIN Resp r ON c.[Кредиты ID] = r.CreditID
@@ -275,5 +279,6 @@ LEFT JOIN FinProducts fp ON c.[Кредиты Финансовый Продук�
 LEFT JOIN Statuses st ON c.[Кредиты ID] = st.CreditID
 LEFT JOIN LatestOutstanding lo ON c.[Кредиты ID] = lo.CreditID
 LEFT JOIN SegmentRevenue seg ON c.[Кредиты Кредитный Продукт ID] = seg.ProductID
-LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID;
+LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID
+LEFT JOIN [ATK].[dbo].[Справочники.СекторыЭкономики] AS e ON c.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID];
 GO

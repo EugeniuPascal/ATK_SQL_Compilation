@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-10-08 16:13:26.200861
+-- Generated: 2025-10-09 12:45:27.050381
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 15
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -652,7 +652,9 @@ IF OBJECT_ID(N''[mis].[2tbl_Gold_Dim_Employees]'',''U'') IS NOT NULL DROP TABLE 
 CREATE TABLE [mis].[2tbl_Gold_Dim_Employees](
     [EmployeeID] VARCHAR(36) NOT NULL,
     [EmployeeCode] INT NULL,
+    [EmployeePositionID] VARCHAR(36) NULL,
     [EmployeeName] NVARCHAR(40) NULL,
+    [EmployeePosition] NVARCHAR(150) NULL,
     [HireDate] NVARCHAR(10) NULL,
     [BirthDate] NVARCHAR(10) NULL,
     [DismissalDate] NVARCHAR(10) NULL,
@@ -660,16 +662,18 @@ CREATE TABLE [mis].[2tbl_Gold_Dim_Employees](
     [ExperienceYears] INT NULL,
     [ExperienceMonths] INT NULL,
     [ExperienceYM] NVARCHAR(50) NULL,
-    [EmploymentPeriod] NVARCHAR(50) NULL,
-    [EmployeePositionID] VARCHAR(36) NULL,
-    [EmployeePosition] NVARCHAR(150) NULL,
-    [ExperienceYearIndex] INT NULL
+	[ExperienceMonthsRange] NVARCHAR(50) NULL,
+    [ExperienceIndex] INT NULL,
+    [EmploymentPeriod] NVARCHAR(50) NULL
 );
 
-INSERT INTO mis.[2tbl_Gold_Dim_Employees] (
+INSERT INTO mis.[2tbl_Gold_Dim_Employees] 
+(
     [EmployeeID],
     [EmployeeCode],
+    [EmployeePositionID],
     [EmployeeName],
+    [EmployeePosition],
     [HireDate],
     [BirthDate],
     [DismissalDate],
@@ -677,49 +681,50 @@ INSERT INTO mis.[2tbl_Gold_Dim_Employees] (
     [ExperienceYears],
     [ExperienceMonths],
     [ExperienceYM],
-    [EmploymentPeriod],
-    [EmployeePositionID],
-    [EmployeePosition],
-    [ExperienceYearIndex]
+	[ExperienceMonthsRange],
+    [ExperienceIndex],
+    [EmploymentPeriod]  
 )
 SELECT 
     a.[Сотрудники ID] AS EmployeeID,
     a.[Сотрудники Код] AS EmployeeCode,
+    lastPos.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
     a.[Сотрудники Наименование] AS EmployeeName,
-    
+    lastPos.[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition,
+
     
     CASE 
         WHEN a.[Сотрудники Дата Приема] IS NULL OR a.[Сотрудники Дата Приема] = ''1753-01-01''
         THEN N''N/A''
         ELSE FORMAT(a.[Сотрудники Дата Приема], ''yyyy-MM-dd'')
     END AS HireDate,
-    
+
     
     CASE 
         WHEN a.[Сотрудники Дата Рождения] IS NULL OR a.[Сотрудники Дата Рождения] = ''1753-01-01''
         THEN N''N/A''
         ELSE FORMAT(a.[Сотрудники Дата Рождения], ''yyyy-MM-dd'')
     END AS BirthDate,
-    
+
     
     CASE 
         WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
         THEN N''N/A''
         ELSE FORMAT(a.[Сотрудники Дата Увольнения], ''yyyy-MM-dd'')
     END AS DismissalDate,
-    
+
     a.[Сотрудники Табельный Номер] AS TimesheetNumber,
 
     
     CASE 
         WHEN a.[Сотрудники Дата Приема] IS NULL OR a.[Сотрудники Дата Приема] = ''1753-01-01''
         THEN NULL
-        ELSE DATEDIFF(YEAR, a.[Сотрудники Дата Приема], 
+        ELSE DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
              CASE 
                  WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
                  THEN GETDATE()
                  ELSE a.[Сотрудники Дата Увольнения]
-             END)
+             END) / 12
     END AS ExperienceYears,
 
     
@@ -731,26 +736,69 @@ SELECT
                  WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
                  THEN GETDATE()
                  ELSE a.[Сотрудники Дата Увольнения]
-             END) % 12
+             END)
     END AS ExperienceMonths,
 
     
     CASE 
         WHEN a.[Сотрудники Дата Приема] IS NULL OR a.[Сотрудники Дата Приема] = ''1753-01-01''
         THEN N''N/A''
-        ELSE CAST(DATEDIFF(YEAR, a.[Сотрудники Дата Приема], 
-                 CASE 
-                     WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
-                     THEN GETDATE()
-                     ELSE a.[Сотрудники Дата Увольнения]
-                 END) AS NVARCHAR(3)) + N'' years '' +
-             CAST(DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
-                 CASE 
-                     WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
-                     THEN GETDATE()
-                     ELSE a.[Сотрудники Дата Увольнения]
-                 END) % 12 AS NVARCHAR(2)) + N'' months''
+        ELSE 
+            CAST(DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+                 CASE WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01'' 
+                      THEN GETDATE() ELSE a.[Сотрудники Дата Увольнения] END) / 12 AS NVARCHAR(3)) 
+            + N'' years '' + 
+            CAST(DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+                 CASE WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01'' 
+                      THEN GETDATE() ELSE a.[Сотрудники Дата Увольнения] END) % 12 AS NVARCHAR(2)) 
+            + N'' months''
     END AS ExperienceYM,
+	
+	
+    CASE 
+        WHEN DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+             CASE 
+                 WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
+                 THEN GETDATE()
+                 ELSE a.[Сотрудники Дата Увольнения]
+             END) BETWEEN 1 AND 5 THEN N''1-5 m''
+        WHEN DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+             CASE 
+                 WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
+                 THEN GETDATE()
+                 ELSE a.[Сотрудники Дата Увольнения]
+             END) BETWEEN 6 AND 11 THEN N''6-11 m''
+        WHEN DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+             CASE 
+                 WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
+                 THEN GETDATE()
+                 ELSE a.[Сотрудники Дата Увольнения]
+             END) BETWEEN 12 AND 35 THEN N''12-35 m''
+        WHEN DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+             CASE 
+                 WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
+                 THEN GETDATE()
+                 ELSE a.[Сотрудники Дата Увольнения]
+             END) > 35 THEN N''36+ m''
+    ELSE N''N/A''
+END AS ExperienceMonthsRange,
+
+
+   CASE 
+        WHEN DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+             CASE WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01'' 
+               THEN GETDATE() ELSE a.[Сотрудники Дата Увольнения] END) BETWEEN 1 AND 5 THEN 1
+        WHEN DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+             CASE WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01'' 
+               THEN GETDATE() ELSE a.[Сотрудники Дата Увольнения] END) BETWEEN 6 AND 11 THEN 2
+        WHEN DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+             CASE WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01'' 
+               THEN GETDATE() ELSE a.[Сотрудники Дата Увольнения] END) BETWEEN 12 AND 35 THEN 3
+        WHEN DATEDIFF(MONTH, a.[Сотрудники Дата Приема], 
+             CASE WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01'' 
+               THEN GETDATE() ELSE a.[Сотрудники Дата Увольнения] END) > 35 THEN 4
+        ELSE NULL
+    END AS ExperienceIndex,
 
     
     CASE 
@@ -759,40 +807,7 @@ SELECT
         WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
         THEN FORMAT(a.[Сотрудники Дата Приема], ''yyyy-MM-dd'') + N'' → Present''
         ELSE FORMAT(a.[Сотрудники Дата Приема], ''yyyy-MM-dd'') + N'' → '' + FORMAT(a.[Сотрудники Дата Увольнения], ''yyyy-MM-dd'')
-    END AS EmploymentPeriod,
-
-    
-    lastPos.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
-    lastPos.[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition,
-
-    
-    CASE 
-        WHEN DATEDIFF(YEAR, a.[Сотрудники Дата Приема], 
-             CASE 
-                 WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
-                 THEN GETDATE()
-                 ELSE a.[Сотрудники Дата Увольнения]
-             END) < 1 THEN 0
-        WHEN DATEDIFF(YEAR, a.[Сотрудники Дата Приема], 
-             CASE 
-                 WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
-                 THEN GETDATE()
-                 ELSE a.[Сотрудники Дата Увольнения]
-             END) BETWEEN 1 AND 20 THEN 1
-        WHEN DATEDIFF(YEAR, a.[Сотрудники Дата Приема], 
-             CASE 
-                 WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
-                 THEN GETDATE()
-                 ELSE a.[Сотрудники Дата Увольнения]
-             END) BETWEEN 21 AND 30 THEN 2
-        WHEN DATEDIFF(YEAR, a.[Сотрудники Дата Приема], 
-             CASE 
-                 WHEN a.[Сотрудники Дата Увольнения] IS NULL OR a.[Сотрудники Дата Увольнения] = ''1753-01-01''
-                 THEN GETDATE()
-                 ELSE a.[Сотрудники Дата Увольнения]
-             END) BETWEEN 31 AND 40 THEN 3
-        ELSE 4
-    END AS ExperienceYearIndex
+    END AS EmploymentPeriod
 
 FROM [ATK].[dbo].[Справочники.Сотрудники] AS a
 OUTER APPLY (
@@ -931,7 +946,6 @@ LEFT JOIN mis.[Silver_Справочники.Дилеры] d
 
 CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
 (
-    
     [AdminTask_ID] VARCHAR(36) NOT NULL,
     [AdminTask_RowVersion] ROWVERSION NULL,
     [AdminTask_Deleted] VARCHAR(36) NOT NULL,
@@ -968,7 +982,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
     [AdminTask_Priority_ID] VARCHAR(36) NULL,
     [AdminTask_Executor] VARCHAR(36) NULL,
 
-    
     [TaskType_Deleted] VARCHAR(36) NULL,
     [TaskType_Parent_ID] VARCHAR(36) NULL,
     [TaskType_IsGroup] BIT NULL,
@@ -980,11 +993,9 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
     [TaskType_BlockEditCount] BIT NULL,
     [TaskType_MaxTime] INT NULL,
 
-    
     [WaitHours] DECIMAL(18,2) NULL,
     [TotalHours] DECIMAL(18,2) NULL,
 
-    
     [StatusHistory_ID] VARCHAR(36) NULL,
     [StatusHistory_RowNumber] INT NULL,
     [StatusHistory_Status] NVARCHAR(256) NULL,
@@ -995,7 +1006,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
     [StatusHistory_Comment] NVARCHAR(1000) NULL,
     [StatusHistory_Seconds] INT NULL,
 
-    
     [НаправлениеSLA_ID] VARCHAR(36) NULL,
     [НаправлениеSLA_Name] NVARCHAR(250) NULL,
     [НаправлениеSLA_SLA] INT NULL,
@@ -1009,186 +1019,154 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
     [НаправлениеDoc_ID] VARCHAR(36) NULL
 );
 
-INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
+WITH AdminTasksWithRowNum AS
 (
-    [AdminTask_ID],
-    [AdminTask_Deleted],
-    [AdminTask_Date],
-    [AdminTask_Number],
-    [AdminTask_Completed],
-    [AdminTask_Author_ID],
-    [AdminTask_Author],
-    [AdminTask_Branch_ID],
-    [AdminTask_Branch],
-    [AdminTask_Category_ID],
-    [AdminTask_Category],
-    [AdminTask_Type_ID],
-    [AdminTask_Type],
-    [AdminTask_Description],
-    [AdminTask_Base_ID],
-    [AdminTask_Source_Type],
-    [AdminTask_Source_View],
-    [AdminTask_Source_ID],
-    [AdminTask_Client_ID],
-    [AdminTask_Client],
-    [AdminTask_Credit_ID],
-    [AdminTask_Credit],
-    [AdminTask_Limit_ID],
-    [AdminTask_Limit],
-    [AdminTask_CurrentStatus],
-    [AdminTask_CurrentStatus_ID],
-    [AdminTask_CompletionDate],
-    [AdminTask_CurrentComment],
-    [AdminTask_SLA],
-    [AdminTask_KPI],
-    [AdminTask_TaskCount],
-    [AdminTask_Priority],
-    [AdminTask_Priority_ID],
-    [AdminTask_Executor],
+    SELECT
+        a.[ЗадачаАдминистратораКредитов ID] AS AdminTask_ID,
+        a.[ЗадачаАдминистратораКредитов Пометка Удаления] AS AdminTask_Deleted,
+        a.[ЗадачаАдминистратораКредитов Дата] AS AdminTask_Date,
+        a.[ЗадачаАдминистратораКредитов Номер] AS AdminTask_Number,
+        a.[ЗадачаАдминистратораКредитов Выполнена] AS AdminTask_Completed,
+        a.[ЗадачаАдминистратораКредитов Автор ID] AS AdminTask_Author_ID,
+        a.[ЗадачаАдминистратораКредитов Автор] AS AdminTask_Author,
+        a.[ЗадачаАдминистратораКредитов Филиал ID] AS AdminTask_Branch_ID,
+        a.[ЗадачаАдминистратораКредитов Филиал] AS AdminTask_Branch,
+        a.[ЗадачаАдминистратораКредитов Категория Задачи ID] AS AdminTask_Category_ID,
+        a.[ЗадачаАдминистратораКредитов Категория Задачи] AS AdminTask_Category,
+        a.[ЗадачаАдминистратораКредитов Тип Задачи ID] AS AdminTask_Type_ID,
+        a.[ЗадачаАдминистратораКредитов Тип Задачи] AS AdminTask_Type,
+        a.[ЗадачаАдминистратораКредитов Описание Задачи] AS AdminTask_Description,
+        a.[ЗадачаАдминистратораКредитов Задача Основание ID] AS AdminTask_Base_ID,
+        a.[ЗадачаАдминистратораКредитов Источник Тип] AS AdminTask_Source_Type,
+        a.[ЗадачаАдминистратораКредитов Источник Вид] AS AdminTask_Source_View,
+        a.[ЗадачаАдминистратораКредитов Источник ID] AS AdminTask_Source_ID,
+        a.[ЗадачаАдминистратораКредитов Клиент ID] AS AdminTask_Client_ID,
+        a.[ЗадачаАдминистратораКредитов Клиент] AS AdminTask_Client,
+        a.[ЗадачаАдминистратораКредитов Кредит ID] AS AdminTask_Credit_ID,
+        a.[ЗадачаАдминистратораКредитов Кредит] AS AdminTask_Credit,
+        a.[ЗадачаАдминистратораКредитов Лимит ID] AS AdminTask_Limit_ID,
+        a.[ЗадачаАдминистратораКредитов Лимит] AS AdminTask_Limit,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус] AS AdminTask_CurrentStatus,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус ID] AS AdminTask_CurrentStatus_ID,
+        a.[ЗадачаАдминистратораКредитов Дата Выполнения] AS AdminTask_CompletionDate,
+        a.[ЗадачаАдминистратораКредитов Текущий Комментарий] AS AdminTask_CurrentComment,
+        hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей SLA] AS AdminTask_SLA,
+        hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей KPI] AS AdminTask_KPI,
+        a.[ЗадачаАдминистратораКредитов Количество Задач] AS AdminTask_TaskCount,
+        a.[ЗадачаАдминистратораКредитов Приоритет Задачи] AS AdminTask_Priority,
+        a.[ЗадачаАдминистратораКредитов Приоритет Задачи ID] AS AdminTask_Priority_ID,
+        a.[ЗадачаАдминистратораКредитов Исполнитель] AS AdminTask_Executor,
 
-    [TaskType_Deleted],
-    [TaskType_Parent_ID],
-    [TaskType_IsGroup],
-    [TaskType_Code],
-    [TaskType_Name],
-    [TaskType_Order],
-    [TaskType_SLA],
-    [TaskType_KPI],
-    [TaskType_BlockEditCount],
-    [TaskType_MaxTime],
+        t.[ТипыЗадачАдминистратораКредитов Пометка Удаления] AS TaskType_Deleted,
+        t.[ТипыЗадачАдминистратораКредитов Родитель ID] AS TaskType_Parent_ID,
+        t.[ТипыЗадачАдминистратораКредитов Это Группа] AS TaskType_IsGroup,
+        t.[ТипыЗадачАдминистратораКредитов Код] AS TaskType_Code,
+        t.[ТипыЗадачАдминистратораКредитов Наименование] AS TaskType_Name,
+        t.[ТипыЗадачАдминистратораКредитов Реквизит Доп Упорядочивания] AS TaskType_Order,
+        t.[ТипыЗадачАдминистратораКредитов Запрет Редактирования Количества Задач] AS TaskType_BlockEditCount,
+        hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Максимальное Время Выполнения] AS TaskType_MaxTime,
 
-    [WaitHours],
-    [TotalHours],
+        COALESCE(wait_hours.WaitHours, 0) AS WaitHours,
+        COALESCE(total_hours.TotalHours, 0) AS TotalHours,
 
-    [StatusHistory_ID],
-    [StatusHistory_RowNumber],
-    [StatusHistory_Status],
-    [StatusHistory_UserID],
-    [StatusHistory_User],
-    [StatusHistory_StartDate],
-    [StatusHistory_EndDate],
-    [StatusHistory_Comment],
-    [StatusHistory_Seconds],
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] AS StatusHistory_ID,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Номер Строки] AS StatusHistory_RowNumber,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус] AS StatusHistory_Status,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Пользователь ID] AS StatusHistory_UserID,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Пользователь] AS StatusHistory_User,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Дата Начала] AS StatusHistory_StartDate,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Дата Окончания] AS StatusHistory_EndDate,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Комментарий] AS StatusHistory_Comment,
+        sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS StatusHistory_Seconds,
 
-    [НаправлениеSLA_ID],
-    [НаправлениеSLA_Name],
-    [НаправлениеSLA_SLA],
-    [НаправлениеSLA_MaxTime],
-    [НаправлениеSLA_CreateDate],
-    [НаправлениеSLA_WorkDate],
-    [НаправлениеSLA_ApprovalDate],
-    [НаправлениеSLA_DeletedDate],
-    [НаправлениеSLA_TypeID],
-    [НаправлениеSLA_TypeName],
-    [НаправлениеDoc_ID]
+        pay.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] AS НаправлениеSLA_ID,
+        pay.[СведенияОНаправленияхНаВыплату Направление на Выплату] AS НаправлениеSLA_Name,
+        pay.[СведенияОНаправленияхНаВыплату SLA] AS НаправлениеSLA_SLA,
+        pay.[СведенияОНаправленияхНаВыплату Максимальное Время Выполнения] AS НаправлениеSLA_MaxTime,
+        pay.[СведенияОНаправленияхНаВыплату Дата Создания] AS НаправлениеSLA_CreateDate,
+        pay.[СведенияОНаправленияхНаВыплату Дата Взятия в Работу] AS НаправлениеSLA_WorkDate,
+        pay.[СведенияОНаправленияхНаВыплату Дата Утверждения] AS НаправлениеSLA_ApprovalDate,
+        pay.[СведенияОНаправленияхНаВыплату Дата Пометки Удаления] AS НаправлениеSLA_DeletedDate,
+        pay.[СведенияОНаправленияхНаВыплату Тип Направления на Выплату ID] AS НаправлениеSLA_TypeID,
+        pay.[СведенияОНаправленияхНаВыплату Тип Направления на Выплату] AS НаправлениеSLA_TypeName,
+        doc.[НаправлениеНаВыплату ID] AS НаправлениеDoc_ID,
+
+        ROW_NUMBER() OVER (
+            PARTITION BY a.[ЗадачаАдминистратораКредитов ID]
+            ORDER BY CASE WHEN pay.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] IS NOT NULL THEN 0 ELSE 1 END
+        ) AS rn
+
+    FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов] a
+    LEFT JOIN [ATK].[mis].[Silver_Справочники.ТипыЗадачАдминистратораКредитов] t
+        ON a.[ЗадачаАдминистратораКредитов Тип Задачи ID] = t.[ТипыЗадачАдминистратораКредитов ID]
+    OUTER APPLY (
+        SELECT TOP 1 *
+        FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s
+        WHERE s.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
+        ORDER BY s.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Номер Строки] DESC
+    ) sh
+    OUTER APPLY (
+        SELECT SUM(CAST(s2.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS TotalHours
+        FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s2
+        WHERE s2.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
+    ) total_hours
+    OUTER APPLY (
+        SELECT SUM(CAST(s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS WaitHours
+        FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s3
+        WHERE s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
+          AND s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус] = N''ВОжидании''
+    ) wait_hours
+    OUTER APPLY (
+        SELECT TOP 1 *
+        FROM [ATK].[dbo].[Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей] hist
+        WHERE hist.[ТипыЗадачАдминистратораКредитов ID] = t.[ТипыЗадачАдминистратораКредитов ID]
+          AND hist.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Дата Изменения] <= a.[ЗадачаАдминистратораКредитов Дата]
+        ORDER BY hist.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Дата Изменения] DESC
+    ) hist_tasktype
+    LEFT JOIN [ATK].[dbo].[Документы.НаправлениеНаВыплату] AS doc
+        ON doc.[НаправлениеНаВыплату Кредит ID] = a.[ЗадачаАдминистратораКредитов Кредит ID]
+    LEFT JOIN [ATK].[dbo].[РегистрыСведений.СведенияОНаправленияхНаВыплату] AS pay
+        ON pay.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] = doc.[НаправлениеНаВыплату ID]
+)
+INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks] (
+    [AdminTask_ID],[AdminTask_Deleted],[AdminTask_Date],[AdminTask_Number],
+    [AdminTask_Completed],[AdminTask_Author_ID],[AdminTask_Author],[AdminTask_Branch_ID],
+    [AdminTask_Branch],[AdminTask_Category_ID],[AdminTask_Category],[AdminTask_Type_ID],
+    [AdminTask_Type],[AdminTask_Description],[AdminTask_Base_ID],[AdminTask_Source_Type],
+    [AdminTask_Source_View],[AdminTask_Source_ID],[AdminTask_Client_ID],[AdminTask_Client],
+    [AdminTask_Credit_ID],[AdminTask_Credit],[AdminTask_Limit_ID],[AdminTask_Limit],
+    [AdminTask_CurrentStatus],[AdminTask_CurrentStatus_ID],[AdminTask_CompletionDate],[AdminTask_CurrentComment],
+    [AdminTask_SLA],[AdminTask_KPI],[AdminTask_TaskCount],[AdminTask_Priority],
+    [AdminTask_Priority_ID],[AdminTask_Executor],[TaskType_Deleted],[TaskType_Parent_ID],
+    [TaskType_IsGroup],[TaskType_Code],[TaskType_Name],[TaskType_Order],
+    [TaskType_BlockEditCount],[TaskType_MaxTime],
+    [WaitHours],[TotalHours],[StatusHistory_ID],[StatusHistory_RowNumber],
+    [StatusHistory_Status],[StatusHistory_UserID],[StatusHistory_User],[StatusHistory_StartDate],
+    [StatusHistory_EndDate],[StatusHistory_Comment],[StatusHistory_Seconds],
+    [НаправлениеSLA_ID],[НаправлениеSLA_Name],[НаправлениеSLA_SLA],[НаправлениеSLA_MaxTime],
+    [НаправлениеSLA_CreateDate],[НаправлениеSLA_WorkDate],[НаправлениеSLA_ApprovalDate],[НаправлениеSLA_DeletedDate],
+    [НаправлениеSLA_TypeID],[НаправлениеSLA_TypeName],[НаправлениеDoc_ID]
 )
 SELECT
-    a.[ЗадачаАдминистратораКредитов ID],
-    a.[ЗадачаАдминистратораКредитов Пометка Удаления],
-    a.[ЗадачаАдминистратораКредитов Дата],
-    a.[ЗадачаАдминистратораКредитов Номер],
-    a.[ЗадачаАдминистратораКредитов Выполнена],
-    a.[ЗадачаАдминистратораКредитов Автор ID],
-    a.[ЗадачаАдминистратораКредитов Автор],
-    a.[ЗадачаАдминистратораКредитов Филиал ID],
-    a.[ЗадачаАдминистратораКредитов Филиал],
-    a.[ЗадачаАдминистратораКредитов Категория Задачи ID],
-    a.[ЗадачаАдминистратораКредитов Категория Задачи],
-    a.[ЗадачаАдминистратораКредитов Тип Задачи ID],
-    a.[ЗадачаАдминистратораКредитов Тип Задачи],
-    a.[ЗадачаАдминистратораКредитов Описание Задачи],
-    a.[ЗадачаАдминистратораКредитов Задача Основание ID],
-    a.[ЗадачаАдминистратораКредитов Источник Тип],
-    a.[ЗадачаАдминистратораКредитов Источник Вид],
-    a.[ЗадачаАдминистратораКредитов Источник ID],
-    a.[ЗадачаАдминистратораКредитов Клиент ID],
-    a.[ЗадачаАдминистратораКредитов Клиент],
-    a.[ЗадачаАдминистратораКредитов Кредит ID],
-    a.[ЗадачаАдминистратораКредитов Кредит],
-    a.[ЗадачаАдминистратораКредитов Лимит ID],
-    a.[ЗадачаАдминистратораКредитов Лимит],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус ID],
-    a.[ЗадачаАдминистратораКредитов Дата Выполнения],
-    a.[ЗадачаАдминистратораКредитов Текущий Комментарий],
-    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей SLA],
-    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей KPI],
-    a.[ЗадачаАдминистратораКредитов Количество Задач],
-    a.[ЗадачаАдминистратораКредитов Приоритет Задачи],
-    a.[ЗадачаАдминистратораКредитов Приоритет Задачи ID],
-    a.[ЗадачаАдминистратораКредитов Исполнитель],
-
-    t.[ТипыЗадачАдминистратораКредитов Пометка Удаления],
-    t.[ТипыЗадачАдминистратораКредитов Родитель ID],
-    t.[ТипыЗадачАдминистратораКредитов Это Группа],
-    t.[ТипыЗадачАдминистратораКредитов Код],
-    t.[ТипыЗадачАдминистратораКредитов Наименование],
-    t.[ТипыЗадачАдминистратораКредитов Реквизит Доп Упорядочивания],
-    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей SLA],
-    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей KPI],
-    t.[ТипыЗадачАдминистратораКредитов Запрет Редактирования Количества Задач],
-    hist_tasktype.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Максимальное Время Выполнения],
-
-    COALESCE(wait_hours.WaitHours, 0) AS WaitHours,
-    COALESCE(total_hours.TotalHours, 0) AS TotalHours,
-
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Номер Строки],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Пользователь ID],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Пользователь],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Дата Начала],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Дата Окончания],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Комментарий],
-    sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах],
-
-    pay.[СведенияОНаправленияхНаВыплату Направление на Выплату ID],
-    pay.[СведенияОНаправленияхНаВыплату Направление на Выплату],
-    pay.[СведенияОНаправленияхНаВыплату SLA],
-    pay.[СведенияОНаправленияхНаВыплату Максимальное Время Выполнения],
-    pay.[СведенияОНаправленияхНаВыплату Дата Создания],
-    pay.[СведенияОНаправленияхНаВыплату Дата Взятия в Работу],
-    pay.[СведенияОНаправленияхНаВыплату Дата Утверждения],
-    pay.[СведенияОНаправленияхНаВыплату Дата Пометки Удаления],
-    pay.[СведенияОНаправленияхНаВыплату Тип Направления на Выплату ID],
-    pay.[СведенияОНаправленияхНаВыплату Тип Направления на Выплату],
-    doc.[НаправлениеНаВыплату ID] AS НаправлениеDoc_ID
-
-FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов] a
-LEFT JOIN [ATK].[mis].[Silver_Справочники.ТипыЗадачАдминистратораКредитов] t
-    ON a.[ЗадачаАдминистратораКредитов Тип Задачи ID] = t.[ТипыЗадачАдминистратораКредитов ID]
-OUTER APPLY
-(
-    SELECT TOP 1 *
-    FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s
-    WHERE s.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
-    ORDER BY s.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Номер Строки] DESC
-) sh
-OUTER APPLY
-(
-    SELECT SUM(CAST(s2.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS TotalHours
-    FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s2
-    WHERE s2.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
-) total_hours
-OUTER APPLY
-(
-    SELECT SUM(CAST(s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS WaitHours
-    FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s3
-    WHERE s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
-      AND s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус] = N''ВОжидании''
-) wait_hours
-OUTER APPLY
-(
-    SELECT TOP 1 *
-    FROM [ATK].[dbo].[Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей] hist
-    WHERE hist.[ТипыЗадачАдминистратораКредитов ID] = t.[ТипыЗадачАдминистратораКредитов ID]
-      AND hist.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Дата Изменения] <= a.[ЗадачаАдминистратораКредитов Дата]
-    ORDER BY hist.[ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Дата Изменения] DESC
-) hist_tasktype
-LEFT JOIN [ATK].[dbo].[Документы.НаправлениеНаВыплату] AS doc
-    ON doc.[НаправлениеНаВыплату Кредит ID] = a.[ЗадачаАдминистратораКредитов Кредит ID]
-LEFT JOIN [ATK].[dbo].[РегистрыСведений.СведенияОНаправленияхНаВыплату] AS pay
-    ON pay.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] = doc.[НаправлениеНаВыплату ID];';
+    [AdminTask_ID],[AdminTask_Deleted],[AdminTask_Date],[AdminTask_Number],
+    [AdminTask_Completed],[AdminTask_Author_ID],[AdminTask_Author],[AdminTask_Branch_ID],
+    [AdminTask_Branch],[AdminTask_Category_ID],[AdminTask_Category],[AdminTask_Type_ID],
+    [AdminTask_Type],[AdminTask_Description],[AdminTask_Base_ID],[AdminTask_Source_Type],
+    [AdminTask_Source_View],[AdminTask_Source_ID],[AdminTask_Client_ID],[AdminTask_Client],
+    [AdminTask_Credit_ID],[AdminTask_Credit],[AdminTask_Limit_ID],[AdminTask_Limit],
+    [AdminTask_CurrentStatus],[AdminTask_CurrentStatus_ID],[AdminTask_CompletionDate],[AdminTask_CurrentComment],
+    [AdminTask_SLA],[AdminTask_KPI],[AdminTask_TaskCount],[AdminTask_Priority],
+    [AdminTask_Priority_ID],[AdminTask_Executor],[TaskType_Deleted],[TaskType_Parent_ID],
+    [TaskType_IsGroup],[TaskType_Code],[TaskType_Name],[TaskType_Order],
+    [TaskType_BlockEditCount],[TaskType_MaxTime],
+    [WaitHours],[TotalHours],[StatusHistory_ID],[StatusHistory_RowNumber],
+    [StatusHistory_Status],[StatusHistory_UserID],[StatusHistory_User],[StatusHistory_StartDate],
+    [StatusHistory_EndDate],[StatusHistory_Comment],[StatusHistory_Seconds],
+    [НаправлениеSLA_ID],[НаправлениеSLA_Name],[НаправлениеSLA_SLA],[НаправлениеSLA_MaxTime],
+    [НаправлениеSLA_CreateDate],[НаправлениеSLA_WorkDate],[НаправлениеSLA_ApprovalDate],[НаправлениеSLA_DeletedDate],
+    [НаправлениеSLA_TypeID],[НаправлениеSLA_TypeName],[НаправлениеDoc_ID]
+FROM AdminTasksWithRowNum
+WHERE rn = 1;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

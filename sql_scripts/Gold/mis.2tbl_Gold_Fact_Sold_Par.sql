@@ -4,7 +4,7 @@ SET NOCOUNT ON;
 DECLARE @DateFrom DATE = '2024-01-01';
 
 -----------------------------------------------------
--- Drop & recreate main GOLD table
+-- Drop recreate main GOLD table
 -----------------------------------------------------
 DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par];
 

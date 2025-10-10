@@ -1,16 +1,11 @@
 USE [ATK];
 GO
 
-/* ==================================
-   Drop target table if exists
-   ================================== */
 IF OBJECT_ID('mis.[2tbl_Gold_Fact_AdminTasks]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_AdminTasks];
 GO
 
-/* ==================================
-   Create Gold table
-   ================================== */
+
 CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
 (
     -- Existing AdminTask columns
@@ -65,6 +60,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
     -- Hours
     [WaitHours] DECIMAL(18,2) NULL,
     [TotalHours] DECIMAL(18,2) NULL,
+	[InProgress] DECIMAL(18,2) NULL,
 
     -- Status history
     [StatusHistory_ID] VARCHAR(36) NULL,
@@ -92,9 +88,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
 );
 GO
 
-/* ==================================
-   Populate Gold table
-   ================================== */
 INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
 (
     [AdminTask_ID],
@@ -145,6 +138,7 @@ INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
 
     [WaitHours],
     [TotalHours],
+	[InProgress],
 
     [StatusHistory_ID],
     [StatusHistory_RowNumber],
@@ -217,6 +211,7 @@ SELECT
 
     COALESCE(wait_hours.WaitHours, 0) AS WaitHours,
     COALESCE(total_hours.TotalHours, 0) AS TotalHours,
+	COALESCE(in_progress.InProgress, 0) AS InProgress,
 
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID],
     sh.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Номер Строки],
@@ -263,6 +258,14 @@ OUTER APPLY
     WHERE s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
       AND s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус] = N'ВОжидании'
 ) wait_hours
+
+    OUTER APPLY (
+        SELECT SUM(CAST(s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах] AS FLOAT))/3600.0 AS InProgress
+        FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов] s3
+        WHERE s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов ID] = a.[ЗадачаАдминистратораКредитов ID]
+         AND s3.[ЗадачаАдминистратораКредитов.ИсторияСтатусов Статус] = N'ВРаботе'
+    ) in_progress
+
 OUTER APPLY
 (
     SELECT TOP 1 *

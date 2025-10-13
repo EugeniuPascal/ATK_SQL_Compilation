@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_CanceledCredits]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_CanceledCredits];
+IF OBJECT_ID('mis.[2tbl_Gold_Fact_WriteOffCredits]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_WriteOffCredits];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_CanceledCredits]
+CREATE TABLE mis.[2tbl_Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID] VARCHAR(36) NOT NULL,
     [Credit_RowNumber]        INT NULL,
@@ -30,11 +30,12 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CanceledCredits]
     [Canceled_CreditDate]    DATETIME NULL,
     [Canceled_CreditPosted]  VARCHAR(36) NULL,
     [Canceled_CreditBase]    NVARCHAR(250) NULL,
-	[Canceled_CreditAuthorID] VARCHAR(36) NULL
+	[Canceled_CreditAuthorID] VARCHAR(36) NULL,
+	[Canceled_DebitAccount]  NVARCHAR(250) NULL
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Fact_CanceledCredits]
+INSERT INTO mis.[2tbl_Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID],
     [Credit_RowNumber],
@@ -59,7 +60,8 @@ INSERT INTO mis.[2tbl_Gold_Fact_CanceledCredits]
     [Canceled_CreditDate],
     [Canceled_CreditPosted],
     [Canceled_CreditBase],
-	[Canceled_CreditAuthorID] 
+	[Canceled_CreditAuthorID],
+	[Canceled_DebitAccount]
 )
 SELECT
     a.[АнулированиеКредитов ID],
@@ -85,7 +87,8 @@ SELECT
     b.[АнулированиеКредитов Дата],
     b.[АнулированиеКредитов Проведен],
     b.[АнулированиеКредитов Основание],
-	b.[АнулированиеКредитов Автор ID]
+	b.[АнулированиеКредитов Автор ID],
+	b.[АнулированиеКредитов Счет Дт]
 FROM [ATK].[dbo].[Документы.АнулированиеКредитов.Кредиты] AS a
 LEFT JOIN [ATK].[dbo].[Документы.АнулированиеКредитов] AS b
     ON a.[АнулированиеКредитов ID] = b.[АнулированиеКредитов ID];

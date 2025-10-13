@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-10-10 16:56:45.241491
+-- Generated: 2025-10-13 15:58:21.960842
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 16
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -14,11 +14,11 @@
 --   mis.2tbl_Gold_Fact_AdminTasks.sql
 --   mis.2tbl_Gold_Fact_ArchiveDocument.sql
 --   mis.2tbl_Gold_Fact_BudgetEmployees.sql
---   mis.2tbl_Gold_Fact_CanceledCredits.sql
 --   mis.2tbl_Gold_Fact_CerereOnline.sql
 --   mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
 --   mis.2tbl_Gold_Fact_Disbursement.sql
 --   mis.2tbl_Gold_Fact_Sold_Par.sql
+--   mis.2tbl_Gold_Fact_WriteOffCredits.sql
 -- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER
 -- =============================================
 
@@ -348,7 +348,7 @@ CREATE TABLE [mis].[2tbl_Gold_Dim_Credits](
     [EconomicSectorDetailed] NVARCHAR(255) NULL,
     [FinancialProductID] VARCHAR(36) NULL,
     [FinancialProduct] NVARCHAR(255) NULL,
-    [Agro] NVARCHAR(255) NULL,
+    [AgroCredit] NVARCHAR(255) NULL,
     [LocalityType] NVARCHAR(255) NULL,
     [Currency] NVARCHAR(50) NULL,
     [ProductID] VARCHAR(36) NULL,
@@ -502,7 +502,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
     [EconomicSectorDetailed], [FinancialProductID], [FinancialProduct],
-    [Agro], [LocalityType], [Currency], [ProductID],
+    [AgroCredit], [LocalityType], [Currency], [ProductID],
     [Product], [Purpose], [RemoveFundingSource],
     [ContractType], [ContractDate], [IncomeSegment],
     [UsagePurpose], [PurposeDescription],
@@ -1013,17 +1013,21 @@ CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
     [StatusHistory_Seconds] INT NULL,
 
     
-    [НаправлениеSLA_ID] VARCHAR(36) NULL,
-    [НаправлениеSLA_Name] NVARCHAR(250) NULL,
-    [НаправлениеSLA_SLA] INT NULL,
-    [НаправлениеSLA_MaxTime] INT NULL,
-    [НаправлениеSLA_CreateDate] DATETIME NULL,
-    [НаправлениеSLA_WorkDate] DATETIME NULL,
-    [НаправлениеSLA_ApprovalDate] DATETIME NULL,
-    [НаправлениеSLA_DeletedDate] DATETIME NULL,
-    [НаправлениеSLA_TypeID] VARCHAR(36) NULL,
-    [НаправлениеSLA_TypeName] NVARCHAR(250) NULL,
-    [НаправлениеDoc_ID] VARCHAR(36) NULL
+    [СведенияОНаправленияхНаВыплату Направление на Выплату ID] VARCHAR(36) NULL,
+    [СведенияОНаправленияхНаВыплату Направление на Выплату] VARCHAR(100) NULL,
+    [СведенияОНаправленияхНаВыплату SLA] DECIMAL (8, 3) NULL,
+    [СведенияОНаправленияхНаВыплату Максимальное Время Выполнения] DECIMAL(8, 3) NULL,
+    [СведенияОНаправленияхНаВыплату Дата Создания] DATETIME NULL,
+    [СведенияОНаправленияхНаВыплату Дата Взятия в Работу] DATETIME NULL,
+    [СведенияОНаправленияхНаВыплату Дата Утверждения] DATETIME NULL,
+    [СведенияОНаправленияхНаВыплату Дата Пометки Удаления] DATETIME NULL,
+    [СведенияОНаправленияхНаВыплату Тип Направления на Выплату ID] VARCHAR(36) NULL,
+    [СведенияОНаправленияхНаВыплату Тип Направления на Выплату] NVARCHAR(30) NULL,
+	
+	[НаправлениеНаВыплату ID] VARCHAR(36) NULL,
+	[НаправлениеНаВыплату Категория Риска AML] NVARCHAR(256) NULL
+
+	
 );
 
 INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
@@ -1088,17 +1092,19 @@ INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks]
     [StatusHistory_Comment],
     [StatusHistory_Seconds],
 
-    [НаправлениеSLA_ID],
-    [НаправлениеSLA_Name],
-    [НаправлениеSLA_SLA],
-    [НаправлениеSLA_MaxTime],
-    [НаправлениеSLA_CreateDate],
-    [НаправлениеSLA_WorkDate],
-    [НаправлениеSLA_ApprovalDate],
-    [НаправлениеSLA_DeletedDate],
-    [НаправлениеSLA_TypeID],
-    [НаправлениеSLA_TypeName],
-    [НаправлениеDoc_ID]
+    [СведенияОНаправленияхНаВыплату Направление на Выплату ID],
+    [СведенияОНаправленияхНаВыплату Направление на Выплату],
+    [СведенияОНаправленияхНаВыплату SLA],
+    [СведенияОНаправленияхНаВыплату Максимальное Время Выполнения],
+    [СведенияОНаправленияхНаВыплату Дата Создания],
+    [СведенияОНаправленияхНаВыплату Дата Взятия в Работу],
+    [СведенияОНаправленияхНаВыплату Дата Утверждения],
+    [СведенияОНаправленияхНаВыплату Дата Пометки Удаления],
+    [СведенияОНаправленияхНаВыплату Тип Направления на Выплату ID],
+    [СведенияОНаправленияхНаВыплату Тип Направления на Выплату],
+	
+    [НаправлениеНаВыплату ID],
+	[НаправлениеНаВыплату Категория Риска AML]
 )
 SELECT
     a.[ЗадачаАдминистратораКредитов ID],
@@ -1171,7 +1177,8 @@ SELECT
     pay.[СведенияОНаправленияхНаВыплату Дата Пометки Удаления],
     pay.[СведенияОНаправленияхНаВыплату Тип Направления на Выплату ID],
     pay.[СведенияОНаправленияхНаВыплату Тип Направления на Выплату],
-    doc.[НаправлениеНаВыплату ID] AS НаправлениеDoc_ID
+    doc.[НаправлениеНаВыплату ID],
+	doc.[НаправлениеНаВыплату Категория Риска AML]
 
 FROM [ATK].[mis].[Silver_Задачи.ЗадачаАдминистратораКредитов] a
 LEFT JOIN [ATK].[mis].[Silver_Справочники.ТипыЗадачАдминистратораКредитов] t
@@ -1408,100 +1415,6 @@ FROM [ATK].[dbo].[Документы.БюджетПоСотрудникам.Со
 LEFT JOIN [ATK].[dbo].[Документы.БюджетПоСотрудникам] d
     ON s.[БюджетПоСотрудникам ID] = d.[БюджетПоСотрудникам ID]
 WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-01-01'';';
-    BEGIN TRY
-        EXEC sys.sp_executesql @sql;
-    END TRY
-    BEGIN CATCH
-        THROW;
-    END CATCH;
-
-    -- Start of: mis.2tbl_Gold_Fact_CanceledCredits.sql
-    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Fact_CanceledCredits]'', ''U'') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_CanceledCredits];
-
-CREATE TABLE mis.[2tbl_Gold_Fact_CanceledCredits]
-(
-    [Credit_CanceledCreditID] VARCHAR(36) NOT NULL,
-    [Credit_RowNumber]        INT NULL,
-    [Credit_AccountID]        VARCHAR(36) NULL,
-    [Credit_Account]          NVARCHAR(250) NULL,
-    [Credit_ClientID]         VARCHAR(36) NULL,
-    [Credit_Client]           NVARCHAR(150) NULL,
-    [Credit_CreditID]         VARCHAR(36) NULL,
-    [Credit_Credit]           NVARCHAR(150) NULL,
-    [Credit_CurrencyID]       VARCHAR(36) NULL,
-    [Credit_Currency]         NVARCHAR(50) NULL,
-    [Credit_Amount]           DECIMAL(14, 2) NULL,
-    [Credit_AmountCurrency]   DECIMAL(14, 2) NULL,
-    [Credit_Interest]         DECIMAL(14, 2) NULL,
-    [Credit_InterestCurrency] DECIMAL(14, 2) NULL,
-    [Credit_Penalty]          DECIMAL(14, 2) NULL,
-    [Credit_PenaltyCurrency]  DECIMAL(14, 2) NULL,
-    [Credit_Commission]       DECIMAL(15, 2) NULL,
-    [Credit_CommissionCurrency] DECIMAL(15, 2) NULL,
-    [Credit_LineAmount]       DECIMAL(15, 2) NULL,
-    [Credit_LineAmountCurrency] DECIMAL(15, 2) NULL,
-    [Canceled_CreditDate]    DATETIME NULL,
-    [Canceled_CreditPosted]  VARCHAR(36) NULL,
-    [Canceled_CreditBase]    NVARCHAR(250) NULL,
-	[Canceled_CreditAuthorID] VARCHAR(36) NULL
-);
-
-INSERT INTO mis.[2tbl_Gold_Fact_CanceledCredits]
-(
-    [Credit_CanceledCreditID],
-    [Credit_RowNumber],
-    [Credit_AccountID],
-    [Credit_Account],
-    [Credit_ClientID],
-    [Credit_Client],
-    [Credit_CreditID],
-    [Credit_Credit],
-    [Credit_CurrencyID],
-    [Credit_Currency],
-    [Credit_Amount],
-    [Credit_AmountCurrency],
-    [Credit_Interest],
-    [Credit_InterestCurrency],
-    [Credit_Penalty],
-    [Credit_PenaltyCurrency],
-    [Credit_Commission],
-    [Credit_CommissionCurrency],
-    [Credit_LineAmount],
-    [Credit_LineAmountCurrency],
-    [Canceled_CreditDate],
-    [Canceled_CreditPosted],
-    [Canceled_CreditBase],
-	[Canceled_CreditAuthorID] 
-)
-SELECT
-    a.[АнулированиеКредитов ID],
-    a.[АнулированиеКредитов.Кредиты Номер Строки],
-    a.[АнулированиеКредитов.Кредиты Счет ID],
-    a.[АнулированиеКредитов.Кредиты Счет],
-    a.[АнулированиеКредитов.Кредиты Контрагент ID],
-    a.[АнулированиеКредитов.Кредиты Контрагент],
-    a.[АнулированиеКредитов.Кредиты Кредит ID],
-    a.[АнулированиеКредитов.Кредиты Кредит],
-    a.[АнулированиеКредитов.Кредиты Валюта ID],
-    a.[АнулированиеКредитов.Кредиты Валюта],
-    a.[АнулированиеКредитов.Кредиты Сумма],
-    a.[АнулированиеКредитов.Кредиты Сумма Валютная],
-    a.[АнулированиеКредитов.Кредиты Процент],
-    a.[АнулированиеКредитов.Кредиты Процент Валютный],
-    a.[АнулированиеКредитов.Кредиты Пеня],
-    a.[АнулированиеКредитов.Кредиты Пеня Валютный],
-    a.[АнулированиеКредитов.Кредиты Комиссион],
-    a.[АнулированиеКредитов.Кредиты Комиссион Валютный],
-    a.[АнулированиеКредитов.Кредиты Сумма Кредитная Линия],
-    a.[АнулированиеКредитов.Кредиты Сумма Кредитная Линия Валютная],
-    b.[АнулированиеКредитов Дата],
-    b.[АнулированиеКредитов Проведен],
-    b.[АнулированиеКредитов Основание],
-	b.[АнулированиеКредитов Автор ID]
-FROM [ATK].[dbo].[Документы.АнулированиеКредитов.Кредиты] AS a
-LEFT JOIN [ATK].[dbo].[Документы.АнулированиеКредитов] AS b
-    ON a.[АнулированиеКредитов ID] = b.[АнулированиеКредитов ID];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY
@@ -2035,16 +1948,19 @@ CREATE TABLE [mis].[2tbl_Gold_Fact_Sold_Par](
     SoldDate                 DATE         NOT NULL,
     CreditID                 VARCHAR(36)  NOT NULL,
     SoldAmount               DECIMAL(18,2) NULL,
-	NumberOfOverdueDaysIFRS  DECIMAL(15,2) NULL,
+    NumberOfOverdueDaysIFRS  DECIMAL(15,2) NULL,
     IRR_Values               DECIMAL(18,6) NULL,
     BranchShadow             NVARCHAR(100) NULL,
     EmployeeID               VARCHAR(36)  NULL,
     BranchID                 VARCHAR(36)  NULL,
-    EmployeePositionID       VARCHAR(36) NULL,
+    EmployeePositionID       VARCHAR(36)  NULL,
     Par_0_IFRS               DECIMAL(18,6) NULL,
     Par_30_IFRS              DECIMAL(18,6) NULL,
     Par_60_IFRS              DECIMAL(18,6) NULL,
-    Par_90_IFRS              DECIMAL(18,6) NULL
+    Par_90_IFRS              DECIMAL(18,6) NULL,
+    RestructuredCreditState  NVARCHAR(256) NULL,
+    RestructuringReason      NVARCHAR(256) NULL,
+    RestructuringDebtType    NVARCHAR(256) NULL
 ) WITH (DATA_COMPRESSION = PAGE);
 
 
@@ -2052,16 +1968,16 @@ CREATE TABLE [mis].[2tbl_Gold_Fact_Sold_Par](
 
 IF OBJECT_ID(''tempdb..#MaxPastDays'') IS NOT NULL DROP TABLE #MaxPastDays;
 CREATE TABLE #MaxPastDays(
-    OwnerID   VARCHAR(36) NOT NULL,
-    ParDate   DATE        NOT NULL,
-    MaxPastDays INT       NULL
+    OwnerID     VARCHAR(36) NOT NULL,
+    ParDate     DATE        NOT NULL,
+    MaxPastDays INT         NULL
 );
 
-INSERT INTO #MaxPastDays (OwnerID, ParDate, MaxPastDays)
+INSERT INTO #MaxPastDays
 SELECT 
-    k.[Кредиты Владелец] AS OwnerID,
-    sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS ParDate,
-    MAX(sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого]) AS MaxPastDays
+    k.[Кредиты Владелец],
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Дата],
+    MAX(sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого])
 FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 LEFT JOIN mis.[Silver_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
@@ -2069,24 +1985,24 @@ WHERE sd.[СуммыЗадолженностиПоПериодамПросроч
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
 GROUP BY k.[Кредиты Владелец], sd.[СуммыЗадолженностиПоПериодамПросрочки Дата];
 
-CREATE UNIQUE NONCLUSTERED INDEX IX_MaxPastDays_Owner_ParDate ON #MaxPastDays (OwnerID, ParDate);
+CREATE UNIQUE NONCLUSTERED INDEX IX_MaxPastDays ON #MaxPastDays (OwnerID, ParDate);
 
 
 
 
 IF OBJECT_ID(''tempdb..#ShadowBranch'') IS NOT NULL DROP TABLE #ShadowBranch;
 CREATE TABLE #ShadowBranch(
-    CreditID     VARCHAR(36)  NOT NULL,
+    CreditID     VARCHAR(36)   NOT NULL,
     BranchShadow NVARCHAR(100) NULL,
-    Period       DATE         NULL
+    Period       DATE          NULL
 );
 
-INSERT INTO #ShadowBranch (CreditID, BranchShadow, Period)
+INSERT INTO #ShadowBranch
 SELECT 
-    x.[КредитыВТеневыхФилиалах Кредит ID] AS CreditID,
-    x.[КредитыВТеневыхФилиалах Филиал] AS BranchShadow,
-    x.[КредитыВТеневыхФилиалах Период] AS Period
-FROM mis.[Silver_РегистрыСведений.КредитыВТеневыхФилиалах] x;
+    [КредитыВТеневыхФилиалах Кредит ID],
+    [КредитыВТеневыхФилиалах Филиал],
+    [КредитыВТеневыхФилиалах Период]
+FROM mis.[Silver_РегистрыСведений.КредитыВТеневыхФилиалах];
 
 CREATE NONCLUSTERED INDEX IX_Shadow_Credit_Period ON #ShadowBranch (CreditID, Period);
 
@@ -2095,19 +2011,19 @@ CREATE NONCLUSTERED INDEX IX_Shadow_Credit_Period ON #ShadowBranch (CreditID, Pe
 
 IF OBJECT_ID(''tempdb..#Responsible'') IS NOT NULL DROP TABLE #Responsible;
 CREATE TABLE #Responsible(
-    CreditID VARCHAR(36) NOT NULL,
+    CreditID   VARCHAR(36) NOT NULL,
     EmployeeID VARCHAR(36) NULL,
-    BranchID VARCHAR(36) NULL,
-    Period   DATE        NULL
+    BranchID   VARCHAR(36) NULL,
+    Period     DATE        NULL
 );
 
-INSERT INTO #Responsible (CreditID, EmployeeID, BranchID, Period)
+INSERT INTO #Responsible
 SELECT
-    r.[ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
-    r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS EmployeeID,
-    r.[ОтветственныеПоКредитамВыданным Филиал ID] AS BranchID,
-    r.[ОтветственныеПоКредитамВыданным Период] AS Period
-FROM mis.[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным] r;
+    [ОтветственныеПоКредитамВыданным Кредит ID],
+    [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID],
+    [ОтветственныеПоКредитамВыданным Филиал ID],
+    [ОтветственныеПоКредитамВыданным Период]
+FROM mis.[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным];
 
 CREATE NONCLUSTERED INDEX IX_Resp_Credit_Period ON #Responsible (CreditID, Period);
 
@@ -2118,154 +2034,152 @@ IF OBJECT_ID(''tempdb..#EmployeePos'') IS NOT NULL DROP TABLE #EmployeePos;
 CREATE TABLE #EmployeePos(
     EmployeeID VARCHAR(36) NOT NULL,
     PositionID VARCHAR(36) NULL,
-    Period DATE NULL
+    Period     DATE        NULL
 );
 
-
-INSERT INTO #EmployeePos (EmployeeID, PositionID, Period)
+INSERT INTO #EmployeePos
 SELECT
-    emp.[СотрудникиДанныеПоЗарплате Сотрудник ID] AS EmployeeID,
-    emp.[СотрудникиДанныеПоЗарплате Должность ID] AS PositionID,
-    emp.[СотрудникиДанныеПоЗарплате Период] AS Period
+    emp.[СотрудникиДанныеПоЗарплате Сотрудник ID],
+    emp.[СотрудникиДанныеПоЗарплате Должность ID],
+    emp.[СотрудникиДанныеПоЗарплате Период]
 FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] emp
-INNER JOIN (
-    SELECT DISTINCT EmployeeID
-    FROM #Responsible
-    WHERE EmployeeID IS NOT NULL
-) rlist
-  ON emp.[СотрудникиДанныеПоЗарплате Сотрудник ID] = rlist.EmployeeID
 WHERE emp.[СотрудникиДанныеПоЗарплате Период] >= DATEADD(year,-1,@DateFrom);
 
-CREATE CLUSTERED INDEX CX_EmployeePos_Emp_Period 
-ON #EmployeePos (EmployeeID, Period);
+CREATE CLUSTERED INDEX CX_EmployeePos ON #EmployeePos (EmployeeID, Period);
 
 
 
 
 IF OBJECT_ID(''tempdb..#IRR'') IS NOT NULL DROP TABLE #IRR;
 CREATE TABLE #IRR(
-    CreditID VARCHAR(36) NOT NULL,
-    IRR_Year DECIMAL(18,6) NULL,
+    CreditID   VARCHAR(36)   NOT NULL,
+    IRR_Year   DECIMAL(18,6) NULL,
     IRR_Client DECIMAL(18,6) NULL,
-    IRRDate DATETIME2 NULL
+    IRRDate    DATETIME2     NULL
 );
 
-INSERT INTO #IRR (CreditID, IRR_Year, IRR_Client, IRRDate)
+INSERT INTO #IRR
 SELECT
-    i.[УстановкаДанныхКредита Кредит ID] AS CreditID,
-    i.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] AS IRR_Year,
-    i.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая] AS IRR_Client,
-    i.[УстановкаДанныхКредита Дата] AS IRRDate
-FROM mis.[Silver_Документы.УстановкаДанныхКредита] i
-WHERE i.[УстановкаДанныхКредита Кредит ID] IS NOT NULL;
-
+    [УстановкаДанныхКредита Кредит ID],
+    [УстановкаДанныхКредита Внутренняя Норма Доходности Годовая],
+    [УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая],
+    [УстановкаДанныхКредита Дата]
+FROM mis.[Silver_Документы.УстановкаДанныхКредита]
+WHERE [УстановкаДанныхКредита Кредит ID] IS NOT NULL;
 
 CREATE NONCLUSTERED INDEX IX_IRR_Credit_Date ON #IRR (CreditID, IRRDate DESC);
 
 
 
 
-
 ;WITH RespRanges AS (
-    SELECT 
-        CreditID,
-        EmployeeID,
-        BranchID,
-        Period AS ValidFrom,
-        LEAD(Period) OVER (PARTITION BY CreditID ORDER BY Period) AS ValidTo
+    SELECT CreditID, EmployeeID, BranchID,
+           Period AS ValidFrom,
+           LEAD(Period) OVER (PARTITION BY CreditID ORDER BY Period) AS ValidTo
     FROM #Responsible
 ),
 ShadowRanges AS (
-    SELECT
-        CreditID,
-        BranchShadow,
-        Period AS ValidFrom,
-        LEAD(Period) OVER (PARTITION BY CreditID ORDER BY Period) AS ValidTo
+    SELECT CreditID, BranchShadow,
+           Period AS ValidFrom,
+           LEAD(Period) OVER (PARTITION BY CreditID ORDER BY Period) AS ValidTo
     FROM #ShadowBranch
 ),
 EmpPosRanges AS (
-    SELECT
-        EmployeeID,
-        PositionID,
-        Period AS ValidFrom,
-        LEAD(Period) OVER (PARTITION BY EmployeeID ORDER BY Period) AS ValidTo
+    SELECT EmployeeID, PositionID,
+           Period AS ValidFrom,
+           LEAD(Period) OVER (PARTITION BY EmployeeID ORDER BY Period) AS ValidTo
     FROM #EmployeePos
 )
+
+
+
+
 INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
 (
-    SoldDate, CreditID, SoldAmount, NumberOfOverdueDaysIFRS, IRR_Values, BranchShadow, EmployeeID, BranchID, EmployeePositionID,
-    Par_0_IFRS, Par_30_IFRS, Par_60_IFRS, Par_90_IFRS
+    SoldDate, CreditID, SoldAmount, NumberOfOverdueDaysIFRS, IRR_Values,
+    BranchShadow, EmployeeID, BranchID, EmployeePositionID,
+    Par_0_IFRS, Par_30_IFRS, Par_60_IFRS, Par_90_IFRS,
+    RestructuredCreditState, RestructuringReason, RestructuringDebtType
 )
 SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО] AS NumberOfOverdueDaysIFRS,
+
     
     ROUND(
         COALESCE(
-            CASE 
-                WHEN irr.IRR_Year IS NOT NULL AND irr.IRR_Year < 100 
-                    THEN irr.IRR_Year
-                ELSE irr.IRR_Client
-            END,
-            0
-        )
-        * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
+            CASE WHEN irr.IRR_Year IS NOT NULL AND irr.IRR_Year < 100 THEN irr.IRR_Year ELSE irr.IRR_Client END, 0
+        ) * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
     ) AS IRR_Values,
-    
-    
+
     sh.BranchShadow,
-    
-    
     r.EmployeeID,
     r.BranchID,
-    empPos.PositionID AS EmployeePositionID,
+    emp.PositionID,
 
-    
     CASE WHEN mpd.MaxPastDays > 0  THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_0_IFRS,
     CASE WHEN mpd.MaxPastDays > 30 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_30_IFRS,
     CASE WHEN mpd.MaxPastDays > 60 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_60_IFRS,
-    CASE WHEN mpd.MaxPastDays > 90 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_90_IFRS
+    CASE WHEN mpd.MaxPastDays > 90 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_90_IFRS,
 
+    
+    rr_state.LastState AS RestructuredCreditState,
+    rr_reason.LastReason AS RestructuringReason,
+    rr_reason.LastDebtType AS RestructuringDebtType
 FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 JOIN mis.[Silver_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-
-
 LEFT JOIN #MaxPastDays mpd
   ON mpd.OwnerID = k.[Кредиты Владелец]
  AND mpd.ParDate = sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
-
-
 LEFT JOIN RespRanges r
-    ON r.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= r.ValidFrom
-   AND (r.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < r.ValidTo)
-
-
-LEFT JOIN EmpPosRanges empPos
-    ON empPos.EmployeeID = r.EmployeeID
-   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= empPos.ValidFrom
-   AND (empPos.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < empPos.ValidTo)
-
-
+  ON r.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+ AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
+     BETWEEN r.ValidFrom AND DATEADD(DAY,-1, ISNULL(r.ValidTo,''9999-12-31''))
+LEFT JOIN EmpPosRanges emp
+  ON emp.EmployeeID = r.EmployeeID
+ AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
+     BETWEEN emp.ValidFrom AND DATEADD(DAY,-1, ISNULL(emp.ValidTo,''9999-12-31''))
 LEFT JOIN ShadowRanges sh
-    ON sh.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= sh.ValidFrom
-   AND (sh.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < sh.ValidTo)
+  ON sh.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+ AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
+     BETWEEN sh.ValidFrom AND DATEADD(DAY,-1, ISNULL(sh.ValidTo,''9999-12-31''))
 
 
 OUTER APPLY (
     SELECT TOP (1) i.IRR_Year, i.IRR_Client
     FROM #IRR i
     WHERE i.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-      AND CAST(i.IRRDate AS DATE) <= CAST(sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE)
+      AND CAST(i.IRRDate AS DATE) <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
     ORDER BY i.IRRDate DESC
 ) AS irr
 
+
+OUTER APPLY (
+    SELECT TOP (1)
+        sr.[СостоянияРеструктурированныхКредитов Состояние Реструктурированного Кредита] AS LastState
+    FROM [ATK].[dbo].[РегистрыСведений.СостоянияРеструктурированныхКредитов] sr
+    WHERE sr.[СостоянияРеструктурированныхКредитов Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+      AND sr.[СостоянияРеструктурированныхКредитов Период] <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
+    ORDER BY sr.[СостоянияРеструктурированныхКредитов Период] DESC
+) rr_state
+
+
+OUTER APPLY (
+    SELECT TOP (1)
+        rk.[РеструктурированныеКредиты Причина Реструктуризации] AS LastReason,
+        rk.[РеструктурированныеКредиты Тип Реструктуризации Долга] AS LastDebtType
+    FROM [ATK].[dbo].[РегистрыСведений.РеструктурированныеКредиты] rk
+    WHERE rk.[РеструктурированныеКредиты Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+      AND rk.[РеструктурированныеКредиты Период] <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
+    ORDER BY rk.[РеструктурированныеКредиты Период] DESC
+) rr_reason
+
 WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
-AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
+  AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
+  
 
 
 
@@ -2273,10 +2187,104 @@ AND sd.[СуммыЗадолженностиПоПериодамПросрочк
 CREATE CLUSTERED COLUMNSTORE INDEX CCSI_2tbl_Gold_Fact_Sold_Par
 ON mis.[2tbl_Gold_Fact_Sold_Par];
 
-
-
-
 DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranch, #Responsible, #IRR, #EmployeePos;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
+
+    -- Start of: mis.2tbl_Gold_Fact_WriteOffCredits.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[2tbl_Gold_Fact_WriteOffCredits]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_WriteOffCredits];
+
+CREATE TABLE mis.[2tbl_Gold_Fact_WriteOffCredits]
+(
+    [Credit_CanceledCreditID] VARCHAR(36) NOT NULL,
+    [Credit_RowNumber]        INT NULL,
+    [Credit_AccountID]        VARCHAR(36) NULL,
+    [Credit_Account]          NVARCHAR(250) NULL,
+    [Credit_ClientID]         VARCHAR(36) NULL,
+    [Credit_Client]           NVARCHAR(150) NULL,
+    [Credit_CreditID]         VARCHAR(36) NULL,
+    [Credit_Credit]           NVARCHAR(150) NULL,
+    [Credit_CurrencyID]       VARCHAR(36) NULL,
+    [Credit_Currency]         NVARCHAR(50) NULL,
+    [Credit_Amount]           DECIMAL(14, 2) NULL,
+    [Credit_AmountCurrency]   DECIMAL(14, 2) NULL,
+    [Credit_Interest]         DECIMAL(14, 2) NULL,
+    [Credit_InterestCurrency] DECIMAL(14, 2) NULL,
+    [Credit_Penalty]          DECIMAL(14, 2) NULL,
+    [Credit_PenaltyCurrency]  DECIMAL(14, 2) NULL,
+    [Credit_Commission]       DECIMAL(15, 2) NULL,
+    [Credit_CommissionCurrency] DECIMAL(15, 2) NULL,
+    [Credit_LineAmount]       DECIMAL(15, 2) NULL,
+    [Credit_LineAmountCurrency] DECIMAL(15, 2) NULL,
+    [Canceled_CreditDate]    DATETIME NULL,
+    [Canceled_CreditPosted]  VARCHAR(36) NULL,
+    [Canceled_CreditBase]    NVARCHAR(250) NULL,
+	[Canceled_CreditAuthorID] VARCHAR(36) NULL,
+	[Canceled_DebitAccount]  NVARCHAR(250) NULL
+);
+
+INSERT INTO mis.[2tbl_Gold_Fact_WriteOffCredits]
+(
+    [Credit_CanceledCreditID],
+    [Credit_RowNumber],
+    [Credit_AccountID],
+    [Credit_Account],
+    [Credit_ClientID],
+    [Credit_Client],
+    [Credit_CreditID],
+    [Credit_Credit],
+    [Credit_CurrencyID],
+    [Credit_Currency],
+    [Credit_Amount],
+    [Credit_AmountCurrency],
+    [Credit_Interest],
+    [Credit_InterestCurrency],
+    [Credit_Penalty],
+    [Credit_PenaltyCurrency],
+    [Credit_Commission],
+    [Credit_CommissionCurrency],
+    [Credit_LineAmount],
+    [Credit_LineAmountCurrency],
+    [Canceled_CreditDate],
+    [Canceled_CreditPosted],
+    [Canceled_CreditBase],
+	[Canceled_CreditAuthorID],
+	[Canceled_DebitAccount]
+)
+SELECT
+    a.[АнулированиеКредитов ID],
+    a.[АнулированиеКредитов.Кредиты Номер Строки],
+    a.[АнулированиеКредитов.Кредиты Счет ID],
+    a.[АнулированиеКредитов.Кредиты Счет],
+    a.[АнулированиеКредитов.Кредиты Контрагент ID],
+    a.[АнулированиеКредитов.Кредиты Контрагент],
+    a.[АнулированиеКредитов.Кредиты Кредит ID],
+    a.[АнулированиеКредитов.Кредиты Кредит],
+    a.[АнулированиеКредитов.Кредиты Валюта ID],
+    a.[АнулированиеКредитов.Кредиты Валюта],
+    a.[АнулированиеКредитов.Кредиты Сумма],
+    a.[АнулированиеКредитов.Кредиты Сумма Валютная],
+    a.[АнулированиеКредитов.Кредиты Процент],
+    a.[АнулированиеКредитов.Кредиты Процент Валютный],
+    a.[АнулированиеКредитов.Кредиты Пеня],
+    a.[АнулированиеКредитов.Кредиты Пеня Валютный],
+    a.[АнулированиеКредитов.Кредиты Комиссион],
+    a.[АнулированиеКредитов.Кредиты Комиссион Валютный],
+    a.[АнулированиеКредитов.Кредиты Сумма Кредитная Линия],
+    a.[АнулированиеКредитов.Кредиты Сумма Кредитная Линия Валютная],
+    b.[АнулированиеКредитов Дата],
+    b.[АнулированиеКредитов Проведен],
+    b.[АнулированиеКредитов Основание],
+	b.[АнулированиеКредитов Автор ID],
+	b.[АнулированиеКредитов Счет Дт]
+FROM [ATK].[dbo].[Документы.АнулированиеКредитов.Кредиты] AS a
+LEFT JOIN [ATK].[dbo].[Документы.АнулированиеКредитов] AS b
+    ON a.[АнулированиеКредитов ID] = b.[АнулированиеКредитов ID];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

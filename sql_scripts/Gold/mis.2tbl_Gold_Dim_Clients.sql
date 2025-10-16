@@ -2,12 +2,10 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
--- Drop the table if it exists
 IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Clients]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Clients];
 GO
 
--- Create the table
 CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,

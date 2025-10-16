@@ -1,9 +1,6 @@
 USE [ATK];
 GO
 
-/* ============================
-   Clean up temp tables & target table
-   ============================ */
 IF OBJECT_ID('tempdb..#Base')   IS NOT NULL DROP TABLE #Base;
 IF OBJECT_ID('tempdb..#Status') IS NOT NULL DROP TABLE #Status;
 IF OBJECT_ID('tempdb..#Final')  IS NOT NULL DROP TABLE #Final;
@@ -12,9 +9,7 @@ IF OBJECT_ID('mis.[2tbl_Gold_Fact_Disbursement]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_Disbursement];
 GO
 
-/* ============================
-   Create target table
-   ============================ */
+
 CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] 
 (
     CreditID           NVARCHAR(36)   NOT NULL,

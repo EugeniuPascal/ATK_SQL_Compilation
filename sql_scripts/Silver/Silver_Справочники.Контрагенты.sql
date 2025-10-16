@@ -1,12 +1,10 @@
 USE [ATK];
 GO
 
--- Drop the table if it exists
 IF OBJECT_ID('mis.[Silver_Справочники.Контрагенты]', 'U') IS NOT NULL
     DROP TABLE mis.[Silver_Справочники.Контрагенты];
 GO
 
--- Create the table using original column names
 CREATE TABLE mis.[Silver_Справочники.Контрагенты]
 (
     [Контрагенты ID]                   VARCHAR(36)  NOT NULL,
@@ -43,7 +41,6 @@ CREATE TABLE mis.[Silver_Справочники.Контрагенты]
 );
 GO
 
--- Insert data from source table explicitly
 INSERT INTO mis.[Silver_Справочники.Контрагенты]
 (
     [Контрагенты ID],
@@ -111,4 +108,4 @@ SELECT
     [Контрагенты Не Отправлять Рекламные СМС],
 	[Контрагенты Сектор Экономики]
 FROM [ATK].[dbo].[Справочники.Контрагенты];
-GO
+

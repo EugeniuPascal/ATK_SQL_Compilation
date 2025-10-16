@@ -4,6 +4,9 @@ SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = '2024-01-01';
 
+-----------------------------------------------------
+-- Drop + recreate GOLD table
+-----------------------------------------------------
 IF OBJECT_ID('mis.[2tbl_Gold_Fact_Sold_Par]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_Sold_Par];
 
@@ -152,5 +155,5 @@ OUTER APPLY (
 ) rs_restruct
 
 WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
-  AND sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0;
+  AND sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
 

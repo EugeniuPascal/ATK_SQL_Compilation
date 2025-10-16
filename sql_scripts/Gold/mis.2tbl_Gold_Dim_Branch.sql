@@ -1,12 +1,10 @@
 USE [ATK];
 GO
 
--- Drop the table if it exists
 IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Branch]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Branch];
 GO
 
--- Create the table
 CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
     BranchID VARCHAR(36) NOT NULL,
     BranchCode DECIMAL(3, 0) NULL,

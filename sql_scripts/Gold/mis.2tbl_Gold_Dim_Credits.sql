@@ -1,12 +1,10 @@
 USE [ATK];
 GO
 
--- Drop table if exists
 IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Credits]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_Credits];
 GO
 
--- Create table with DigitalSign column
 CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,

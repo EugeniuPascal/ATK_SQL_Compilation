@@ -1,12 +1,10 @@
 USE [ATK];
 GO
 
--- Drop the gold table if it exists
 IF OBJECT_ID('mis.[2tbl_Gold_Dim_PartnersBranch]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Dim_PartnersBranch];
 GO
 
--- Create gold table with only essential columns
 CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
 (
     [PartnerBranchID]               VARCHAR(36) NOT NULL,

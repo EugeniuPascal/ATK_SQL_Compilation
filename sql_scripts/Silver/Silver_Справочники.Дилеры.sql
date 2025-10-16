@@ -1,12 +1,10 @@
 USE [ATK];
 GO
 
--- Drop table if it exists
 IF OBJECT_ID('mis.[Silver_Справочники.Дилеры]', 'U') IS NOT NULL
     DROP TABLE mis.[Silver_Справочники.Дилеры];
 GO
 
--- Create materialized table
 CREATE TABLE mis.[Silver_Справочники.Дилеры]
 (
     [Дилеры ID]                             VARCHAR(36) NOT NULL, 
@@ -45,4 +43,5 @@ SELECT
     [Дилеры Представитель Организации],
 	[Дилеры Эксперт по Умолчанию ID],
 	[Дилеры Эксперт по Умолчанию]  
+	
 FROM [ATK].[dbo].[Справочники.Дилеры];

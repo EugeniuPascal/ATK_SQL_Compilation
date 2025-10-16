@@ -2,15 +2,6 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
------------------------------------------------------------------------------------
--- 2tbl_Gold_Fact_CerereOnline
--- Purpose:
---     Builds GOLD-level fact table for online credit requests (Cerere Online).
---     Combines data from:
---         - [Silver_Документы.ЗаявкаНаКредит]
---         - [Silver_Документы.ОбъединеннаяИнтернетЗаявка]
---     Excludes test clients based on [Контрагенты Тестовый Контрагент] = 00.
------------------------------------------------------------------------------------
 IF OBJECT_ID('mis.[2tbl_Gold_Fact_CerereOnline]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_CerereOnline];
 GO

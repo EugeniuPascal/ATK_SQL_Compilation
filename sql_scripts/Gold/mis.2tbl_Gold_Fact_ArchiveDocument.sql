@@ -1,12 +1,10 @@
 USE [ATK]
 GO
 
--- Drop table if exists
 IF OBJECT_ID('mis.[2tbl_Gold_Fact_ArchiveDocument]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_ArchiveDocument];
 GO
 
--- Step 1: Create the table structure (no data yet)
 CREATE TABLE mis.[2tbl_Gold_Fact_ArchiveDocument] (
     [АктыПередачиКредитныхДел Период]         DATETIME NULL,
     [АктыПередачиКредитныхДел ID]             VARCHAR(36) NULL,

@@ -224,23 +224,31 @@ SELECT TOP (5) *
 
 pentru soldPar de fixat
 
-
-SELECT *
+SELECT [СостоянияРеструктурированныхКредитов Период],[СостоянияРеструктурированныхКредитов Состояние Реструктурированного Кредита]
 FROM [ATK].[dbo].[РегистрыСведений.СостоянияРеструктурированныхКредитов]
-WHERE [СостоянияРеструктурированныхКредитов Кредит ID] = '812100155D65040111ECC06922E57355'
+WHERE [СостоянияРеструктурированныхКредитов Кредит ID] = '810A00155D65040111EC3D57E9373288'
 ORDER BY [СостоянияРеструктурированныхКредитов Период] ASC
 
-SELECT *
+SELECT [РеструктурированныеКредиты Период],[РеструктурированныеКредиты Причина Реструктуризации], [РеструктурированныеКредиты Тип Реструктуризации Долга]
 FROM [ATK].[dbo].[РегистрыСведений.РеструктурированныеКредиты]
 --WHERE [РеструктурированныеКредиты Период] > '2024-01-01'
-WHERE [РеструктурированныеКредиты Кредит ID] = '812100155D65040111ECC06922E57355'
+WHERE [РеструктурированныеКредиты Кредит ID] = '810A00155D65040111EC3D57E9373288'
 ORDER BY [РеструктурированныеКредиты Период] ASC
 
-SELECT SoldDate, RestructuredCreditState, RestructuringReason, RestructuringDebtType
-FROM mis.[2tbl_Gold_Fact_Sold_Par]
-WHERE CreditID = '812100155D65040111ECC06922E57355'
-ORDER BY SoldDate ASC
+SELECT SoldDate, RestructuredCreditState, RestructuringReason, RestructuringDebtType,IRR_Values
+Par_0_IFRS, Par_30_IFRS, Par_60_IFRS, Par_90_IFRS
+FROM mis.[2tbl_Gold_Fact_Sold_Par1]
+--WHERE[СуммыЗадолженностиПоПериодамПросрочки Клиент ID] = '80E900155D65040111EAD70139702DB2'
+WHERE CreditID = '812100155D65040111ECC06922E57355' ORDER BY SoldDate ASC
 
+SELECT TOP (5) * FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки];
+SELECT TOP (5) * FROM mis.[Silver_Справочники.Кредиты]
+SELECT TOP (5) * FROM mis.[Silver_РегистрыСведений.КредитыВТеневыхФилиалах]
+SELECT TOP (5) * FROM mis.[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным]
+SELECT TOP (5) * FROM mis.[Silver_РегистрыСведений.СотрудникиДанныеПоЗарплате]
+SELECT TOP (5) * FROM mis.[Silver_Документы.УстановкаДанныхКредита]
+SELECT TOP (5) * FROM mis.[Silver_РегистрыСведений.СостоянияРеструктурированныхКредитов]
+SELECT TOP (5) * FROM mis.[Silver_РегистрыСведений.РеструктурированныеКредиты]
 
 SELECT [РеструктурированныеКредиты Кредит ID], COUNT(*) AS CreditCount
 FROM [ATK].[dbo].[РегистрыСведений.РеструктурированныеКредиты]
@@ -301,3 +309,67 @@ MultiState AS (
 SELECT m.CreditID
 FROM MultiRestructured m
 INNER JOIN MultiState s ON m.CreditID = s.CreditID;
+
+SELECT [СостоянияРеструктурированныхКредитов Период],[СостоянияРеструктурированныхКредитов Состояние Реструктурированного Кредита]
+FROM [ATK].[dbo].[РегистрыСведений.СостоянияРеструктурированныхКредитов]
+WHERE [СостоянияРеструктурированныхКредитов Период] IS NULL
+
+SELECT [СостоянияРеструктурированныхКредитов Период],[СостоянияРеструктурированныхКредитов Состояние Реструктурированного Кредита]
+FROM [ATK].[dbo].[РегистрыСведений.СостоянияРеструктурированныхКредитов]
+
+WHERE [СостоянияРеструктурированныхКредитов Период] IS NULL
+
+SELECT
+    [УстановкаДанныхКредита Кредит ID],
+    [УстановкаДанныхКредита Дата],
+    COUNT(*) AS RecordCount
+FROM mis.[Silver_Документы.УстановкаДанныхКредита]
+GROUP BY
+    [УстановкаДанныхКредита Кредит ID],
+    [УстановкаДанныхКредита Дата]
+HAVING COUNT(*) > 1;
+
+SELECT 
+    CASE 
+        WHEN EXISTS (
+            SELECT 1
+            FROM mis.[Silver_Документы.УстановкаДанныхКредита]
+            GROUP BY [УстановкаДанныхКредита Кредит ID], [УстановкаДанныхКредита Дата]
+            HAVING COUNT(*) > 1
+        ) THEN '❌ Duplicates exist'
+        ELSE '✅ All unique'
+    END AS Result;
+
+SELECT *
+
+FROM [ATK].[mis].[2tbl_Gold_Fact_Sold_Par1]
+
+WHERE [CreditID] IN (
+
+'810900155D65040111EC2C0E0E1C45E4',
+
+'B7C900155D65140C11EFF35114382BB1',
+
+'810900155D65040111EC30D141C07DD6',
+
+'810A00155D65040111EC36EF2177D72E',
+
+'810A00155D65040111EC3D57E9373288',
+
+'810B00155D65040111EC422BD61DAC0A',
+
+'811900155D65040111EC93D6BF9D3695',
+
+'813F00155D65040111ED3FCD43679F7E',
+
+'B72B00155D65140C11ED869B127655AB',
+
+'B72F00155D65140C11EDA62A250B2676',
+
+'B73900155D65140C11EDC70416B16A23',
+
+'B7B400155D65140C11EFA6637B9B7419'
+ 
+)
+
+AND [SoldDate] = '2025-07-31';

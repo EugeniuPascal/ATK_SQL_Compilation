@@ -15,7 +15,7 @@ NUMERIC_PRECISION,
 NUMERIC_SCALE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_SCHEMA = 'dbo'
-AND TABLE_NAME = 'Справочники.Контрагенты'
+AND TABLE_NAME = 'РегистрыСведений.ДанныеКредитовВыданных'
 AND COLUMN_NAME = 'Контрагенты Тестовый Контрагент';
 
 SELECT TOP (5) [ФормыПредприятия ID]

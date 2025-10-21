@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_AdminTasks]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_AdminTasks];
+IF OBJECT_ID('mis.[2tbl_Gold_Fact_AdminTasks1]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_AdminTasks1];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
+CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks1]
 (
     -- Existing AdminTask columns
     [AdminTask_ID] VARCHAR(36) NOT NULL,
@@ -217,7 +217,7 @@ GO
         WHERE p.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] = doc.[НаправлениеНаВыплату ID]
     ) pay
 )
-INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks] (
+INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks1] (
     [AdminTask_ID], [AdminTask_Deleted], [AdminTask_Date], [AdminTask_Number], [AdminTask_Completed],
     [AdminTask_Author_ID], [AdminTask_Author], [AdminTask_Branch_ID], [AdminTask_Branch],
     [AdminTask_Category_ID], [AdminTask_Category], [AdminTask_Type_ID], [AdminTask_Type],

@@ -61,7 +61,11 @@ SELECT
     END AS CreditAmount,
 
     -- Convert to MDL
-    ROUND(d.[ДанныеКредитовВыданных Сумма Кредита] * ISNULL(rate.Rate, 1), 2) AS CreditAmountInMDL,
+    ROUND(
+    ISNULL(proto.[ПротоколКомитета Сумма на Выдачу], d.[ДанныеКредитовВыданных Сумма Кредита]) 
+    * ISNULL(rate.Rate, 1), 
+    2
+) AS CreditAmountInMDL,
     
     d.[ДанныеКредитовВыданных Валюта Кредита]            AS CreditCurrency,
     firstR.[ФилиалID]                                     AS FirstFilialID,

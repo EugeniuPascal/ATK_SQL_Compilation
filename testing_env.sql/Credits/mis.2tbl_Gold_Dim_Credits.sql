@@ -16,7 +16,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [EconomicSectorDetailed] NVARCHAR(255) NULL,
     [FinancialProductID] VARCHAR(36) NULL,
     [FinancialProduct] NVARCHAR(255) NULL,
-    [AgroCredit] NVARCHAR(50) NULL,
+    [AgroCredit] NVARCHAR(255) NULL,
     [LocalityType] NVARCHAR(255) NULL,
     [Currency] NVARCHAR(50) NULL,
     [ProductID] VARCHAR(36) NULL,
@@ -47,8 +47,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
     [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL,
     [DigitalSign] NVARCHAR(50) NULL,
 	[EconomicSectorEFSE] NVARCHAR(50) NULL,
-	[EconomicSector] NVARCHAR(50) NULL,
-	[Agro] NVARCHAR(50) NULL
+	[EconomicSector] NVARCHAR(50) NULL
 );
 GO
 
@@ -182,7 +181,7 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
     [LastFilialID], [LastEmployeeID], [DealerID], [Source],
     [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit],
     [CommitteeProt_CrPurpose], [CommitteeProt_AMLRiskCat],
-    [DigitalSign], [EconomicSectorEFSE], [EconomicSector], [Agro]
+    [DigitalSign], [EconomicSectorEFSE], [EconomicSector] 
 )
 SELECT
     c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
@@ -191,10 +190,10 @@ SELECT
 	c.[Кредиты Финансовый Продукт],
 	
     CASE c.[Кредиты Агро]
-	     WHEN 'Агро' THEN 'AgroCredit'
+	     WHEN 'Агро' THEN 'Agro'
          WHEN 'НеАгро' THEN 'nonAgro'
 		 ELSE c.[Кредиты Агро]
-	END AS AgroCredit, 
+	END AS Agro, 
 	CASE c.[Кредиты Тип Местности]
 	     WHEN 'ГородБольшой' THEN 'bigCity'
          WHEN 'Пригород' THEN 'suburb'
@@ -270,15 +269,7 @@ SELECT
 		 ELSE 'False' 
     END AS DigitalSign,
 	e.[СекторыЭкономики Сектор Экономики EFSE] AS EconomicSectorEFSE,
-	e.[СекторыЭкономики Основной Раздел] AS EconimicSector,
-	
-	CASE 
-	   WHEN fp.FinancialProductsMainGroup = 'Business'
-	   AND e.[СекторыЭкономики Основной Раздел] = '1. Agricultura'
-	   THEN 'Agro'
-	   ELSE 'NonAgro'
-	END AS Agro
-	
+	e.[СекторыЭкономики Основной Раздел] AS EconimicSector
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.[Кредиты ID] = cr.CreditID
 LEFT JOIN Resp r ON c.[Кредиты ID] = r.CreditID
@@ -288,4 +279,4 @@ LEFT JOIN LatestOutstanding lo ON c.[Кредиты ID] = lo.CreditID
 LEFT JOIN SegmentRevenue seg ON c.[Кредиты Кредитный Продукт ID] = seg.ProductID
 LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID
 LEFT JOIN [ATK].[dbo].[Справочники.СекторыЭкономики] AS e ON c.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID];
-
+GO

@@ -1,13 +1,12 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_Employees]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Employees];
+IF OBJECT_ID('mis.[2tbl_Gold_Dim_Employees1]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Dim_Employees1];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
+CREATE TABLE mis.[2tbl_Gold_Dim_Employees1] (
     [EmployeeID] VARCHAR(36) NOT NULL,
-	[BranchID] VARCHAR(36) NULL,
     [EmployeeCode] INT NULL,
     [EmployeePositionID] VARCHAR(36) NULL,
     [EmployeeName] NVARCHAR(40) NULL,
@@ -30,10 +29,9 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_Employees] 
+INSERT INTO mis.[2tbl_Gold_Dim_Employees1] 
 (
     [EmployeeID],
-	[BranchID],
     [EmployeeCode],
     [EmployeePositionID],
     [EmployeeName],
@@ -56,7 +54,6 @@ INSERT INTO mis.[2tbl_Gold_Dim_Employees]
 )
 SELECT 
     e.[Сотрудники ID] AS EmployeeID,
-	lastPos.[СотрудникиДанныеПоЗарплате Филиал ID] AS [BranchID],
     e.[Сотрудники Код] AS EmployeeCode,
     lastPos.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
     e.[Сотрудники Наименование] AS EmployeeName,

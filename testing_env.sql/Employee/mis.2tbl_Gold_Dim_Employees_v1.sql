@@ -1,13 +1,12 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_Employees]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Employees];
+IF OBJECT_ID('mis.[2tbl_Gold_Dim_Employees1]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Dim_Employees1];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
+CREATE TABLE mis.[2tbl_Gold_Dim_Employees1] (
     [EmployeeID] VARCHAR(36) NOT NULL,
-	[BranchID] VARCHAR(36) NULL,
     [EmployeeCode] INT NULL,
     [EmployeePositionID] VARCHAR(36) NULL,
     [EmployeeName] NVARCHAR(40) NULL,
@@ -23,17 +22,13 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
     [ExperienceIndex] INT NULL,
     [EmploymentPeriod] NVARCHAR(50) NULL,
     [EmploymentPositionType] NVARCHAR(150) NULL,
-    [EmpPositionIDdate] DATETIME,
-	[ExperienceMonthsLastPosition] INT NULL,
-	[ExperienceMonthsRangeLastPosition] NVARCHAR(50) NULL,
-	[ExperienceIndexLastPosition] INT
+    [EmpPositionIDdate] DATETIME
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_Employees] 
+INSERT INTO mis.[2tbl_Gold_Dim_Employees1] 
 (
     [EmployeeID],
-	[BranchID],
     [EmployeeCode],
     [EmployeePositionID],
     [EmployeeName],
@@ -49,14 +44,10 @@ INSERT INTO mis.[2tbl_Gold_Dim_Employees]
     [ExperienceIndex],
     [EmploymentPeriod],
     [EmploymentPositionType],
-    [EmpPositionIDdate],
-	[ExperienceMonthsLastPosition],
-	[ExperienceMonthsRangeLastPosition],
-	[ExperienceIndexLastPosition]
+    [EmpPositionIDdate]
 )
 SELECT 
     e.[Сотрудники ID] AS EmployeeID,
-	lastPos.[СотрудникиДанныеПоЗарплате Филиал ID] AS [BranchID],
     e.[Сотрудники Код] AS EmployeeCode,
     lastPos.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
     e.[Сотрудники Наименование] AS EmployeeName,
@@ -137,32 +128,8 @@ SELECT
         ELSE FORMAT(e.[Сотрудники Дата Приема], 'yyyy-MM-dd') + N' → ' + FORMAT(e.[Сотрудники Дата Увольнения], 'yyyy-MM-dd')
     END AS EmploymentPeriod,
 
-    lastPos.[СотрудникиДанныеПоЗарплате Вид Должности] AS EmploymentPositionType,
-    firstAssigned.FirstDate AS EmpPositionIDdate,
-	
-	 CASE 
-        WHEN firstAssigned.FirstDate IS NULL OR firstAssigned.FirstDate = '1753-01-01' THEN NULL
-        ELSE DATEDIFF(MONTH, firstAssigned.FirstDate, 
-             COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())
-        )
-    END AS ExperienceMonthsLastPosition,
-	
-	 CASE 
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 1 AND 5 THEN N'1-5 m'
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 6 AND 11 THEN N'6-11 m'
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 12 AND 35 THEN N'12-35 m'
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) > 35 THEN N'36+ m'
-        ELSE N'N/A'
-    END AS ExperienceMonthsRangeLastPosition,
-	
-	
-	CASE 
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 1 AND 5 THEN 1
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 6 AND 11 THEN 2
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 12 AND 35 THEN 3
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) > 35 THEN 4
-        ELSE NULL
-    END AS ExperienceIndexLastPosition
+    lastPos.[СотрудникиДанныеПоЗарплате Должность] AS EmploymentPositionType,
+    firstAssigned.FirstDate AS EmpPositionIDdate
 
 FROM [ATK].[dbo].[Справочники.Сотрудники] AS e
 OUTER APPLY (

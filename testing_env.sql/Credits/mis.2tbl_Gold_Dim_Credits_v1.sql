@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Credits]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Credits];
+IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Credits1]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Dim_Credits1];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
+CREATE TABLE mis.[2tbl_Gold_Dim_Credits1] (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -168,7 +168,7 @@ GreenCredit AS (
     WHERE rn = 1
 )
 -- Final insert
-INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
+INSERT INTO mis.[2tbl_Gold_Dim_Credits1] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
     [EconomicSectorDetailed], [FinancialProductID], [FinancialProduct],
@@ -288,4 +288,4 @@ LEFT JOIN LatestOutstanding lo ON c.[Кредиты ID] = lo.CreditID
 LEFT JOIN SegmentRevenue seg ON c.[Кредиты Кредитный Продукт ID] = seg.ProductID
 LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID
 LEFT JOIN [ATK].[dbo].[Справочники.СекторыЭкономики] AS e ON c.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID];
-
+GO

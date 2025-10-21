@@ -115,15 +115,26 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par1] (
           AND CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE) <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
         ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
     ) AS rs_state
-    OUTER APPLY (
-        SELECT TOP(1)
-            r.[РеструктурированныеКредиты Тип Реструктуризации Долга] AS OriginalDebtType,
-            r.[РеструктурированныеКредиты Причина Реструктуризации] AS RestructuringReason
-        FROM mis.[Silver_РегистрыСведений.РеструктурированныеКредиты] AS r
-        WHERE r.[РеструктурированныеКредиты Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-          AND CAST(r.[РеструктурированныеКредиты Период] AS DATE) <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
-        ORDER BY r.[РеструктурированныеКредиты Период] DESC
-    ) AS rs_restruct
+OUTER APPLY (
+    SELECT TOP(1)
+        -- Stick to non-commercial if it ever existed, else pick the latest commercial
+        CASE 
+            WHEN EXISTS (
+                SELECT 1
+                FROM mis.[Silver_РегистрыСведений.РеструктурированныеКредиты] AS r2
+                WHERE r2.[РеструктурированныеКредиты Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+                  AND r2.[РеструктурированныеКредиты Тип Реструктуризации Долга] = N'НекоммерческаяРеструктуризация'
+            )
+            THEN N'НекоммерческаяРеструктуризация'
+            ELSE r.[РеструктурированныеКредиты Тип Реструктуризации Долга]
+        END AS OriginalDebtType,
+        
+        r.[РеструктурированныеКредиты Причина Реструктуризации] AS RestructuringReason
+
+    FROM mis.[Silver_РегистрыСведений.РеструктурированныеКредиты] AS r
+    WHERE r.[РеструктурированныеКредиты Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+    ORDER BY r.[РеструктурированныеКредиты Период] DESC
+) AS rs_restruct
     WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
       AND sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
 ), 
@@ -142,17 +153,25 @@ DebtLocked AS (
 -- Step 3: Client-day contamination
 ClientDayContamination AS (
     SELECT *,
+        -- Contaminated credit state (treat NULL as Nevindecat for spreading)
         CASE 
-            WHEN MAX(CASE WHEN StickyRestructuredCreditState = 'Nevindecat' THEN 1 ELSE 0 END)
+            WHEN MAX(CASE WHEN StickyRestructuredCreditState = 'Nevindecat' OR StickyRestructuredCreditState IS NULL THEN 1 ELSE 0 END)
                  OVER(PARTITION BY ClientID, SoldDate) = 1
-                 AND StickyRestructuredCreditState = 'Vindecat' THEN 'NevindecatContaminat'
-            WHEN StickyRestructuredCreditState = 'Nevindecat' THEN 'Nevindecat'
+                 AND StickyRestructuredCreditState = 'Vindecat' 
+                 THEN 'NevindecatContaminat'
+            WHEN StickyRestructuredCreditState = 'Nevindecat' OR StickyRestructuredCreditState IS NULL THEN 'Nevindecat'
             ELSE StickyRestructuredCreditState
         END AS ContaminatedCreditState,
+
+        -- Contaminated debt type (only consider StickyRestructuredCreditState = 'Nevindecat')
         CASE
-            WHEN MAX(CASE WHEN LockedDebtType = 'Restructurizare non-comerciala' AND StickyRestructuredCreditState = 'Nevindecat' THEN 1 ELSE 0 END)
+            WHEN MAX(CASE 
+                         WHEN LockedDebtType = 'Restructurizare non-comerciala' 
+                              AND StickyRestructuredCreditState = 'Nevindecat' 
+                         THEN 1 ELSE 0 END)
                  OVER(PARTITION BY ClientID, SoldDate) = 1
-                 AND LockedDebtType = 'Restructurizare comerciala' THEN 'Restructurizare non-comerciala'
+                 AND LockedDebtType = 'Restructurizare comerciala' 
+            THEN 'Restructurizare non-comerciala'
             ELSE LockedDebtType
         END AS ContaminatedDebtType
     FROM DebtLocked
@@ -179,19 +198,3 @@ SELECT
     RestructuringReason,
     ContaminatedDebtType AS RestructuringDebtType
 FROM ClientDayContamination
-WHERE [CreditID] IN (
-'810900155D65040111EC2C0E0E1C45E4',
-'B7C900155D65140C11EFF35114382BB1',
-'810900155D65040111EC30D141C07DD6',
-'810A00155D65040111EC36EF2177D72E',
-'810A00155D65040111EC3D57E9373288',
-'810B00155D65040111EC422BD61DAC0A',
-'811900155D65040111EC93D6BF9D3695',
-'813F00155D65040111ED3FCD43679F7E',
-'B72B00155D65140C11ED869B127655AB',
-'B72F00155D65140C11EDA62A250B2676',
-'B73900155D65140C11EDC70416B16A23',
-'B7B400155D65140C11EFA6637B9B7419'
- 
-)
-AND [SoldDate] = '2025-07-31';

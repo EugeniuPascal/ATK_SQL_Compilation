@@ -113,7 +113,7 @@ SELECT
 
     -- ExperienceMonthsRange
     CASE 
-        WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 1 AND 5 THEN N'1-5 m'
+        WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 0 AND 5 THEN N'1-5 m'
         WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 6 AND 11 THEN N'6-11 m'
         WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 12 AND 35 THEN N'12-35 m'
         WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) > 35 THEN N'36+ m'
@@ -122,7 +122,7 @@ SELECT
 
     -- ExperienceIndex
     CASE 
-        WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 1 AND 5 THEN 1
+        WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 0 AND 5 THEN 1
         WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 6 AND 11 THEN 2
         WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 12 AND 35 THEN 3
         WHEN DATEDIFF(MONTH, e.[Сотрудники Дата Приема], COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) > 35 THEN 4
@@ -148,7 +148,7 @@ SELECT
     END AS ExperienceMonthsLastPosition,
 	
 	 CASE 
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 1 AND 5 THEN N'1-5 m'
+        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 0 AND 5 THEN N'1-5 m'
         WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 6 AND 11 THEN N'6-11 m'
         WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 12 AND 35 THEN N'12-35 m'
         WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) > 35 THEN N'36+ m'
@@ -157,7 +157,7 @@ SELECT
 	
 	
 	CASE 
-        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 1 AND 5 THEN 1
+        WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 0 AND 5 THEN 1
         WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 6 AND 11 THEN 2
         WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) BETWEEN 12 AND 35 THEN 3
         WHEN DATEDIFF(MONTH, firstAssigned.FirstDate, COALESCE(NULLIF(e.[Сотрудники Дата Увольнения],'1753-01-01'), GETDATE())) > 35 THEN 4

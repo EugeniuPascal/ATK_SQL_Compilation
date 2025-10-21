@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2025-10-21 08:49:39.133878
+-- Generated: 2025-10-21 09:35:40.756890
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 26
 --   Silver_Документы.ЗаявкаНаКредит.sql

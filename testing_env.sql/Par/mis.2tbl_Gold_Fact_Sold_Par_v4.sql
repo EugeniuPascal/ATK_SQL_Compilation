@@ -4,12 +4,10 @@ SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = '2024-01-01';
 
--- Drop table if exists
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_Sold_Par]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_Sold_Par];
+IF OBJECT_ID('mis.[2tbl_Gold_Fact_Sold_Par1]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_Sold_Par1];
 
--- Create table
-CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
+CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par1] (
     [SoldDate]                 DATE         NOT NULL,
     [CreditID]                 VARCHAR(36)  NOT NULL,
     [SoldAmount]               DECIMAL(18,2) NULL,
@@ -177,7 +175,7 @@ ClientDayContamination AS (
 )
 
 -- Step 2: Final insert
-INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
+INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par1] WITH (TABLOCK)
 SELECT
     SoldDate,
     CreditID,

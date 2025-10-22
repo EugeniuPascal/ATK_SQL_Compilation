@@ -4,10 +4,12 @@ SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = '2024-01-01';
 
+-- Drop table if exists
 IF OBJECT_ID('mis.[2tbl_Gold_Fact_Sold_Par1]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_Sold_Par1];
 
-CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par1] (
+-- Create table
+CREATE TABLE [mis].[2tbl_Gold_Fact_Sold_Par1](
     [SoldDate]                 DATE         NOT NULL,
     [CreditID]                 VARCHAR(36)  NOT NULL,
     [SoldAmount]               DECIMAL(18,2) NULL,
@@ -26,9 +28,6 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par1] (
     [RestructuringDebtType]    NVARCHAR(256) NULL
 );
 
------------------------------------------------------
--- Step 1: Base credit data with sticky flags
------------------------------------------------------
 ;WITH CreditBase AS (
     SELECT
         sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,
@@ -117,7 +116,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par1] (
     ) AS rs_state
 OUTER APPLY (
     SELECT TOP(1)
-        -- Stick to non-commercial if it ever existed, else pick the latest commercial
+        
         CASE 
             WHEN EXISTS (
                 SELECT 1
@@ -138,7 +137,7 @@ OUTER APPLY (
     WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
       AND sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
 ), 
--- Step 2: Lock debt type per credit
+
 DebtLocked AS (
     SELECT *,
         CASE 
@@ -150,10 +149,9 @@ DebtLocked AS (
         END AS LockedDebtType
     FROM CreditBase
 ),
--- Step 3: Client-day contamination
 ClientDayContamination AS (
     SELECT *,
-        -- Contaminated credit state (treat NULL as Nevindecat for spreading)
+        
         CASE 
             WHEN MAX(CASE WHEN StickyRestructuredCreditState = 'Nevindecat' OR StickyRestructuredCreditState IS NULL THEN 1 ELSE 0 END)
                  OVER(PARTITION BY ClientID, SoldDate) = 1
@@ -162,8 +160,7 @@ ClientDayContamination AS (
             WHEN StickyRestructuredCreditState = 'Nevindecat' OR StickyRestructuredCreditState IS NULL THEN 'Nevindecat'
             ELSE StickyRestructuredCreditState
         END AS ContaminatedCreditState,
-
-        -- Contaminated debt type (only consider StickyRestructuredCreditState = 'Nevindecat')
+        
         CASE
             WHEN MAX(CASE 
                          WHEN LockedDebtType = 'Restructurizare non-comerciala' 
@@ -176,9 +173,9 @@ ClientDayContamination AS (
         END AS ContaminatedDebtType
     FROM DebtLocked
 )
------------------------------------------------------
--- Step 4: Final insert
------------------------------------------------------
+
+
+
 INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par1] WITH (TABLOCK)
 SELECT
     SoldDate,
@@ -197,4 +194,4 @@ SELECT
     ContaminatedCreditState AS RestructuredCreditState,
     RestructuringReason,
     ContaminatedDebtType AS RestructuringDebtType
-FROM ClientDayContamination
+FROM ClientDayContamination;

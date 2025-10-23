@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-10-22 16:55:42
+-- Generated: 2025-10-23 15:45:27
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (16):
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -2071,204 +2071,200 @@ GO
 -- Start of: mis.2tbl_Gold_Fact_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
-GO
 SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = '2024-01-01';
 
--- Drop table if exists
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_Sold_Par]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_Sold_Par];
+DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par];
 
--- Create table
 CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
-    [SoldDate]                 DATE         NOT NULL,
-    [CreditID]                 VARCHAR(36)  NOT NULL,
-    [SoldAmount]               DECIMAL(18,2) NULL,
-    [NumberOfOverdueDaysIFRS]  DECIMAL(15,2) NULL,
-    [IRR_Values]               DECIMAL(18,6) NULL,
-    [BranchShadow]             NVARCHAR(100) NULL,
-    [EmployeeID]               VARCHAR(36)  NULL,
-    [BranchID]                 VARCHAR(36)  NULL,
-    [EmployeePositionID]       VARCHAR(36)  NULL,
-    [Par_0_IFRS]               DECIMAL(18,6) NULL,
-    [Par_30_IFRS]              DECIMAL(18,6) NULL,
-    [Par_60_IFRS]              DECIMAL(18,6) NULL,
-    [Par_90_IFRS]              DECIMAL(18,6) NULL,
-    [RestructuredCreditState]  NVARCHAR(256) NULL,
-    [RestructuringReason]      NVARCHAR(256) NULL,
-    [RestructuringDebtType]    NVARCHAR(256) NULL
+    SoldDate                DATE         NOT NULL,
+    CreditID                VARCHAR(36)  NOT NULL,
+    SoldAmount              DECIMAL(18,2) NULL,
+    NumberOfOverdueDaysIFRS DECIMAL(15,2) NULL,
+    IRR_Values              DECIMAL(18,6) NULL,
+    BranchShadow            NVARCHAR(100) NULL,
+    EmployeeID              VARCHAR(36)  NULL,
+    BranchID                VARCHAR(36)  NULL,
+    EmployeePositionID      VARCHAR(36)  NULL,
+    Par                     NVARCHAR(20) NULL
+) WITH (DATA_COMPRESSION = PAGE);
+
+-----------------------------------------------------
+-- Step 1: Shadow Branch, Responsible, EmployeePos, IRR temp tables (same as before)
+-----------------------------------------------------
+-- Shadow Branch
+IF OBJECT_ID('tempdb..#ShadowBranch') IS NOT NULL DROP TABLE #ShadowBranch;
+CREATE TABLE #ShadowBranch (
+    CreditID     VARCHAR(36) NOT NULL,
+    BranchShadow NVARCHAR(100) NULL,
+    Period       DATE NULL
 );
 
------------------------------------------------------
--- Step 1: Base credit data
------------------------------------------------------
-;WITH CreditBase AS (
-    SELECT
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID] AS ClientID,
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
-        sd.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО] AS NumberOfOverdueDaysIFRS,
+INSERT INTO #ShadowBranch (CreditID, BranchShadow, Period)
+SELECT 
+    x.[КредитыВТеневыхФилиалах Кредит ID],
+    x.[КредитыВТеневыхФилиалах Филиал],
+    x.[КредитыВТеневыхФилиалах Период]
+FROM mis.[Silver_РегистрыСведений.КредитыВТеневыхФилиалах] x;
 
-        ROUND(
-            COALESCE(
-                CASE WHEN irr.IRR_Year < 100 THEN irr.IRR_Year ELSE irr.IRR_Client END, 0
-            ) * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит],
-            2
-        ) AS IRR_Values,
+CREATE NONCLUSTERED INDEX IX_Shadow_Credit_Period ON #ShadowBranch (CreditID, Period);
 
-        sh.BranchShadow,
-        emp.EmployeeID,
-        emp.BranchID,
-        ep.EmployeePositionID,
-        par.Par_0_IFRS,
-        par.Par_30_IFRS,
-        par.Par_60_IFRS,
-        par.Par_90_IFRS,
-        rs_restruct.RestructuringReason,
-        rs_restruct.OriginalDebtType,
-        rs_state.RestructuredCreditState AS StickyRestructuredCreditState
+-- Responsible
+IF OBJECT_ID('tempdb..#Responsible') IS NOT NULL DROP TABLE #Responsible;
+CREATE TABLE #Responsible (
+    CreditID   VARCHAR(36) NOT NULL,
+    EmployeeID VARCHAR(36) NULL,
+    BranchID   VARCHAR(36) NULL,
+    Period     DATE NULL
+);
 
-    FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] AS sd
-    JOIN mis.[Silver_Справочники.Кредиты] AS k
-        ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-
-    -- PAR flags
-    OUTER APPLY (
-        SELECT
-            CASE WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] > 0
-                THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_0_IFRS,
-            CASE WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] > 30
-                THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_30_IFRS,
-            CASE WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] > 60
-                THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_60_IFRS,
-            CASE WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] > 90
-                THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_90_IFRS
-    ) AS par
-
-    -- BranchShadow historical
-    OUTER APPLY (
-        SELECT TOP(1) sh2.[КредитыВТеневыхФилиалах Филиал] AS BranchShadow
-        FROM mis.[Silver_РегистрыСведений.КредитыВТеневыхФилиалах] AS sh2
-        WHERE sh2.[КредитыВТеневыхФилиалах Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-          AND sh2.[КредитыВТеневыхФилиалах Период] < DATEADD(DAY, 1, sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
-        ORDER BY sh2.[КредитыВТеневыхФилиалах Период] DESC
-    ) AS sh
-
-    -- All historical employees
-OUTER APPLY (
-    SELECT TOP (1)
-        r2.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS EmployeeID,
-        r2.[ОтветственныеПоКредитамВыданным Филиал ID] AS BranchID
-    FROM mis.[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным] AS r2
-    WHERE r2.[ОтветственныеПоКредитамВыданным Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-      AND r2.[ОтветственныеПоКредитамВыданным Период] < DATEADD(DAY, 1, sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
-    ORDER BY r2.[ОтветственныеПоКредитамВыданным Период] DESC
-) AS emp
-
-    -- Employee position historical
-    OUTER APPLY (
-        SELECT TOP(1) e2.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID
-        FROM mis.[Silver_РегистрыСведений.СотрудникиДанныеПоЗарплате] AS e2
-        WHERE e2.[СотрудникиДанныеПоЗарплате Сотрудник ID] = emp.EmployeeID
-          AND e2.[СотрудникиДанныеПоЗарплате Период] < DATEADD(DAY, 1, sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
-        ORDER BY e2.[СотрудникиДанныеПоЗарплате Период] DESC
-    ) AS ep
-
-    -- IRR historical
-    OUTER APPLY (
-        SELECT TOP(1)
-            i2.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] AS IRR_Year,
-            i2.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая] AS IRR_Client
-        FROM mis.[Silver_Документы.УстановкаДанныхКредита] AS i2
-        WHERE i2.[УстановкаДанныхКредита Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-          AND i2.[УстановкаДанныхКредита Дата] < DATEADD(DAY, 1, sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
-        ORDER BY i2.[УстановкаДанныхКредита Дата] DESC
-    ) AS irr
-
-    -- Restructured state historical
-    OUTER APPLY (
-        SELECT TOP(1)
-            CASE WHEN s.[СостоянияРеструктурированныхКредитов Состояние Реструктурированного Кредита] = N'НеИзлеченный'
-                 THEN 'Nevindecat'
-                 ELSE 'Vindecat'
-            END AS RestructuredCreditState
-        FROM mis.[Silver_РегистрыСведений.СостоянияРеструктурированныхКредитов] AS s
-        WHERE s.[СостоянияРеструктурированныхКредитов Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-          AND s.[СостоянияРеструктурированныхКредитов Период] < DATEADD(DAY, 1, sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
-        ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
-    ) AS rs_state
-
-    -- Restructuring reason & debt type historical
-    OUTER APPLY (
-        SELECT TOP(1)
-            r.[РеструктурированныеКредиты Причина Реструктуризации] AS RestructuringReason,
-            r.[РеструктурированныеКредиты Тип Реструктуризации Долга] AS OriginalDebtType
-        FROM mis.[Silver_РегистрыСведений.РеструктурированныеКредиты] AS r
-        WHERE r.[РеструктурированныеКредиты Кредит ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-          AND r.[РеструктурированныеКредиты Период] < DATEADD(DAY, 1, sd.[СуммыЗадолженностиПоПериодамПросрочки Дата])
-        ORDER BY r.[РеструктурированныеКредиты Период] DESC
-    ) AS rs_restruct
-
-    WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
-      AND sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
-),
-
-DebtLocked AS (
-    SELECT *,
-        CASE 
-            WHEN MAX(CASE WHEN OriginalDebtType = N'НекоммерческаяРеструктуризация' THEN 1 ELSE 0 END)
-                 OVER(PARTITION BY CreditID ORDER BY SoldDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) = 1
-            THEN 'Restructurizare non-comerciala'
-            WHEN OriginalDebtType = N'КоммерческаяРеструктуризация' THEN 'Restructurizare comerciala'
-            ELSE NULL
-        END AS LockedDebtType
-    FROM CreditBase
-),
-
-ClientDayContamination AS (
-    SELECT *,
-        CASE 
-            WHEN MAX(CASE WHEN StickyRestructuredCreditState = 'Nevindecat' OR StickyRestructuredCreditState IS NULL THEN 1 ELSE 0 END)
-                 OVER(PARTITION BY ClientID, SoldDate) = 1
-                 AND StickyRestructuredCreditState = 'Vindecat'
-                 THEN 'NevindecatContaminat'
-            WHEN StickyRestructuredCreditState = 'Nevindecat' OR StickyRestructuredCreditState IS NULL THEN 'Nevindecat'
-            ELSE StickyRestructuredCreditState
-        END AS ContaminatedCreditState,
-
-        CASE
-            WHEN MAX(CASE WHEN LockedDebtType = 'Restructurizare non-comerciala' AND StickyRestructuredCreditState = 'Nevindecat' THEN 1 ELSE 0 END)
-                 OVER(PARTITION BY ClientID, SoldDate) = 1
-                 AND LockedDebtType = 'Restructurizare comerciala'
-            THEN 'Restructurizare non-comerciala'
-            ELSE LockedDebtType
-        END AS ContaminatedDebtType
-    FROM DebtLocked
-)
-
--- Step 2: Final insert
-INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
+INSERT INTO #Responsible (CreditID, EmployeeID, BranchID, Period)
 SELECT
-    SoldDate,
-    CreditID,
-    SoldAmount,
-    NumberOfOverdueDaysIFRS,
-    IRR_Values,
-    BranchShadow,
-    EmployeeID,
-    BranchID,
-    EmployeePositionID,
-    Par_0_IFRS,
-    Par_30_IFRS,
-    Par_60_IFRS,
-    Par_90_IFRS,
-    StickyRestructuredCreditState AS RestructuredCreditState,
-    RestructuringReason,
-    OriginalDebtType AS RestructuringDebtType
-FROM CreditBase
-ORDER BY SoldDate, EmployeeID;
+    r.[ОтветственныеПоКредитамВыданным Кредит ID],
+    r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID],
+    r.[ОтветственныеПоКредитамВыданным Филиал ID],
+    r.[ОтветственныеПоКредитамВыданным Период]
+FROM mis.[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным] r;
+
+CREATE NONCLUSTERED INDEX IX_Resp_Credit_Period ON #Responsible (CreditID, Period);
+
+-- Employee Position
+IF OBJECT_ID('tempdb..#EmployeePos') IS NOT NULL DROP TABLE #EmployeePos;
+CREATE TABLE #EmployeePos (
+    EmployeeID VARCHAR(36) NOT NULL,
+    PositionID VARCHAR(36) NULL,
+    Period DATE NULL
+);
+
+INSERT INTO #EmployeePos (EmployeeID, PositionID, Period)
+SELECT
+    emp.[СотрудникиДанныеПоЗарплате Сотрудник ID],
+    emp.[СотрудникиДанныеПоЗарплате Должность ID],
+    emp.[СотрудникиДанныеПоЗарплате Период]
+FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] emp
+WHERE emp.[СотрудникиДанныеПоЗарплате Период] >= DATEADD(year,-1,@DateFrom);
+
+CREATE CLUSTERED INDEX CX_EmployeePos_Emp_Period ON #EmployeePos (EmployeeID, Period);
+
+-- IRR
+IF OBJECT_ID('tempdb..#IRR') IS NOT NULL DROP TABLE #IRR;
+CREATE TABLE #IRR (
+    CreditID VARCHAR(36) NOT NULL,
+    IRR_Year DECIMAL(18,6) NULL,
+    IRR_Client DECIMAL(18,6) NULL,
+    IRRDate DATETIME2 NULL
+);
+
+INSERT INTO #IRR (CreditID, IRR_Year, IRR_Client, IRRDate)
+SELECT
+    i.[УстановкаДанныхКредита Кредит ID],
+    i.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая],
+    i.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая],
+    i.[УстановкаДанныхКредита Дата]
+FROM mis.[Silver_Документы.УстановкаДанныхКредита] i
+WHERE i.[УстановкаДанныхКредита Кредит ID] IS NOT NULL;
+
+CREATE NONCLUSTERED INDEX IX_IRR_Credit_Date ON #IRR (CreditID, IRRDate DESC);
+
+-----------------------------------------------------
+-- Step 2: Prepare ranges
+-----------------------------------------------------
+;WITH RespRanges AS (
+    SELECT CreditID, EmployeeID, BranchID,
+           Period AS ValidFrom,
+           LEAD(Period) OVER (PARTITION BY CreditID ORDER BY Period) AS ValidTo
+    FROM #Responsible
+),
+ShadowRanges AS (
+    SELECT CreditID, BranchShadow,
+           Period AS ValidFrom,
+           LEAD(Period) OVER (PARTITION BY CreditID ORDER BY Period) AS ValidTo
+    FROM #ShadowBranch
+),
+EmpPosRanges AS (
+    SELECT EmployeeID, PositionID,
+           Period AS ValidFrom,
+           LEAD(Period) OVER (PARTITION BY EmployeeID ORDER BY Period) AS ValidTo
+    FROM #EmployeePos
+)
+INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
+(
+    SoldDate, CreditID, SoldAmount, NumberOfOverdueDaysIFRS, IRR_Values,
+    BranchShadow, EmployeeID, BranchID, EmployeePositionID, Par
+)
+SELECT
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Дата],
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID],
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит],
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО],
+
+    -- IRR Values
+    ROUND(
+        COALESCE(
+            CASE WHEN irr.IRR_Year IS NOT NULL AND irr.IRR_Year < 100 THEN irr.IRR_Year
+                 ELSE irr.IRR_Client
+            END, 0
+        ) * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
+    ) AS IRR_Values,
+
+    -- Branch
+    sh.BranchShadow,
+
+    -- Employee
+    r.EmployeeID,
+    r.BranchID,
+    empPos.PositionID AS EmployeePositionID,
+
+    -- Single Par column
+    CASE
+        WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] > 90 THEN N'Par_90_IFRS'
+        WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] > 60 THEN N'Par_60_IFRS'
+        WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] > 30 THEN N'Par_30_IFRS'
+        WHEN sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] > 0  THEN N'Par_0_IFRS'
+        ELSE NULL
+    END AS Par
+
+FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
+
+-- Responsible
+LEFT JOIN RespRanges r
+    ON r.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= r.ValidFrom
+   AND (r.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < r.ValidTo)
+
+-- EmployeePos
+LEFT JOIN EmpPosRanges empPos
+    ON empPos.EmployeeID = r.EmployeeID
+   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= empPos.ValidFrom
+   AND (empPos.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < empPos.ValidTo)
+
+-- Shadow
+LEFT JOIN ShadowRanges sh
+    ON sh.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= sh.ValidFrom
+   AND (sh.ValidTo IS NULL OR sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] < sh.ValidTo)
+
+-- IRR
+OUTER APPLY (
+    SELECT TOP (1) i.IRR_Year, i.IRR_Client
+    FROM #IRR i
+    WHERE i.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+      AND CAST(i.IRRDate AS DATE) <= CAST(sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE)
+    ORDER BY i.IRRDate DESC
+) AS irr
+
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
+AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
+
+-----------------------------------------------------
+-- Columnstore
+-----------------------------------------------------
+CREATE CLUSTERED COLUMNSTORE INDEX CCSI_2tbl_Gold_Fact_Sold_Par
+ON mis.[2tbl_Gold_Fact_Sold_Par];
+
+-- Drop temp tables
+DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR;
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.2tbl_Gold_Fact_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------

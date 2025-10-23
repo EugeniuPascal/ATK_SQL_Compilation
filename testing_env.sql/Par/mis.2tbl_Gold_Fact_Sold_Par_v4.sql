@@ -4,9 +4,11 @@ SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = '2024-01-01';
 
+-- Drop table if exists
 IF OBJECT_ID('mis.[2tbl_Gold_Fact_Sold_Par1]', 'U') IS NOT NULL
     DROP TABLE mis.[2tbl_Gold_Fact_Sold_Par1];
 
+-- Create table
 CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par1] (
     [SoldDate]                 DATE         NOT NULL,
     [CreditID]                 VARCHAR(36)  NOT NULL,

@@ -3,9 +3,12 @@ SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = '2024-01-01';
 
-DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par];
+-----------------------------------------------------
+-- Drop & recreate main GOLD table with single Par column
+-----------------------------------------------------
+DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par2];
 
-CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
+CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par2] (
     SoldDate                DATE         NOT NULL,
     CreditID                VARCHAR(36)  NOT NULL,
     SoldAmount              DECIMAL(18,2) NULL,
@@ -116,7 +119,7 @@ EmpPosRanges AS (
            LEAD(Period) OVER (PARTITION BY EmployeeID ORDER BY Period) AS ValidTo
     FROM #EmployeePos
 )
-INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
+INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par2] WITH (TABLOCK)
 (
     SoldDate, CreditID, SoldAmount, NumberOfOverdueDaysIFRS, IRR_Values,
     BranchShadow, EmployeeID, BranchID, EmployeePositionID, Par
@@ -189,7 +192,7 @@ AND sd.[СуммыЗадолженностиПоПериодамПросрочк
 -- Columnstore
 -----------------------------------------------------
 CREATE CLUSTERED COLUMNSTORE INDEX CCSI_2tbl_Gold_Fact_Sold_Par
-ON mis.[2tbl_Gold_Fact_Sold_Par];
+ON mis.[2tbl_Gold_Fact_Sold_Par2];
 
 -- Drop temp tables
 DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR;

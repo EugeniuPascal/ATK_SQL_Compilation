@@ -1,7 +1,7 @@
 DECLARE @DateFrom date = '2024-01-01';
 DECLARE @DateTo   date = '2025-12-31';
  
--- 1) PAR → #par (только нужные поля/даты, остаток ≠ 0)
+-- 1) PAR → #par (нужные поля, остаток ≠ 0)
 IF OBJECT_ID('tempdb..#par') IS NOT NULL DROP TABLE #par;
  
 SELECT
@@ -21,7 +21,7 @@ WHERE CAST(p.[СуммыЗадолженностиПоПериодамПроср
 CREATE CLUSTERED INDEX CX_par ON #par (SoldDate, CreditID);
 CREATE NONCLUSTERED INDEX IX_par_client ON #par (ClientID, SoldDate);
  
--- 2) Кредиты списка → #ids
+-- 2) Кредиты → #ids
 IF OBJECT_ID('tempdb..#ids') IS NOT NULL DROP TABLE #ids;
 CREATE TABLE #ids ( CreditID varchar(64) NOT NULL PRIMARY KEY CLUSTERED );
  
@@ -44,7 +44,7 @@ CREATE CLUSTERED INDEX CX_merged ON #merged (CreditID, ValidFrom);
 CREATE NONCLUSTERED INDEX IX_merged_to ON #merged (CreditID, ValidTo)
     INCLUDE (TypeName_Sticky, StateName, Reason);
  
--- 4) Последняя причина Некоммерческой по кредиту → #nc_last
+-- 4) Последняя причина Некоммерческой → #nc_last
 IF OBJECT_ID('tempdb..#nc_last') IS NOT NULL DROP TABLE #nc_last;
  
 ;WITH nc AS (
@@ -62,7 +62,7 @@ WHERE rn = 1;
  
 ALTER TABLE #nc_last ADD CONSTRAINT PK_nc_last PRIMARY KEY CLUSTERED (CreditID);
  
--- 5) Финальная таблица GOLD: только 10 колонок
+-- 5) Финальная таблица GOLD (ровно 10 полей)
 IF OBJECT_ID('[ATK].[mis].[2tbl_Gold_Par_Restruct_Daily_Min]','U') IS NOT NULL
     DROP TABLE [ATK].[mis].[2tbl_Gold_Par_Restruct_Daily_Min];
  
@@ -70,8 +70,10 @@ IF OBJECT_ID('[ATK].[mis].[2tbl_Gold_Par_Restruct_Daily_Min]','U') IS NOT NULL
     SELECT
         p.SoldDate, p.CreditID, p.ClientID,
         p.DaysOverdue_Credit, p.DaysOverdue_Actual, p.DaysOverdue_IFRS, p.LP_Balance,
-        mr.TypeName_Sticky, mr.StateName, mr.Reason,
-        cu.HasUnhealed AS HasUnhealedClientDay,
+        mr.TypeName_Sticky,
+        mr.StateName       AS RestructState_Base,
+        mr.Reason,
+        cu.HasUnhealed     AS HasUnhealedClientDay,
         ncl.LastNonCommReason
     FROM #par p
     LEFT JOIN #merged mr
@@ -97,9 +99,13 @@ SELECT
              ELSE TypeName_Sticky
         END,
     RestructState_Final =
-        CASE WHEN COALESCE(HasUnhealedClientDay,0) = 1
-             THEN N'НеИзлеченный'
-             ELSE StateName
+        CASE 
+             WHEN COALESCE(HasUnhealedClientDay,0) = 1
+              AND ISNULL(RestructState_Base, N'') <> N'НеИзлеченный'
+                 THEN N'Nevindecat contaminat'
+             WHEN COALESCE(HasUnhealedClientDay,0) = 1
+                 THEN N'НеИзлеченный'
+             ELSE RestructState_Base
         END,
     RestructReason_Final =
         CASE WHEN COALESCE(HasUnhealedClientDay,0) = 1

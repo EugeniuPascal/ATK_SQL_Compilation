@@ -144,6 +144,7 @@ try:
         f_out.write("END\nGO\n")
 
     logging.info(f"✅ Stored procedure script generated successfully: {output_file}")
+    print(f"✅ Stored procedure script generated successfully: {output_file}")
 
 except Exception as e:
     logging.exception("💥 Fatal error during compilation")

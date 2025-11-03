@@ -109,7 +109,7 @@ try:
                     f_out.write("    BEGIN CATCH\n")
                     f_out.write("        THROW;\n")
                     f_out.write("    END CATCH;\n\n")
-                logging.info(f"Finished file: {sf}")
+                logging.info(f"Finished file: {sf}")                
             except Exception as e:
                 logging.error(f"Error processing {sf}: {e}")
                 raise
@@ -117,7 +117,8 @@ try:
         f_out.write("END\nGO\n")
 
     logging.info(f"✅ Stored procedure script generated successfully: {output_file}")
-
+    print(f"✅ Stored procedure script generated successfully: {output_file}")
+    
 except Exception as e:
     logging.exception("💥 Fatal error during compilation")
     raise

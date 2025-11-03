@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent
--- Generated: 2025-11-03 14:15:24.529817
+-- Generated: 2025-11-03 14:54:47.907138
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files included: 26
 --   Bronze_Документы.ЗаявкаНаКредит.sql

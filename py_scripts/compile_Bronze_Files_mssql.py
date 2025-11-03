@@ -8,7 +8,7 @@ from datetime import datetime
 DB_NAME        = "ATK"
 DEFAULT_SCHEMA = "mis"
 source_folder  = r"C:\ATK_Project\sql_scripts\Bronze"
-output_file    = r"C:\ATK_Project\compiled\compiled_Bronze_job_proc.sql"
+output_file    = r"C:\ATK_Project\compiled\compiled_bronze_job_proc.sql"
 log_file       = r"C:\ATK_Project\logs\compile_Bronze.log"
 
 # ---- Logging ----

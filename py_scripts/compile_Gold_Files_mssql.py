@@ -113,9 +113,9 @@ try:
 
         # preamble
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
-        f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_CompileGoldTables', 'P') IS NOT NULL\n")
-        f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_CompileGoldTables;\nGO\n\n")
-        f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_CompileGoldTables\nAS\nBEGIN\n")
+        f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_GoldTables', 'P') IS NOT NULL\n")
+        f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_GoldTables;\nGO\n\n")
+        f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_GoldTables\nAS\nBEGIN\n")
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 

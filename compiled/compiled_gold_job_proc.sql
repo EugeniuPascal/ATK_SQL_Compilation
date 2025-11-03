@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-11-03 12:35:37.089079
+-- Generated: 2025-11-03 14:49:48.553033
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 16
 --   mis.2tbl_Gold_Dim_AppUsers.sql
@@ -25,11 +25,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.usp_CompileGoldTables', 'P') IS NOT NULL
-    DROP PROCEDURE mis.usp_CompileGoldTables;
+IF OBJECT_ID('mis.usp_GoldTables', 'P') IS NOT NULL
+    DROP PROCEDURE mis.usp_GoldTables;
 GO
 
-CREATE PROCEDURE mis.usp_CompileGoldTables
+CREATE PROCEDURE mis.usp_GoldTables
 AS
 BEGIN
     SET NOCOUNT ON;

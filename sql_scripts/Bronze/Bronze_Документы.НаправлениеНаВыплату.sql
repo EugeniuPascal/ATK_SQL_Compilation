@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Silver_Документы.НаправлениеНаВыплату]', 'U') IS NOT NULL
-    DROP TABLE mis.[Silver_Документы.НаправлениеНаВыплату];
+IF OBJECT_ID('mis.[Bronze_Документы.НаправлениеНаВыплату]', 'U') IS NOT NULL
+    DROP TABLE mis.[Bronze_Документы.НаправлениеНаВыплату];
 GO
 
-CREATE TABLE mis.[Silver_Документы.НаправлениеНаВыплату]
+CREATE TABLE mis.[Bronze_Документы.НаправлениеНаВыплату]
 (
 	[НаправлениеНаВыплату Дата]    DATETIME NULL, 
 	[НаправлениеНаВыплату Кредит ID] VARCHAR(36) NOT NULL, 
@@ -14,7 +14,7 @@ CREATE TABLE mis.[Silver_Документы.НаправлениеНаВыпла
 );
 GO
 
-INSERT INTO mis.[Silver_Документы.НаправлениеНаВыплату] 
+INSERT INTO mis.[Bronze_Документы.НаправлениеНаВыплату] 
 (
 	[НаправлениеНаВыплату Дата], 
 	[НаправлениеНаВыплату Кредит ID],

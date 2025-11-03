@@ -7,9 +7,9 @@ from datetime import datetime
 # ---- Settings ----
 DB_NAME        = "ATK"
 DEFAULT_SCHEMA = "mis"
-source_folder  = r"C:\ATK_Project\sql_scripts\Silver"
-output_file    = r"C:\ATK_Project\compiled\compiled_silver_job_proc.sql"
-log_file       = r"C:\ATK_Project\logs\compile_silver.log"
+source_folder  = r"C:\ATK_Project\sql_scripts\Bronze"
+output_file    = r"C:\ATK_Project\compiled\compiled_Bronze_job_proc.sql"
+log_file       = r"C:\ATK_Project\logs\compile_Bronze.log"
 
 # ---- Logging ----
 os.makedirs(os.path.dirname(log_file), exist_ok=True)
@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
-logging.info("=== Starting Silver SQL Compilation Job ===")
+logging.info("=== Starting Bronze SQL Compilation Job ===")
 
 # --- Regexes (Unicode-friendly) ---
 GO_LINE_RE   = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
@@ -78,7 +78,7 @@ try:
 
     with open(output_file, 'w', encoding='utf-8-sig') as f_out:
         f_out.write("-- =============================================\n")
-        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent\n")
+        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
         f_out.write(f"-- Source folder: {source_folder}\n")
         f_out.write(f"-- Files included: {len(sql_files)}\n")
@@ -88,9 +88,9 @@ try:
         f_out.write("-- =============================================\n\n")
 
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
-        f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_CompileSilverTables', 'P') IS NOT NULL\n")
-        f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_CompileSilverTables;\nGO\n\n")
-        f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_CompileSilverTables\nAS\nBEGIN\n")
+        f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_BronzeTables', 'P') IS NOT NULL\n")
+        f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables;\nGO\n\n")
+        f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables\nAS\nBEGIN\n")
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 

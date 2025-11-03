@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Silver_РегистрыСведений.Валюта]', 'U') IS NOT NULL
-    DROP TABLE mis.[Silver_РегистрыСведений.Валюта];
+IF OBJECT_ID('mis.[Bronze_РегистрыСведений.Валюта]', 'U') IS NOT NULL
+    DROP TABLE mis.[Bronze_РегистрыСведений.Валюта];
 GO
 
-CREATE TABLE mis.[Silver_РегистрыСведений.Валюта]
+CREATE TABLE mis.[Bronze_РегистрыСведений.Валюта]
 (
 	[Валюта Период]    DATETIME NULL, 
 	[Валюта Валюта ID] VARCHAR(36) NOT NULL, 
@@ -16,7 +16,7 @@ CREATE TABLE mis.[Silver_РегистрыСведений.Валюта]
 );
 GO
 
-INSERT INTO mis.[Silver_РегистрыСведений.Валюта] 
+INSERT INTO mis.[Bronze_РегистрыСведений.Валюта] 
 (
 	[Валюта Период],
 	[Валюта Валюта ID],

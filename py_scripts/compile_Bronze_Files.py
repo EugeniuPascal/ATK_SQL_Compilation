@@ -2,8 +2,8 @@
 from pathlib import Path
 from datetime import datetime
 
-MAIN_DIR = Path(r"C:\ATK_Project\sql_scripts\Silver")
-OUTPUT   = Path(r"C:\ATK_Project\compiled\compiled_Silver_Tables.sql")
+MAIN_DIR = Path(r"C:\ATK_Project\sql_scripts\Bronze")
+OUTPUT   = Path(r"C:\ATK_Project\compiled\compiled_Bronze_Tables.sql")
 
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
@@ -23,7 +23,7 @@ def compile_sql():
     )
 
     header = (
-        f"-- Compiled SQL bundle (Silver)\n"
+        f"-- Compiled SQL bundle (Bronze)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join(f.name for f in sql_files) + "\n"

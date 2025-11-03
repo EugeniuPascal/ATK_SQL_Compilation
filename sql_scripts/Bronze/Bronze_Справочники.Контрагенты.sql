@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Silver_Справочники.Контрагенты]', 'U') IS NOT NULL
-    DROP TABLE mis.[Silver_Справочники.Контрагенты];
+IF OBJECT_ID('mis.[Bronze_Справочники.Контрагенты]', 'U') IS NOT NULL
+    DROP TABLE mis.[Bronze_Справочники.Контрагенты];
 GO
 
-CREATE TABLE mis.[Silver_Справочники.Контрагенты]
+CREATE TABLE mis.[Bronze_Справочники.Контрагенты]
 (
     [Контрагенты ID]                   VARCHAR(36)  NOT NULL,
     [Контрагенты Родитель ID]          VARCHAR(36)  NULL,
@@ -42,7 +42,7 @@ CREATE TABLE mis.[Silver_Справочники.Контрагенты]
 );
 GO
 
-INSERT INTO mis.[Silver_Справочники.Контрагенты]
+INSERT INTO mis.[Bronze_Справочники.Контрагенты]
 (
     [Контрагенты ID],
     [Контрагенты Родитель ID],

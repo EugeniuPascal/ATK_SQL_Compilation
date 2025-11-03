@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Silver_Документы.ПротоколКомитета]', 'U') IS NOT NULL
-    DROP TABLE mis.[Silver_Документы.ПротоколКомитета];
+IF OBJECT_ID('mis.[Bronze_Документы.ПротоколКомитета]', 'U') IS NOT NULL
+    DROP TABLE mis.[Bronze_Документы.ПротоколКомитета];
 GO
 
-CREATE TABLE mis.[Silver_Документы.ПротоколКомитета]
+CREATE TABLE mis.[Bronze_Документы.ПротоколКомитета]
 (
     [ПротоколКомитета Дата]                DATETIME NULL,
 	[ПротоколКомитета Кредит ID]           VARCHAR(36) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE mis.[Silver_Документы.ПротоколКомитета]
 );
 GO
 
-INSERT INTO mis.[Silver_Документы.ПротоколКомитета] 
+INSERT INTO mis.[Bronze_Документы.ПротоколКомитета] 
 (
     [ПротоколКомитета Дата],
 	[ПротоколКомитета Кредит ID], 

@@ -1,18 +1,18 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Silver_Справочники.ФинансовыеПродукты]', 'U') IS NOT NULL
-    DROP TABLE mis.[Silver_Справочники.ФинансовыеПродукты];
+IF OBJECT_ID('mis.[Bronze_Справочники.ФинансовыеПродукты]', 'U') IS NOT NULL
+    DROP TABLE mis.[Bronze_Справочники.ФинансовыеПродукты];
 GO
 
-CREATE TABLE mis.[Silver_Справочники.ФинансовыеПродукты]
+CREATE TABLE mis.[Bronze_Справочники.ФинансовыеПродукты]
 (
 	[ФинансовыеПродукты ID]              VARCHAR(36) NOT NULL, 
     [ФинансовыеПродукты Основная Группа] NVARCHAR(100) NULL
 );
 GO
 
-INSERT INTO mis.[Silver_Справочники.ФинансовыеПродукты] 
+INSERT INTO mis.[Bronze_Справочники.ФинансовыеПродукты] 
 (
 	[ФинансовыеПродукты ID],         
     [ФинансовыеПродукты Основная Группа]

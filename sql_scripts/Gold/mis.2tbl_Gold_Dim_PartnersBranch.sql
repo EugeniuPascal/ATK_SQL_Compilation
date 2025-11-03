@@ -52,7 +52,7 @@ SELECT
     d.[Дилеры Эксперт по Умолчанию] AS DealerDefaultEmployeeName,
     d.[Дилеры Представитель Организации ID] AS DealerOrgRepID,
     d.[Дилеры Представитель Организации] AS DealerOrgRepName
-FROM mis.[Silver_Справочники.ФилиалыКонтрагентов] f
-LEFT JOIN mis.[Silver_Справочники.Дилеры] d
+FROM mis.[Bronze_Справочники.ФилиалыКонтрагентов] f
+LEFT JOIN mis.[Bronze_Справочники.Дилеры] d
   ON d.[Дилеры Владелец] = f.[ФилиалыКонтрагентов ID];
 GO

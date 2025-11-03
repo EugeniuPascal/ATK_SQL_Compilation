@@ -39,8 +39,8 @@ SELECT
     k.[Кредиты Владелец] AS OwnerID,
     sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS ParDate,
     MAX(sd.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого]) AS MaxPastDays
-FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
-LEFT JOIN mis.[Silver_Справочники.Кредиты] k
+FROM mis.[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
+LEFT JOIN mis.[Bronze_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
 WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
   AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom
@@ -63,7 +63,7 @@ SELECT
     x.[КредитыВТеневыхФилиалах Кредит ID] AS CreditID,
     x.[КредитыВТеневыхФилиалах Филиал] AS BranchShadow,
     x.[КредитыВТеневыхФилиалах Период] AS Period
-FROM mis.[Silver_РегистрыСведений.КредитыВТеневыхФилиалах] x;
+FROM mis.[Bronze_РегистрыСведений.КредитыВТеневыхФилиалах] x;
 
 CREATE NONCLUSTERED INDEX IX_Shadow_Credit_Period ON #ShadowBranch (CreditID, Period);
 
@@ -84,7 +84,7 @@ SELECT
     r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS EmployeeID,
     r.[ОтветственныеПоКредитамВыданным Филиал ID] AS BranchID,
     r.[ОтветственныеПоКредитамВыданным Период] AS Period
-FROM mis.[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным] r;
+FROM mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] r;
 
 CREATE NONCLUSTERED INDEX IX_Resp_Credit_Period ON #Responsible (CreditID, Period);
 
@@ -133,7 +133,7 @@ SELECT
     i.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] AS IRR_Year,
     i.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая] AS IRR_Client,
     i.[УстановкаДанныхКредита Дата] AS IRRDate
-FROM mis.[Silver_Документы.УстановкаДанныхКредита] i
+FROM mis.[Bronze_Документы.УстановкаДанныхКредита] i
 WHERE i.[УстановкаДанныхКредита Кредит ID] IS NOT NULL;
 
 -- helpful index to speed the OUTER APPLY lookup
@@ -205,8 +205,8 @@ SELECT
     CASE WHEN mpd.MaxPastDays > 60 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_60_IFRS,
     CASE WHEN mpd.MaxPastDays > 90 THEN sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] ELSE 0 END AS Par_90_IFRS
 
-FROM mis.[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
-JOIN mis.[Silver_Справочники.Кредиты] k
+FROM mis.[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
+JOIN mis.[Bronze_Справочники.Кредиты] k
   ON k.[Кредиты ID] = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
 
 -- MaxPastDays

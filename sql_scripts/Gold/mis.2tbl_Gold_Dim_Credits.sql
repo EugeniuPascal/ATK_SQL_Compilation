@@ -59,7 +59,7 @@ Credits AS (
     FROM (
         SELECT *,
                ROW_NUMBER() OVER(PARTITION BY [Кредиты ID] ORDER BY [Кредиты Дата Выдачи] DESC, [Кредиты Код]) AS rn
-        FROM [ATK].[mis].[Silver_Справочники.Кредиты]
+        FROM [ATK].[mis].[Bronze_Справочники.Кредиты]
     ) t
     WHERE rn = 1
 ),
@@ -73,7 +73,7 @@ OIA_LatestPerApp AS (
                    ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
                             oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
                ) AS rn
-        FROM [ATK].[mis].[Silver_Документы.ОбъединеннаяИнтернетЗаявка] oia
+        FROM [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] oia
     ) t
     WHERE rn = 1
 ),
@@ -93,7 +93,7 @@ CreditRequest AS (
                 ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
                          oia.[ОбъединеннаяИнтернетЗаявка ID] DESC
             ) AS rn
-        FROM [ATK].[mis].[Silver_Документы.ЗаявкаНаКредит] znk
+        FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
         LEFT JOIN OIA_LatestPerApp oia
            ON znk.[ЗаявкаНаКредит ID] = oia.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
     ) t
@@ -107,14 +107,14 @@ Resp AS (
         MIN([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS FirstEmployeeID,
         MAX([ОтветственныеПоКредитамВыданным Филиал ID]) AS LastFilialID,
         MAX([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS LastEmployeeID
-    FROM [ATK].[mis].[Silver_РегистрыСведений.ОтветственныеПоКредитамВыданным]
+    FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным]
     GROUP BY [ОтветственныеПоКредитамВыданным Кредит ID]
 ),
 -- Financial products main group
 FinProducts AS (
     SELECT [ФинансовыеПродукты ID] AS FinancialProductID,
            [ФинансовыеПродукты Основная Группа] AS FinancialProductsMainGroup
-    FROM [ATK].[mis].[Silver_Справочники.ФинансовыеПродукты]
+    FROM [ATK].[mis].[Bronze_Справочники.ФинансовыеПродукты]
 ),
 -- Latest credit status
 Statuses AS (
@@ -125,7 +125,7 @@ Statuses AS (
                ROW_NUMBER() OVER(PARTITION BY s.[СтатусыКредитовВыданных Кредит ID]
                                  ORDER BY s.[СтатусыКредитовВыданных Период] DESC,
                                           s.[СтатусыКредитовВыданных Номер Строки] DESC) AS rn
-        FROM [ATK].[mis].[Silver_РегистрыСведений.СтатусыКредитовВыданных] s
+        FROM [ATK].[mis].[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s
         WHERE s.[СтатусыКредитовВыданных Активность] = 1
     ) t
     WHERE rn = 1
@@ -134,11 +134,11 @@ Statuses AS (
 LatestOutstanding AS (
     SELECT sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
            sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS LatestOutstandingAmount
-    FROM [ATK].[mis].[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
+    FROM [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
     INNER JOIN (
         SELECT [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
                MAX([СуммыЗадолженностиПоПериодамПросрочки Дата]) AS MaxDate
-        FROM [ATK].[mis].[Silver_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
+        FROM [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
         GROUP BY [СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
     ) md
       ON sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = md.CreditID

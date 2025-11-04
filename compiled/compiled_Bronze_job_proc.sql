@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent
--- Generated: 2025-11-03 14:54:47.907138
+-- Generated: 2025-11-04 07:54:15.542531
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files included: 26
 --   Bronze_Документы.ЗаявкаНаКредит.sql
@@ -499,7 +499,7 @@ CREATE TABLE [mis].[Bronze_Задачи.ЗадачаАдминистратора
     [ЗадачаАдминистратораКредитов Кредит] NVARCHAR(150) NULL,
     [ЗадачаАдминистратораКредитов Лимит ID] VARCHAR(36) NOT NULL,
     [ЗадачаАдминистратораКредитов Лимит] NVARCHAR(150) NULL,
-    [ЗадачаАдминистратораКредитов Текущий Статус] NVARCHAR(256) NOT NULL,
+    [ЗадачаАдминистратораКредитов Текущий Статус] NVARCHAR(256) NULL,
     [ЗадачаАдминистратораКредитов Текущий Статус ID] VARCHAR(36) NOT NULL,
     [ЗадачаАдминистратораКредитов Дата Выполнения] DATETIME NULL,
     [ЗадачаАдминистратораКредитов Текущий Комментарий] NVARCHAR(1000) NOT NULL,

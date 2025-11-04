@@ -1,38 +1,38 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-04 07:54:05
+-- Generated: 2025-11-04 09:48:04
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (16):
---   mis.2tbl_Gold_Dim_AppUsers.sql
---   mis.2tbl_Gold_Dim_Branch.sql
---   mis.2tbl_Gold_Dim_Clients.sql
---   mis.2tbl_Gold_Dim_Credits.sql
---   mis.2tbl_Gold_Dim_EmployeePayrollData.sql
---   mis.2tbl_Gold_Dim_Employees.sql
---   mis.2tbl_Gold_Dim_EmployeesHistory.sql
---   mis.2tbl_Gold_Dim_PartnersBranch.sql
---   mis.2tbl_Gold_Fact_AdminTasks.sql
---   mis.2tbl_Gold_Fact_ArchiveDocument.sql
---   mis.2tbl_Gold_Fact_BudgetEmployees.sql
---   mis.2tbl_Gold_Fact_CerereOnline.sql
---   mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
---   mis.2tbl_Gold_Fact_Disbursement.sql
---   mis.2tbl_Gold_Fact_Sold_Par.sql
---   mis.2tbl_Gold_Fact_WriteOffCredits.sql
+--   mis.Gold_Dim_AppUsers.sql
+--   mis.Gold_Dim_Branch.sql
+--   mis.Gold_Dim_Clients.sql
+--   mis.Gold_Dim_Credits.sql
+--   mis.Gold_Dim_EmployeePayrollData.sql
+--   mis.Gold_Dim_Employees.sql
+--   mis.Gold_Dim_EmployeesHistory.sql
+--   mis.Gold_Dim_PartnersBranch.sql
+--   mis.Gold_Fact_AdminTasks.sql
+--   mis.Gold_Fact_ArchiveDocument.sql
+--   mis.Gold_Fact_BudgetEmployees.sql
+--   mis.Gold_Fact_CerereOnline.sql
+--   mis.Gold_Fact_CreditsInShadowBranches.sql
+--   mis.Gold_Fact_Disbursement.sql
+--   mis.Gold_Fact_Sold_Par.sql
+--   mis.Gold_Fact_WriteOffCredits.sql
 ----------------------------------------------------------------------------------------------------
 
 SET NOCOUNT ON;
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_AppUsers.sql
+-- Start of: mis.Gold_Dim_AppUsers.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_AppUsers]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_AppUsers];
+IF OBJECT_ID('mis.[Gold_Dim_AppUsers]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_AppUsers];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_AppUsers]
+CREATE TABLE mis.[Gold_Dim_AppUsers]
 (
     App_User_ClientID VARCHAR(36) NOT NULL,
     App_User_UserID VARCHAR(36) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_AppUsers]
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_AppUsers] 
+INSERT INTO mis.[Gold_Dim_AppUsers] 
 (
     App_User_ClientID,
     App_User_UserID,
@@ -59,22 +59,22 @@ SELECT
 
 FROM [ATK].[mis].[Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения];
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_AppUsers.sql
+-- End of:   mis.Gold_Dim_AppUsers.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_Branch.sql
+-- Start of: mis.Gold_Dim_Branch.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Branch]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Branch];
+IF OBJECT_ID(N'mis.[Gold_Dim_Branch]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Branch];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
+CREATE TABLE mis.[Gold_Dim_Branch] (
     BranchID VARCHAR(36) NOT NULL,
     BranchCode DECIMAL(3, 0) NULL,
     BranchName NVARCHAR(100) NULL,
@@ -103,7 +103,7 @@ WITH LastSvedeniya AS (
         ) AS rn
     FROM [ATK].[dbo].[РегистрыСведений.СведенияОФилиалах]
 )
-INSERT INTO mis.[2tbl_Gold_Dim_Branch] (
+INSERT INTO mis.[Gold_Dim_Branch] (
     BranchID,
     BranchCode,
     BranchName,
@@ -140,23 +140,23 @@ LEFT JOIN LastSvedeniya s
     AND s.rn = 1;
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_Branch.sql
+-- End of:   mis.Gold_Dim_Branch.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_Clients.sql
+-- Start of: mis.Gold_Dim_Clients.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 SET NOCOUNT ON;
 
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Clients]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Clients];
+IF OBJECT_ID(N'mis.[Gold_Dim_Clients]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Clients];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
+CREATE TABLE mis.[Gold_Dim_Clients] (
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
     [BranchID]              VARCHAR(36)    NULL,
@@ -190,7 +190,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Clients] (
     [OrganizationType]      NVARCHAR(52)   NULL,
     [IsGroupOwner]          BIT            NULL,
     [GroupID]               NVARCHAR(20)    NULL,	
-    CONSTRAINT PK_2tbl_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
+    CONSTRAINT PK_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
 
@@ -292,7 +292,7 @@ Dedup AS (
     FROM Final
 )
 
-INSERT INTO mis.[2tbl_Gold_Dim_Clients] (
+INSERT INTO mis.[Gold_Dim_Clients] (
     [ClientID],[ParentID],[BranchID],
     [IsDeleted],[IsGroup],[ClientCode],[ClientName],[IsBlocked],[Visibility],
     [Age],[AgeGroup],[City],[CreatedDate],[PartnerCode],[FullName],[IsNonResident],[NoPaymentNotification],
@@ -326,28 +326,28 @@ WHERE rn = 1;
 GO
 
 -- Indexes
-CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[2tbl_Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
-CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[2tbl_Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
-CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[2tbl_Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
-CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[2tbl_Gold_Dim_Clients](IsGroupOwner, GroupID);
+CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
+CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
+CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
+CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[Gold_Dim_Clients](IsGroupOwner, GroupID);
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_Clients.sql
+-- End of:   mis.Gold_Dim_Clients.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_Credits.sql
+-- Start of: mis.Gold_Dim_Credits.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Credits]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Credits];
+IF OBJECT_ID(N'mis.[Gold_Dim_Credits]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Credits];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
+CREATE TABLE mis.[Gold_Dim_Credits] (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -510,7 +510,7 @@ GreenCredit AS (
     WHERE rn = 1
 )
 -- Final insert
-INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
+INSERT INTO mis.[Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
     [EconomicSectorDetailed], [FinancialProductID], [FinancialProduct],
@@ -631,29 +631,29 @@ LEFT JOIN SegmentRevenue seg ON c.[Кредиты Кредитный Проду�
 LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID
 LEFT JOIN [ATK].[dbo].[Справочники.СекторыЭкономики] AS e ON c.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID];
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_Credits.sql
+-- End of:   mis.Gold_Dim_Credits.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_EmployeePayrollData.sql
+-- Start of: mis.Gold_Dim_EmployeePayrollData.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_EmployeePayrollData]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_EmployeePayrollData];
+IF OBJECT_ID('mis.[Gold_Dim_EmployeePayrollData]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_EmployeePayrollData];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_EmployeePayrollData]
+CREATE TABLE mis.[Gold_Dim_EmployeePayrollData]
 (
     EmployeePositionID VARCHAR(36) NOT NULL,
     EmployeePosition NVARCHAR(150) NULL
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_EmployeePayrollData] 
+INSERT INTO mis.[Gold_Dim_EmployeePayrollData] 
 (
     EmployeePositionID,
     EmployeePosition
@@ -666,22 +666,22 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате];
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_EmployeePayrollData.sql
+-- End of:   mis.Gold_Dim_EmployeePayrollData.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_Employees.sql
+-- Start of: mis.Gold_Dim_Employees.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_Employees]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Employees];
+IF OBJECT_ID('mis.[Gold_Dim_Employees]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Employees];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
+CREATE TABLE mis.[Gold_Dim_Employees] (
     [EmployeeID] VARCHAR(36) NOT NULL,
 	[BranchID] VARCHAR(36) NULL,
     [EmployeeCode] INT NULL,
@@ -706,7 +706,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Employees] (
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_Employees] 
+INSERT INTO mis.[Gold_Dim_Employees] 
 (
     [EmployeeID],
 	[BranchID],
@@ -857,24 +857,24 @@ OUTER APPLY (
 ) AS firstAssigned;
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_Employees.sql
+-- End of:   mis.Gold_Dim_Employees.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_EmployeesHistory.sql
+-- Start of: mis.Gold_Dim_EmployeesHistory.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_EmployeesHistory]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_EmployeesHistory];
+IF OBJECT_ID('mis.[Gold_Dim_EmployeesHistory]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_EmployeesHistory];
 GO
 
 
-CREATE TABLE mis.[2tbl_Gold_Dim_EmployeesHistory] (
+CREATE TABLE mis.[Gold_Dim_EmployeesHistory] (
     Period       DATETIME      NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
@@ -889,7 +889,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_EmployeesHistory] (
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_EmployeesHistory] (
+INSERT INTO mis.[Gold_Dim_EmployeesHistory] (
     Period,
     ID,
     RowNumber,
@@ -923,22 +923,22 @@ SELECT
 FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным];
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_EmployeesHistory.sql
+-- End of:   mis.Gold_Dim_EmployeesHistory.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Dim_PartnersBranch.sql
+-- Start of: mis.Gold_Dim_PartnersBranch.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_PartnersBranch]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_PartnersBranch];
+IF OBJECT_ID('mis.[Gold_Dim_PartnersBranch]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_PartnersBranch];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
+CREATE TABLE mis.[Gold_Dim_PartnersBranch]
 (
     [PartnerBranchID]               VARCHAR(36) NOT NULL,
     [PartnerBranchDeletedFlag]      VARCHAR(36) NOT NULL,
@@ -957,7 +957,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
 GO
 
 -- Insert data from silvers
-INSERT INTO mis.[2tbl_Gold_Dim_PartnersBranch]
+INSERT INTO mis.[Gold_Dim_PartnersBranch]
 (
     [PartnerBranchID],
     [PartnerBranchDeletedFlag],
@@ -990,22 +990,22 @@ LEFT JOIN mis.[Bronze_Справочники.Дилеры] d
   ON d.[Дилеры Владелец] = f.[ФилиалыКонтрагентов ID];
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Dim_PartnersBranch.sql
+-- End of:   mis.Gold_Dim_PartnersBranch.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_AdminTasks.sql
+-- Start of: mis.Gold_Fact_AdminTasks.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_AdminTasks]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_AdminTasks];
+IF OBJECT_ID('mis.[Gold_Fact_AdminTasks]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_AdminTasks];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_AdminTasks]
+CREATE TABLE mis.[Gold_Fact_AdminTasks]
 (
     -- Existing AdminTask columns
     [AdminTask_ID] VARCHAR(36) NOT NULL,
@@ -1217,7 +1217,7 @@ GO
         WHERE p.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] = doc.[НаправлениеНаВыплату ID]
     ) pay
 )
-INSERT INTO mis.[2tbl_Gold_Fact_AdminTasks] (
+INSERT INTO mis.[Gold_Fact_AdminTasks] (
     [AdminTask_ID], [AdminTask_Deleted], [AdminTask_Date], [AdminTask_Number], [AdminTask_Completed],
     [AdminTask_Author_ID], [AdminTask_Author], [AdminTask_Branch_ID], [AdminTask_Branch],
     [AdminTask_Category_ID], [AdminTask_Category], [AdminTask_Type_ID], [AdminTask_Type],
@@ -1263,22 +1263,22 @@ SELECT
 FROM AllTasks
 WHERE rn = 1;
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_AdminTasks.sql
+-- End of:   mis.Gold_Fact_AdminTasks.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_ArchiveDocument.sql
+-- Start of: mis.Gold_Fact_ArchiveDocument.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK]
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_ArchiveDocument]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_ArchiveDocument];
+IF OBJECT_ID('mis.[Gold_Fact_ArchiveDocument]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_ArchiveDocument];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_ArchiveDocument] (
+CREATE TABLE mis.[Gold_Fact_ArchiveDocument] (
     [АктыПередачиКредитныхДел Период]         DATETIME NULL,
     [АктыПередачиКредитныхДел ID]             VARCHAR(36) NULL,
     [АктыПередачиКредитныхДел Номер Строки]   INT NULL,
@@ -1333,7 +1333,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_ArchiveDocument] (
 GO
 
 -- Step 2: Insert data from 2024-01-01 onward
-INSERT INTO mis.[2tbl_Gold_Fact_ArchiveDocument]
+INSERT INTO mis.[Gold_Fact_ArchiveDocument]
 SELECT
     r.[АктыПередачиКредитныхДел Период],
     r.[АктыПередачиКредитныхДел ID],
@@ -1393,22 +1393,22 @@ LEFT JOIN [ATK].[dbo].[РегистрыСведений.Ответственны
 WHERE r.[АктыПередачиКредитныхДел Период] >= '2024-01-01';
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_ArchiveDocument.sql
+-- End of:   mis.Gold_Fact_ArchiveDocument.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_BudgetEmployees.sql
+-- Start of: mis.Gold_Fact_BudgetEmployees.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_BudgetEmployees]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_BudgetEmployees];
+IF OBJECT_ID('mis.[Gold_Fact_BudgetEmployees]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_BudgetEmployees];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_BudgetEmployees] 
+CREATE TABLE mis.[Gold_Fact_BudgetEmployees] 
 (
     [EmployeeID]          VARCHAR(36) NOT NULL,
     [Employee]            NVARCHAR(40) NULL,
@@ -1436,7 +1436,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_BudgetEmployees]
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Fact_BudgetEmployees]
+INSERT INTO mis.[Gold_Fact_BudgetEmployees]
 SELECT
     s.[БюджетПоСотрудникам ID] AS EmployeeID,
     s.[БюджетПоСотрудникам.Сотрудники Сотрудник] AS Employee,
@@ -1467,23 +1467,23 @@ LEFT JOIN [ATK].[dbo].[Документы.БюджетПоСотрудникам
 WHERE d.[БюджетПоСотрудникам Дата] >= '2023-01-01';
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_BudgetEmployees.sql
+-- End of:   mis.Gold_Fact_BudgetEmployees.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_CerereOnline.sql
+-- Start of: mis.Gold_Fact_CerereOnline.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 SET NOCOUNT ON;
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_CerereOnline]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_CerereOnline];
+IF OBJECT_ID('mis.[Gold_Fact_CerereOnline]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_CerereOnline];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline] (
+CREATE TABLE mis.[Gold_Fact_CerereOnline] (
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
     [Status]                NVARCHAR(256)  NULL,
@@ -1525,7 +1525,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline] (
     [WebCreditTerm]         INT            NULL,
     [WebBranchID]           VARCHAR(36)    NULL,
     [CommitteeDecisionDate] DATETIME       NULL,
-    --CONSTRAINT PK_2tbl_Gold_Fact_CerereOnline PRIMARY KEY CLUSTERED ([WebID])
+    --CONSTRAINT PK_Gold_Fact_CerereOnline PRIMARY KEY CLUSTERED ([WebID])
 );
 GO
 
@@ -1635,7 +1635,7 @@ GO
 -----------------------------------------------------------------------------------
 -- 4️⃣ Insert into final GOLD table, excluding test clients
 -----------------------------------------------------------------------------------
-INSERT INTO mis.[2tbl_Gold_Fact_CerereOnline]
+INSERT INTO mis.[Gold_Fact_CerereOnline]
 (
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],[CreditAmount],[NewExisting_Client],
@@ -1670,23 +1670,23 @@ LEFT JOIN dbo.[Справочники.Контрагенты] AS c
 WHERE c.[Контрагенты Тестовый Контрагент] = 00;
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_CerereOnline.sql
+-- End of:   mis.Gold_Fact_CerereOnline.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
+-- Start of: mis.Gold_Fact_CreditsInShadowBranches.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
 
-IF OBJECT_ID('mis.[2tbl_Gold_CreditsInShadowBranches]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_CreditsInShadowBranches];
+IF OBJECT_ID('mis.[Gold_CreditsInShadowBranches]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_CreditsInShadowBranches];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_CreditsInShadowBranches] (
+CREATE TABLE mis.[Gold_CreditsInShadowBranches] (
     Period DATETIME NULL,
     ID VARCHAR(32) NOT NULL,
     RowNumber INT NULL,
@@ -1734,7 +1734,7 @@ calc AS (
           ) AS DateTo
     FROM src
 )
-INSERT INTO mis.[2tbl_Gold_CreditsInShadowBranches] (
+INSERT INTO mis.[Gold_CreditsInShadowBranches] (
       Period,
       ID,
       RowNumber,
@@ -1763,13 +1763,13 @@ FROM calc;
 
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_CreditsInShadowBranches.sql
+-- End of:   mis.Gold_Fact_CreditsInShadowBranches.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_Disbursement.sql
+-- Start of: mis.Gold_Fact_Disbursement.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
@@ -1778,11 +1778,11 @@ IF OBJECT_ID('tempdb..#Base')   IS NOT NULL DROP TABLE #Base;
 IF OBJECT_ID('tempdb..#Status') IS NOT NULL DROP TABLE #Status;
 IF OBJECT_ID('tempdb..#Final')  IS NOT NULL DROP TABLE #Final;
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_Disbursement]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_Disbursement];
+IF OBJECT_ID('mis.[Gold_Fact_Disbursement]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_Disbursement];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] 
+CREATE TABLE mis.[Gold_Fact_Disbursement] 
 (
     CreditID           NVARCHAR(36)   NOT NULL,
     ClientID           NVARCHAR(36)   NULL,
@@ -2011,7 +2011,7 @@ WITH AllSeq AS (
         ) AS rn_all
     FROM #Final f
 )
-INSERT INTO mis.[2tbl_Gold_Fact_Disbursement]
+INSERT INTO mis.[Gold_Fact_Disbursement]
 (
     CreditID, ClientID, DisbursementDate, CurrencyID, CreditAmount, CreditAmountInMDL,
     CreditCurrency, FirstFilialID, FirstEmployeeID, LastFilialID, LastEmployeeID,
@@ -2037,22 +2037,22 @@ GO
    Indexes
    ============================ */
 CREATE CLUSTERED INDEX CIX_Disbursement_DisbursementDate_ClientID
-ON mis.[2tbl_Gold_Fact_Disbursement] (DisbursementDate ASC, ClientID ASC);
+ON mis.[Gold_Fact_Disbursement] (DisbursementDate ASC, ClientID ASC);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_CreditID
-ON mis.[2tbl_Gold_Fact_Disbursement] (CreditID);
+ON mis.[Gold_Fact_Disbursement] (CreditID);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_FirstFilialID
-ON mis.[2tbl_Gold_Fact_Disbursement] (FirstFilialID);
+ON mis.[Gold_Fact_Disbursement] (FirstFilialID);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_LastFilialID
-ON mis.[2tbl_Gold_Fact_Disbursement] (LastFilialID);
+ON mis.[Gold_Fact_Disbursement] (LastFilialID);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_NewExisting
-ON mis.[2tbl_Gold_Fact_Disbursement] (NewExisting_Client);
+ON mis.[Gold_Fact_Disbursement] (NewExisting_Client);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_ClientID
-ON mis.[2tbl_Gold_Fact_Disbursement] (ClientID);
+ON mis.[Gold_Fact_Disbursement] (ClientID);
 GO
 
 /* ============================
@@ -2062,13 +2062,13 @@ DROP TABLE #Base;
 DROP TABLE #Status;
 DROP TABLE #Final;
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_Disbursement.sql
+-- End of:   mis.Gold_Fact_Disbursement.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_Sold_Par.sql
+-- Start of: mis.Gold_Fact_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 SET NOCOUNT ON;
@@ -2078,9 +2078,9 @@ DECLARE @DateFrom DATE = '2024-01-01';
 -----------------------------------------------------
 -- Drop recreate main GOLD table
 -----------------------------------------------------
-DROP TABLE IF EXISTS mis.[2tbl_Gold_Fact_Sold_Par];
+DROP TABLE IF EXISTS mis.[Gold_Fact_Sold_Par];
 
-CREATE TABLE mis.[2tbl_Gold_Fact_Sold_Par] (
+CREATE TABLE mis.[Gold_Fact_Sold_Par] (
     SoldDate                 DATE         NOT NULL,
     CreditID                 VARCHAR(36)  NOT NULL,
     SoldAmount               DECIMAL(18,2) NULL,
@@ -2240,7 +2240,7 @@ EmpPosRanges AS (
         LEAD(Period) OVER (PARTITION BY EmployeeID ORDER BY Period) AS ValidTo
     FROM #EmployeePos
 )
-INSERT INTO mis.[2tbl_Gold_Fact_Sold_Par] WITH (TABLOCK)
+INSERT INTO mis.[Gold_Fact_Sold_Par] WITH (TABLOCK)
 (
     SoldDate, CreditID, SoldAmount, NumberOfOverdueDaysIFRS, IRR_Values, BranchShadow, EmployeeID, BranchID, EmployeePositionID,
     Par_0_IFRS, Par_30_IFRS, Par_60_IFRS, Par_90_IFRS
@@ -2319,30 +2319,30 @@ AND sd.[СуммыЗадолженностиПоПериодамПросрочк
 -----------------------------------------------------
 -- Columnstore
 -----------------------------------------------------
-CREATE CLUSTERED COLUMNSTORE INDEX CCSI_2tbl_Gold_Fact_Sold_Par
-ON mis.[2tbl_Gold_Fact_Sold_Par];
+CREATE CLUSTERED COLUMNSTORE INDEX CCSI_Gold_Fact_Sold_Par
+ON mis.[Gold_Fact_Sold_Par];
 
 -----------------------------------------------------
 -- Drop temp tables
 -----------------------------------------------------
 DROP TABLE IF EXISTS #MaxPastDays, #ShadowBranch, #Responsible, #IRR, #EmployeePos;
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_Sold_Par.sql
+-- End of:   mis.Gold_Fact_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.2tbl_Gold_Fact_WriteOffCredits.sql
+-- Start of: mis.Gold_Fact_WriteOffCredits.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_WriteOffCredits]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_WriteOffCredits];
+IF OBJECT_ID('mis.[Gold_Fact_WriteOffCredits]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_WriteOffCredits];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_WriteOffCredits]
+CREATE TABLE mis.[Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID] VARCHAR(36) NOT NULL,
     [Credit_RowNumber]        INT NULL,
@@ -2372,7 +2372,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_WriteOffCredits]
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Fact_WriteOffCredits]
+INSERT INTO mis.[Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID],
     [Credit_RowNumber],
@@ -2431,7 +2431,7 @@ LEFT JOIN [ATK].[dbo].[Документы.АнулированиеКредито
     ON a.[АнулированиеКредитов ID] = b.[АнулированиеКредитов ID];
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.2tbl_Gold_Fact_WriteOffCredits.sql
+-- End of:   mis.Gold_Fact_WriteOffCredits.sql
 ----------------------------------------------------------------------------------------------------
 
 GO

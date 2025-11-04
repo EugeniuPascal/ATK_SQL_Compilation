@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Credits]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Credits];
+IF OBJECT_ID(N'mis.[Gold_Dim_Credits]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Credits];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Credits] (
+CREATE TABLE mis.[Gold_Dim_Credits] (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -168,7 +168,7 @@ GreenCredit AS (
     WHERE rn = 1
 )
 -- Final insert
-INSERT INTO mis.[2tbl_Gold_Dim_Credits] (
+INSERT INTO mis.[Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
     [EconomicSectorDetailed], [FinancialProductID], [FinancialProduct],

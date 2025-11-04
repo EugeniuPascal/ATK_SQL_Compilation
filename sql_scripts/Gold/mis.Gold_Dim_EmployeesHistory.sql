@@ -2,12 +2,12 @@ USE [ATK];
 GO
 
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_EmployeesHistory]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_EmployeesHistory];
+IF OBJECT_ID('mis.[Gold_Dim_EmployeesHistory]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_EmployeesHistory];
 GO
 
 
-CREATE TABLE mis.[2tbl_Gold_Dim_EmployeesHistory] (
+CREATE TABLE mis.[Gold_Dim_EmployeesHistory] (
     Period       DATETIME      NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
@@ -22,7 +22,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_EmployeesHistory] (
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_EmployeesHistory] (
+INSERT INTO mis.[Gold_Dim_EmployeesHistory] (
     Period,
     ID,
     RowNumber,

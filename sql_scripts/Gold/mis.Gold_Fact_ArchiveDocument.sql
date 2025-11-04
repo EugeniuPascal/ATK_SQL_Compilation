@@ -1,11 +1,11 @@
 USE [ATK]
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_ArchiveDocument]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_ArchiveDocument];
+IF OBJECT_ID('mis.[Gold_Fact_ArchiveDocument]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_ArchiveDocument];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_ArchiveDocument] (
+CREATE TABLE mis.[Gold_Fact_ArchiveDocument] (
     [АктыПередачиКредитныхДел Период]         DATETIME NULL,
     [АктыПередачиКредитныхДел ID]             VARCHAR(36) NULL,
     [АктыПередачиКредитныхДел Номер Строки]   INT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_ArchiveDocument] (
 GO
 
 -- Step 2: Insert data from 2024-01-01 onward
-INSERT INTO mis.[2tbl_Gold_Fact_ArchiveDocument]
+INSERT INTO mis.[Gold_Fact_ArchiveDocument]
 SELECT
     r.[АктыПередачиКредитныхДел Период],
     r.[АктыПередачиКредитныхДел ID],

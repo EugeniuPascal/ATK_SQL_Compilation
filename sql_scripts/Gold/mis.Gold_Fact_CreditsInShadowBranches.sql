@@ -2,11 +2,11 @@ USE [ATK];
 GO
 
 
-IF OBJECT_ID('mis.[2tbl_Gold_CreditsInShadowBranches]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_CreditsInShadowBranches];
+IF OBJECT_ID('mis.[Gold_CreditsInShadowBranches]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_CreditsInShadowBranches];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_CreditsInShadowBranches] (
+CREATE TABLE mis.[Gold_CreditsInShadowBranches] (
     Period DATETIME NULL,
     ID VARCHAR(32) NOT NULL,
     RowNumber INT NULL,
@@ -54,7 +54,7 @@ calc AS (
           ) AS DateTo
     FROM src
 )
-INSERT INTO mis.[2tbl_Gold_CreditsInShadowBranches] (
+INSERT INTO mis.[Gold_CreditsInShadowBranches] (
       Period,
       ID,
       RowNumber,

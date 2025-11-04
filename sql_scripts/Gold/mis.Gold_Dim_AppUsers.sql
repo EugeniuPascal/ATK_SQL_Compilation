@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_AppUsers]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_AppUsers];
+IF OBJECT_ID('mis.[Gold_Dim_AppUsers]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_AppUsers];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_AppUsers]
+CREATE TABLE mis.[Gold_Dim_AppUsers]
 (
     App_User_ClientID VARCHAR(36) NOT NULL,
     App_User_UserID VARCHAR(36) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_AppUsers]
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_AppUsers] 
+INSERT INTO mis.[Gold_Dim_AppUsers] 
 (
     App_User_ClientID,
     App_User_UserID,

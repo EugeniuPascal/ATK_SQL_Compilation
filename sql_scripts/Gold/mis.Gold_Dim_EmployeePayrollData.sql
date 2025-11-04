@@ -1,18 +1,18 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_EmployeePayrollData]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_EmployeePayrollData];
+IF OBJECT_ID('mis.[Gold_Dim_EmployeePayrollData]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_EmployeePayrollData];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_EmployeePayrollData]
+CREATE TABLE mis.[Gold_Dim_EmployeePayrollData]
 (
     EmployeePositionID VARCHAR(36) NOT NULL,
     EmployeePosition NVARCHAR(150) NULL
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Dim_EmployeePayrollData] 
+INSERT INTO mis.[Gold_Dim_EmployeePayrollData] 
 (
     EmployeePositionID,
     EmployeePosition

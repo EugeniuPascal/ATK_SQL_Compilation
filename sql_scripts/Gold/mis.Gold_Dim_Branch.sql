@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID(N'mis.[2tbl_Gold_Dim_Branch]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_Branch];
+IF OBJECT_ID(N'mis.[Gold_Dim_Branch]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Branch];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_Branch] (
+CREATE TABLE mis.[Gold_Dim_Branch] (
     BranchID VARCHAR(36) NOT NULL,
     BranchCode DECIMAL(3, 0) NULL,
     BranchName NVARCHAR(100) NULL,
@@ -34,7 +34,7 @@ WITH LastSvedeniya AS (
         ) AS rn
     FROM [ATK].[dbo].[РегистрыСведений.СведенияОФилиалах]
 )
-INSERT INTO mis.[2tbl_Gold_Dim_Branch] (
+INSERT INTO mis.[Gold_Dim_Branch] (
     BranchID,
     BranchCode,
     BranchName,

@@ -5,11 +5,11 @@ IF OBJECT_ID('tempdb..#Base')   IS NOT NULL DROP TABLE #Base;
 IF OBJECT_ID('tempdb..#Status') IS NOT NULL DROP TABLE #Status;
 IF OBJECT_ID('tempdb..#Final')  IS NOT NULL DROP TABLE #Final;
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_Disbursement]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_Disbursement];
+IF OBJECT_ID('mis.[Gold_Fact_Disbursement]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_Disbursement];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_Disbursement] 
+CREATE TABLE mis.[Gold_Fact_Disbursement] 
 (
     CreditID           NVARCHAR(36)   NOT NULL,
     ClientID           NVARCHAR(36)   NULL,
@@ -238,7 +238,7 @@ WITH AllSeq AS (
         ) AS rn_all
     FROM #Final f
 )
-INSERT INTO mis.[2tbl_Gold_Fact_Disbursement]
+INSERT INTO mis.[Gold_Fact_Disbursement]
 (
     CreditID, ClientID, DisbursementDate, CurrencyID, CreditAmount, CreditAmountInMDL,
     CreditCurrency, FirstFilialID, FirstEmployeeID, LastFilialID, LastEmployeeID,
@@ -264,22 +264,22 @@ GO
    Indexes
    ============================ */
 CREATE CLUSTERED INDEX CIX_Disbursement_DisbursementDate_ClientID
-ON mis.[2tbl_Gold_Fact_Disbursement] (DisbursementDate ASC, ClientID ASC);
+ON mis.[Gold_Fact_Disbursement] (DisbursementDate ASC, ClientID ASC);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_CreditID
-ON mis.[2tbl_Gold_Fact_Disbursement] (CreditID);
+ON mis.[Gold_Fact_Disbursement] (CreditID);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_FirstFilialID
-ON mis.[2tbl_Gold_Fact_Disbursement] (FirstFilialID);
+ON mis.[Gold_Fact_Disbursement] (FirstFilialID);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_LastFilialID
-ON mis.[2tbl_Gold_Fact_Disbursement] (LastFilialID);
+ON mis.[Gold_Fact_Disbursement] (LastFilialID);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_NewExisting
-ON mis.[2tbl_Gold_Fact_Disbursement] (NewExisting_Client);
+ON mis.[Gold_Fact_Disbursement] (NewExisting_Client);
 
 CREATE NONCLUSTERED INDEX IX_Disbursement_ClientID
-ON mis.[2tbl_Gold_Fact_Disbursement] (ClientID);
+ON mis.[Gold_Fact_Disbursement] (ClientID);
 GO
 
 /* ============================

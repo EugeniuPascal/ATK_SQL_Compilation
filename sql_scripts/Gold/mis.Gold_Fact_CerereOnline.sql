@@ -2,11 +2,11 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_CerereOnline]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_CerereOnline];
+IF OBJECT_ID('mis.[Gold_Fact_CerereOnline]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_CerereOnline];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline] (
+CREATE TABLE mis.[Gold_Fact_CerereOnline] (
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
     [Status]                NVARCHAR(256)  NULL,
@@ -48,7 +48,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_CerereOnline] (
     [WebCreditTerm]         INT            NULL,
     [WebBranchID]           VARCHAR(36)    NULL,
     [CommitteeDecisionDate] DATETIME       NULL,
-    --CONSTRAINT PK_2tbl_Gold_Fact_CerereOnline PRIMARY KEY CLUSTERED ([WebID])
+    --CONSTRAINT PK_Gold_Fact_CerereOnline PRIMARY KEY CLUSTERED ([WebID])
 );
 GO
 
@@ -158,7 +158,7 @@ GO
 -----------------------------------------------------------------------------------
 -- 4️⃣ Insert into final GOLD table, excluding test clients
 -----------------------------------------------------------------------------------
-INSERT INTO mis.[2tbl_Gold_Fact_CerereOnline]
+INSERT INTO mis.[Gold_Fact_CerereOnline]
 (
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],[CreditAmount],[NewExisting_Client],

@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Fact_WriteOffCredits]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Fact_WriteOffCredits];
+IF OBJECT_ID('mis.[Gold_Fact_WriteOffCredits]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_WriteOffCredits];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Fact_WriteOffCredits]
+CREATE TABLE mis.[Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID] VARCHAR(36) NOT NULL,
     [Credit_RowNumber]        INT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE mis.[2tbl_Gold_Fact_WriteOffCredits]
 );
 GO
 
-INSERT INTO mis.[2tbl_Gold_Fact_WriteOffCredits]
+INSERT INTO mis.[Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID],
     [Credit_RowNumber],

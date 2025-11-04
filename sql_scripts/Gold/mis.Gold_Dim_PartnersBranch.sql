@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[2tbl_Gold_Dim_PartnersBranch]', 'U') IS NOT NULL
-    DROP TABLE mis.[2tbl_Gold_Dim_PartnersBranch];
+IF OBJECT_ID('mis.[Gold_Dim_PartnersBranch]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_PartnersBranch];
 GO
 
-CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
+CREATE TABLE mis.[Gold_Dim_PartnersBranch]
 (
     [PartnerBranchID]               VARCHAR(36) NOT NULL,
     [PartnerBranchDeletedFlag]      VARCHAR(36) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE mis.[2tbl_Gold_Dim_PartnersBranch]
 GO
 
 -- Insert data from silvers
-INSERT INTO mis.[2tbl_Gold_Dim_PartnersBranch]
+INSERT INTO mis.[Gold_Dim_PartnersBranch]
 (
     [PartnerBranchID],
     [PartnerBranchDeletedFlag],

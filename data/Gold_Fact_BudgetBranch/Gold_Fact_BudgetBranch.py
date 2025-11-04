@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from tabulate import tabulate
 
 # --- Read Excel ---
-df = pd.read_excel(r"C:\ATK_Project\data\2tbl_Gold_Fact_BudgetBranch\Branch Plan 2025.xlsx")
+df = pd.read_excel(r"C:\ATK_Project\data\Gold_Fact_BudgetBranch\Branch Plan 2025.xlsx")
 
 # Strip extra spaces from column names
 df.columns = df.columns.str.strip()
@@ -82,7 +82,7 @@ cursor.fast_executemany = True  # Speeds up bulk insert
 
 # --- Bulk insert ---
 cursor.executemany("""
-    INSERT INTO [mis].[2tbl_Gold_Fact_BudgetBranch]
+    INSERT INTO [mis].[Gold_Fact_BudgetBranch]
        (BranchID,
         Month,
         Product_Segment,

@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Gold_Fact_WriteOffCredits]', 'U') IS NOT NULL
-    DROP TABLE mis.[Gold_Fact_WriteOffCredits];
+IF OBJECT_ID('mis.[2tbl_Gold_Fact_WriteOffCredits]', 'U') IS NOT NULL
+    DROP TABLE mis.[2tbl_Gold_Fact_WriteOffCredits];
 GO
 
-CREATE TABLE mis.[Gold_Fact_WriteOffCredits]
+CREATE TABLE mis.[2tbl_Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID] VARCHAR(36) NOT NULL,
     [Credit_RowNumber]        INT NULL,
@@ -31,13 +31,11 @@ CREATE TABLE mis.[Gold_Fact_WriteOffCredits]
     [Canceled_CreditPosted]  VARCHAR(36) NULL,
     [Canceled_CreditBase]    NVARCHAR(250) NULL,
 	[Canceled_CreditAuthorID] VARCHAR(36) NULL,
-	[Canceled_DebitAccount]  NVARCHAR(250) NULL,
-    [FinalBranchID]   VARCHAR(36) NULL,
-    [FinalExpertID]   VARCHAR(36) NULL
+	[Canceled_DebitAccount]  NVARCHAR(250) NULL
 );
 GO
 
-INSERT INTO mis.[Gold_Fact_WriteOffCredits]
+INSERT INTO mis.[2tbl_Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID],
     [Credit_RowNumber],
@@ -63,9 +61,7 @@ INSERT INTO mis.[Gold_Fact_WriteOffCredits]
     [Canceled_CreditPosted],
     [Canceled_CreditBase],
 	[Canceled_CreditAuthorID],
-	[Canceled_DebitAccount],
-	[FinalBranchID],
-    [FinalExpertID]
+	[Canceled_DebitAccount]
 )
 SELECT
     a.[АнулированиеКредитов ID],
@@ -92,28 +88,8 @@ SELECT
     b.[АнулированиеКредитов Проведен],
     b.[АнулированиеКредитов Основание],
 	b.[АнулированиеКредитов Автор ID],
-	b.[АнулированиеКредитов Счет Дт],
-	lastResp.FinalBranchID,
-	lastResp.FinalExpertID
+	b.[АнулированиеКредитов Счет Дт]
 FROM [ATK].[dbo].[Документы.АнулированиеКредитов.Кредиты] AS a
 LEFT JOIN [ATK].[dbo].[Документы.АнулированиеКредитов] AS b
-    ON a.[АнулированиеКредитов ID] = b.[АнулированиеКредитов ID]
-OUTER APPLY (
-    SELECT TOP (1)
-           c.[BranchID] AS FinalBranchID,
-           c.[ExpertID] AS FinalExpertID
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] c
-    WHERE c.[CreditID] = a.[АнулированиеКредитов.Кредиты Кредит ID]
-    ORDER BY 
-        ISNULL(CAST(c.[ValidTo] AS date), CONVERT(date,'9999-12-31')) DESC,
-        CAST(c.[ValidFrom] AS date) DESC,
-        c.[BranchID] DESC,
-        c.[ExpertID] DESC
-) AS lastResp;
-
-CREATE INDEX IX_WriteOff_CreditID 
-    ON [ATK].[mis].[Gold_Fact_WriteOffCredits] ([Credit_CreditID]);
-
-CREATE INDEX IX_WriteOff_Final 
-    ON [ATK].[mis].[Gold_Fact_WriteOffCredits] ([FinalBranchID], [FinalExpertID]);
-
+    ON a.[АнулированиеКредитов ID] = b.[АнулированиеКредитов ID];
+GO

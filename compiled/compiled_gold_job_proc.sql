@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-11-04 09:48:10.983126
+-- Generated: 2025-11-04 15:49:37.677438
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 16
 --   mis.Gold_Dim_AppUsers.sql
@@ -2255,7 +2255,9 @@ CREATE TABLE mis.[Gold_Fact_WriteOffCredits]
     [Canceled_CreditPosted]  VARCHAR(36) NULL,
     [Canceled_CreditBase]    NVARCHAR(250) NULL,
 	[Canceled_CreditAuthorID] VARCHAR(36) NULL,
-	[Canceled_DebitAccount]  NVARCHAR(250) NULL
+	[Canceled_DebitAccount]  NVARCHAR(250) NULL,
+    [FinalBranchID]   VARCHAR(36) NULL,
+    [FinalExpertID]   VARCHAR(36) NULL
 );
 
 INSERT INTO mis.[Gold_Fact_WriteOffCredits]
@@ -2284,7 +2286,9 @@ INSERT INTO mis.[Gold_Fact_WriteOffCredits]
     [Canceled_CreditPosted],
     [Canceled_CreditBase],
 	[Canceled_CreditAuthorID],
-	[Canceled_DebitAccount]
+	[Canceled_DebitAccount],
+	[FinalBranchID],
+    [FinalExpertID]
 )
 SELECT
     a.[АнулированиеКредитов ID],
@@ -2311,10 +2315,30 @@ SELECT
     b.[АнулированиеКредитов Проведен],
     b.[АнулированиеКредитов Основание],
 	b.[АнулированиеКредитов Автор ID],
-	b.[АнулированиеКредитов Счет Дт]
+	b.[АнулированиеКредитов Счет Дт],
+	lastResp.FinalBranchID,
+	lastResp.FinalExpertID
 FROM [ATK].[dbo].[Документы.АнулированиеКредитов.Кредиты] AS a
 LEFT JOIN [ATK].[dbo].[Документы.АнулированиеКредитов] AS b
-    ON a.[АнулированиеКредитов ID] = b.[АнулированиеКредитов ID];';
+    ON a.[АнулированиеКредитов ID] = b.[АнулированиеКредитов ID]
+OUTER APPLY (
+    SELECT TOP (1)
+           c.[BranchID] AS FinalBranchID,
+           c.[ExpertID] AS FinalExpertID
+    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] c
+    WHERE c.[CreditID] = a.[АнулированиеКредитов.Кредиты Кредит ID]
+    ORDER BY 
+        ISNULL(CAST(c.[ValidTo] AS date), CONVERT(date,''9999-12-31'')) DESC,
+        CAST(c.[ValidFrom] AS date) DESC,
+        c.[BranchID] DESC,
+        c.[ExpertID] DESC
+) AS lastResp;
+
+CREATE INDEX IX_WriteOff_CreditID 
+    ON [ATK].[mis].[Gold_Fact_WriteOffCredits] ([Credit_CreditID]);
+
+CREATE INDEX IX_WriteOff_Final 
+    ON [ATK].[mis].[Gold_Fact_WriteOffCredits] ([FinalBranchID], [FinalExpertID]);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

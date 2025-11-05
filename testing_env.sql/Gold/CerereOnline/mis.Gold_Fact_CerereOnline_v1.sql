@@ -185,7 +185,7 @@ LEFT JOIN [ATK].[mis].[Bronze_Справочники.Контрагенты] AS 
 OUTER APPLY (
     SELECT TOP 1 v.[Валюта Курс]
     FROM [ATK].[mis].[Bronze_РегистрыСведений.Валюта] v
-    WHERE v.[Валюта Валюта ID] = b.[CurrencyType]
+    WHERE v.[Валюта Валюта] = b.[CurrencyType]
       AND v.[Валюта Период] <= b.[CreditAppDate]
     ORDER BY v.[Валюта Период] DESC
 ) AS v

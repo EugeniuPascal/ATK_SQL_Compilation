@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-11-05 15:00:55.827031
+-- Generated: 2025-11-05 15:54:23.912839
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 16
 --   mis.Gold_Dim_AppUsers.sql
@@ -1794,7 +1794,7 @@ OUTER APPLY (
     SELECT TOP (1)
            c.[BranchID] AS FinalBranchID,
            c.[ExpertID] AS FinalExpertID
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] c
+    FROM [ATK].[mis].[Silver_Resp_SCD] c
     WHERE c.[CreditID] = a.[АнулированиеКредитов.Кредиты Кредит ID]
     ORDER BY 
         ISNULL(CAST(c.[ValidTo] AS date), CONVERT(date,''9999-12-31'')) DESC,

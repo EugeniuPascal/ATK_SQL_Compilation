@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-11-05 15:56:14.121187
+-- Generated: 2025-11-05 17:09:17.252064
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 16
 --   mis.Gold_Dim_AppUsers.sql
@@ -2277,7 +2277,8 @@ SELECT
         WHEN md.MaxDaysPerClientDay BETWEEN 271 AND 360 THEN N''Par270''
         WHEN md.MaxDaysPerClientDay > 360           THEN N''Par360''
         ELSE NULL
-    END AS ParIFRS
+    END AS ParIFRS,
+	jr.CurrentStage
 INTO #Joined
 FROM #Joined_raw jr
 JOIN #MaxDays md

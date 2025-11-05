@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-05 15:55:59
+-- Generated: 2025-11-05 17:09:10
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (16):
 --   mis.Gold_Dim_AppUsers.sql
@@ -2390,7 +2390,8 @@ SELECT
         WHEN md.MaxDaysPerClientDay BETWEEN 271 AND 360 THEN N'Par270'
         WHEN md.MaxDaysPerClientDay > 360           THEN N'Par360'
         ELSE NULL
-    END AS ParIFRS
+    END AS ParIFRS,
+	jr.CurrentStage
 INTO #Joined
 FROM #Joined_raw jr
 JOIN #MaxDays md

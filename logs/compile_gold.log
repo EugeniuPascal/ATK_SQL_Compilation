@@ -4724,3 +4724,38 @@
 2025-11-05 15:54:23,925 [INFO] Processing file: mis.Gold_Fact_Par_Restruct_Daily_Min.sql
 2025-11-05 15:54:23,926 [INFO] Finished file: mis.Gold_Fact_Par_Restruct_Daily_Min.sql
 2025-11-05 15:54:23,927 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql
+2025-11-05 15:56:14,119 [INFO] === Starting Gold SQL Compilation Job ===
+2025-11-05 15:56:14,120 [INFO] Total SQL files to process: 16
+2025-11-05 15:56:14,121 [INFO] Processing file: mis.Gold_Dim_AppUsers.sql
+2025-11-05 15:56:14,121 [INFO] Finished file: mis.Gold_Dim_AppUsers.sql
+2025-11-05 15:56:14,121 [INFO] Processing file: mis.Gold_Dim_Branch.sql
+2025-11-05 15:56:14,122 [INFO] Finished file: mis.Gold_Dim_Branch.sql
+2025-11-05 15:56:14,122 [INFO] Processing file: mis.Gold_Dim_Clients.sql
+2025-11-05 15:56:14,123 [INFO] Finished file: mis.Gold_Dim_Clients.sql
+2025-11-05 15:56:14,123 [INFO] Processing file: mis.Gold_Dim_Credits.sql
+2025-11-05 15:56:14,124 [INFO] Finished file: mis.Gold_Dim_Credits.sql
+2025-11-05 15:56:14,124 [INFO] Processing file: mis.Gold_Dim_EmployeePayrollData.sql
+2025-11-05 15:56:14,125 [INFO] Finished file: mis.Gold_Dim_EmployeePayrollData.sql
+2025-11-05 15:56:14,125 [INFO] Processing file: mis.Gold_Dim_Employees.sql
+2025-11-05 15:56:14,126 [INFO] Finished file: mis.Gold_Dim_Employees.sql
+2025-11-05 15:56:14,126 [INFO] Processing file: mis.Gold_Dim_EmployeesHistory.sql
+2025-11-05 15:56:14,126 [INFO] Finished file: mis.Gold_Dim_EmployeesHistory.sql
+2025-11-05 15:56:14,126 [INFO] Processing file: mis.Gold_Dim_PartnersBranch.sql
+2025-11-05 15:56:14,126 [INFO] Finished file: mis.Gold_Dim_PartnersBranch.sql
+2025-11-05 15:56:14,127 [INFO] Processing file: mis.Gold_Fact_AdminTasks.sql
+2025-11-05 15:56:14,129 [INFO] Finished file: mis.Gold_Fact_AdminTasks.sql
+2025-11-05 15:56:14,129 [INFO] Processing file: mis.Gold_Fact_ArchiveDocument.sql
+2025-11-05 15:56:14,130 [INFO] Finished file: mis.Gold_Fact_ArchiveDocument.sql
+2025-11-05 15:56:14,130 [INFO] Processing file: mis.Gold_Fact_BudgetEmployees.sql
+2025-11-05 15:56:14,130 [INFO] Finished file: mis.Gold_Fact_BudgetEmployees.sql
+2025-11-05 15:56:14,130 [INFO] Processing file: mis.Gold_Fact_CerereOnline.sql
+2025-11-05 15:56:14,131 [INFO] Finished file: mis.Gold_Fact_CerereOnline.sql
+2025-11-05 15:56:14,132 [INFO] Processing file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2025-11-05 15:56:14,132 [INFO] Finished file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2025-11-05 15:56:14,132 [INFO] Processing file: mis.Gold_Fact_WriteOffCredits.sql
+2025-11-05 15:56:14,133 [INFO] Finished file: mis.Gold_Fact_WriteOffCredits.sql
+2025-11-05 15:56:14,133 [INFO] Processing file: mis.Gold_Fact_Disbursement.sql
+2025-11-05 15:56:14,134 [INFO] Finished file: mis.Gold_Fact_Disbursement.sql
+2025-11-05 15:56:14,134 [INFO] Processing file: mis.Gold_Fact_Par_Restruct_Daily_Min.sql
+2025-11-05 15:56:14,136 [INFO] Finished file: mis.Gold_Fact_Par_Restruct_Daily_Min.sql
+2025-11-05 15:56:14,136 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql

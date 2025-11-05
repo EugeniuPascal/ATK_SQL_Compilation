@@ -86,12 +86,12 @@ def make_idempotent(sql: str) -> str:
 try:
     # ---- Ordered list of Silver files ----
     SQL_ORDER = [
-        "01_mis.Silver_Restruct_SCD.sql",
-        "02_mis.Silver_RestructState_SCD.sql",
-        "03_mis.Silver_Restruct_Merged_SCD.sql",
-        "04_mis.Silver_Client_UnhealedFlag.sql",
-        "05_mis.Silver_Resp_SCD.sql",
-        "06_mis.Silver_Stages_SCD.sql",
+        "mis.Silver_Restruct_SCD.sql",
+        "mis.Silver_RestructState_SCD.sql",
+        "mis.Silver_Restruct_Merged_SCD.sql",
+        "mis.Silver_Client_UnhealedFlag.sql",
+        "mis.Silver_Resp_SCD.sql",
+        "mis.Silver_Stages_SCD.sql",
         # add more as needed
     ]
 

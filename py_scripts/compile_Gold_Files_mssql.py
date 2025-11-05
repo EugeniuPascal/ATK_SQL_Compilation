@@ -28,7 +28,7 @@ USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | 
 LINE_COMMENT_RE  = re.compile(r"--[^\r\n]*")
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 NAME_PART   = r'(?:\[[^\]]+\]|"[^"]+"|[^\s\(\[\]"\.]+)'
-NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*'
+NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*"
 CREATE_VIEW_RE  = re.compile(rf"(?im)\bCREATE\s+VIEW\s+({NAME_PATTERN})")
 CREATE_PROC_RE  = re.compile(rf"(?im)\bCREATE\s+PROCEDURE\s+({NAME_PATTERN})")
 CREATE_FUNC_RE  = re.compile(rf"(?im)\bCREATE\s+FUNCTION\s+({NAME_PATTERN})")
@@ -76,22 +76,22 @@ def make_idempotent(sql: str) -> str:
 try:
     # ---- Ordered list of Gold files ----
     SQL_ORDER = [
-        "01_mis.Gold_Dim_AppUsers.sql",
-        "02_mis.Gold_Dim_Branch.sql",
-        "03_mis.Gold_Dim_Clients.sql",
-        "04_mis.Gold_Dim_Credits.sql",
-        "05_mis.Gold_Dim_EmployeePayrollData.sql",
-        "06_mis.Gold_Dim_Employees.sql",
-        "07_mis.Gold_Dim_EmployeesHistory.sql",
-        "08_mis.Gold_Dim_PartnersBranch.sql",
-        "09_mis.Gold_Fact_AdminTasks.sql",
-        "10_mis.Gold_Fact_ArchiveDocument.sql",
-        "11_mis.Gold_Fact_BudgetEmployees.sql",
-        "12_mis.Gold_Fact_CerereOnline.sql",
-        "13_mis.Gold_Fact_CreditsInShadowBranches.sql",
-        "14_mis.Gold_Fact_WriteOffCredits.sql",
-        "15_mis.Gold_Fact_Disbursement.sql",
-        "16_mis.Gold_Fact_Par_Restruct_Daily_Min.sql",
+        "mis.Gold_Dim_AppUsers.sql",
+        "mis.Gold_Dim_Branch.sql",
+        "mis.Gold_Dim_Clients.sql",
+        "mis.Gold_Dim_Credits.sql",
+        "mis.Gold_Dim_EmployeePayrollData.sql",
+        "mis.Gold_Dim_Employees.sql",
+        "mis.Gold_Dim_EmployeesHistory.sql",
+        "mis.Gold_Dim_PartnersBranch.sql",
+        "mis.Gold_Fact_AdminTasks.sql",
+        "mis.Gold_Fact_ArchiveDocument.sql",
+        "mis.Gold_Fact_BudgetEmployees.sql",
+        "mis.Gold_Fact_CerereOnline.sql",
+        "mis.Gold_Fact_CreditsInShadowBranches.sql",
+        "mis.Gold_Fact_WriteOffCredits.sql",
+        "mis.Gold_Fact_Disbursement.sql",
+        "mis.Gold_Fact_Par_Restruct_Daily_Min.sql",
         # add more as needed
     ]
 

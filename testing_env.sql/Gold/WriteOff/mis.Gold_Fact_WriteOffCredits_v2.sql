@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Gold_Fact_WriteOffCredits1]', 'U') IS NOT NULL
-    DROP TABLE mis.[Gold_Fact_WriteOffCredits1];
+IF OBJECT_ID('mis.[Gold_Fact_WriteOffCredits]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_WriteOffCredits];
 GO
 
-CREATE TABLE mis.[Gold_Fact_WriteOffCredits1]
+CREATE TABLE mis.[Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID] VARCHAR(36) NOT NULL,
     [Credit_RowNumber]        INT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE mis.[Gold_Fact_WriteOffCredits1]
 );
 GO
 
-INSERT INTO mis.[Gold_Fact_WriteOffCredits1]
+INSERT INTO mis.[Gold_Fact_WriteOffCredits]
 (
     [Credit_CanceledCreditID],
     [Credit_RowNumber],
@@ -102,7 +102,7 @@ OUTER APPLY (
     SELECT TOP (1)
            c.[BranchID] AS FinalBranchID,
            c.[ExpertID] AS FinalExpertID
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] c
+    FROM [ATK].[mis].[Silver_Resp_SCD] c
     WHERE c.[CreditID] = a.[АнулированиеКредитов.Кредиты Кредит ID]
     ORDER BY 
         ISNULL(CAST(c.[ValidTo] AS date), CONVERT(date,'9999-12-31')) DESC,

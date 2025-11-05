@@ -5,9 +5,9 @@ SET NOCOUNT ON;
 ------------------------------------------------------------
 -- 0) Ensure target table exists
 ------------------------------------------------------------
-IF OBJECT_ID('[ATK].[mis].[2tbl_Silver_Client_UnhealedFlag1]', 'U') IS NULL
+IF OBJECT_ID('[ATK].[mis].[Silver_Client_UnhealedFlag]', 'U') IS NULL
 BEGIN
-    CREATE TABLE [ATK].[mis].[2tbl_Silver_Client_UnhealedFlag1] (
+    CREATE TABLE [ATK].[mis].[Silver_Client_UnhealedFlag] (
         ClientID    VARCHAR(64) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
@@ -27,7 +27,7 @@ IF (@DateTo > @Today) SET @DateTo = @Today;
 ------------------------------------------------------------
 -- 2) Clean up existing data only in range
 ------------------------------------------------------------
-DELETE FROM [ATK].[mis].[2tbl_Silver_Client_UnhealedFlag1]
+DELETE FROM [ATK].[mis].[Silver_Client_UnhealedFlag]
 WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
 
 ------------------------------------------------------------
@@ -48,15 +48,15 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Dates ON #Dates(SoldDate);
 ------------------------------------------------------------
 -- 4) Insert only distinct client×day where conditions hold
 ------------------------------------------------------------
-INSERT INTO [ATK].[mis].[2tbl_Silver_Client_UnhealedFlag1] (ClientID, SoldDate, HasUnhealed)
+INSERT INTO [ATK].[mis].[Silver_Client_UnhealedFlag] (ClientID, SoldDate, HasUnhealed)
 SELECT m.ClientID, d.SoldDate, CAST(1 AS bit)
 FROM #Dates d
 JOIN (
     SELECT DISTINCT ClientID
-    FROM [ATK].[mis].[2tbl_Silver_Restruct_Merged_SCD1]
+    FROM [ATK].[mis].[Silver_Restruct_Merged_SCD]
     WHERE ClientID IS NOT NULL AND ClientID <> ''
 ) c ON 1=1
-JOIN [ATK].[mis].[2tbl_Silver_Restruct_Merged_SCD1] m
+JOIN [ATK].[mis].[Silver_Restruct_Merged_SCD] m
   ON m.ClientID = c.ClientID
  AND d.SoldDate BETWEEN m.ValidFrom AND m.ValidTo
  AND m.TypeName_Sticky IS NOT NULL

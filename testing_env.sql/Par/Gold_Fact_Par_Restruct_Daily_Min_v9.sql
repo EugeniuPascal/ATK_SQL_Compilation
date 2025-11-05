@@ -5,7 +5,7 @@ SET NOCOUNT ON;
 DECLARE @DateFrom date = '2024-01-01';
 DECLARE @DateTo   date = '2025-12-31';
 
-PRINT N'=== Пересборка [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] за период '
+PRINT N'=== Пересборка [mis].[Gold_Par_Restruct_Daily_Min1] за период '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';
 
 BEGIN TRAN; -- Опционально для консистентности
@@ -19,13 +19,13 @@ IF OBJECT_ID('tempdb..#Joined_raw')   IS NOT NULL DROP TABLE #Joined_raw;
 IF OBJECT_ID('tempdb..#Joined')       IS NOT NULL DROP TABLE #Joined;
 
 /* ================== ЦЕЛЕВАЯ ТАБЛИЦА ================== */
-IF OBJECT_ID('[mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3]', 'U') IS NOT NULL
+IF OBJECT_ID('[mis].[Gold_Par_Restruct_Daily_Min1]', 'U') IS NOT NULL
 BEGIN
-    DROP TABLE [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3];
+    DROP TABLE [mis].[Gold_Par_Restruct_Daily_Min1];
     PRINT N'Старая таблица удалена.';
 END;
 
-CREATE TABLE [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] (
+CREATE TABLE [mis].[Gold_Par_Restruct_Daily_Min1] (
     SoldDate               date          NOT NULL,
     CreditID               varchar(64)   NOT NULL,
     ClientID               varchar(64)   NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] (
     SegmentIFRS            nvarchar(20)  NULL,
     ParIFRS                nvarchar(20)  NULL,
 	StageName              nvarchar(200) NULL,
-    CONSTRAINT PK_Gold_ParRestructDailyMinV3
+    CONSTRAINT PK_Gold_ParRestructDailyMin
         PRIMARY KEY (ClientID, CreditID, SoldDate)
 );
 
@@ -67,7 +67,7 @@ PRINT N'Шаг 1 — подготовка базы...';
             ORDER BY s.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] DESC, s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки Кредит] DESC
         ) AS rn
     FROM [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] s
-    LEFT JOIN [ATK].[mis].[2tbl_Silver_Restruct_Merged_SCD] r
+    LEFT JOIN [ATK].[mis].[Silver_Restruct_Merged_SCD] r
            ON r.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
           AND s.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= r.ValidFrom
           AND s.[СуммыЗадолженностиПоПериодамПросрочки Дата] <= r.ValidTo
@@ -106,7 +106,7 @@ CREATE UNIQUE CLUSTERED INDEX CIX_MaxDays ON #MaxDays (ClientID, SoldDate);
 /* ================== ШАГ 1.2. Флаги ================== */
 SELECT ClientID, SoldDate
 INTO #Flag
-FROM [ATK].[mis].[2tbl_Silver_Client_UnhealedFlag]
+FROM [ATK].[mis].[Silver_Client_UnhealedFlag]
 WHERE HasUnhealed = 1
   AND SoldDate BETWEEN @DateFrom AND @DateTo;
 
@@ -115,7 +115,7 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Flag ON #Flag (ClientID, SoldDate);
 /* ===== ШАГ 2. Самая ранняя запись ответственных (fallback) ===== */
 ;WITH MinFrom AS (
     SELECT CreditID, MIN(ValidFrom) AS MinValidFrom
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD]
+    FROM [ATK].[mis].[Silver_Resp_SCD]
     GROUP BY CreditID
 )
 SELECT
@@ -124,7 +124,7 @@ SELECT
     r.FinalExpertID,
     r.IsSpecialBranch
 INTO #RespEarliest
-FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] r
+FROM [ATK].[mis].[Silver_Resp_SCD] r
 JOIN MinFrom m
   ON r.CreditID = m.CreditID
  AND r.ValidFrom = m.MinValidFrom;
@@ -153,7 +153,7 @@ INTO #Joined_raw
 FROM #Base b
 OUTER APPLY (
     SELECT TOP (1) *
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] r
+    FROM [ATK].[mis].[Silver_Resp_SCD] r
     WHERE r.CreditID = b.CreditID
       AND b.SoldDate BETWEEN r.ValidFrom AND r.ValidTo
     ORDER BY r.ValidFrom DESC
@@ -205,7 +205,7 @@ ON #Joined (ClientID, SoldDate, CreditID);
 /* ================ ШАГ 5. Вставка результата ================= */
 PRINT N'Шаг 3 — вставка результата...';
 
-INSERT /*+ TABLOCK */ INTO [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] WITH (TABLOCK)
+INSERT /*+ TABLOCK */ INTO [mis].[Gold_Par_Restruct_Daily_Min1] WITH (TABLOCK)
 (
     SoldDate, CreditID, ClientID,
     Balance_Total, DaysBucket_Credit, DaysFact_Total, DaysIFRS,
@@ -263,16 +263,16 @@ DROP TABLE #Joined;
 
 /* ================ ИТОГ ================= */
 DECLARE @cnt bigint;
-SELECT @cnt = COUNT_BIG(*) FROM [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3];
+SELECT @cnt = COUNT_BIG(*) FROM [mis].[Gold_Par_Restruct_Daily_Min1];
 PRINT N'🏁 Готово. Строк: ' + CONVERT(varchar(30), @cnt);
 
 COMMIT TRAN;
 
 /*===== РЕКОМЕНДУЕМЫЕ ИНДЕКСЫ (если есть права) =====*/
 CREATE INDEX IX_RespSCD_Credit_FromTo
-ON [ATK].[mis].[2tbl_Silver_Resp_SCD](CreditID, ValidFrom, ValidTo)
+ON [ATK].[mis].[Silver_Resp_SCD](CreditID, ValidFrom, ValidTo)
 INCLUDE (FinalBranchID, FinalExpertID, IsSpecialBranch);
 
-CREATE INDEX IX_ParMinV3_SoldDate   ON [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3](SoldDate);
-CREATE INDEX IX_ParMinV3_ClientDate ON [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3](ClientID, SoldDate)
+CREATE INDEX IX_ParMin_SoldDate   ON [mis].[Gold_Par_Restruct_Daily_Min1](SoldDate);
+CREATE INDEX IX_ParMin_ClientDate ON [mis].[Gold_Par_Restruct_Daily_Min1](ClientID, SoldDate)
 INCLUDE (ParIFRS, SegmentIFRS, Balance_Total, CreditID);

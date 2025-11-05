@@ -5,7 +5,7 @@ SET NOCOUNT ON;
 DECLARE @DateFrom date = '2024-01-01';
 DECLARE @DateTo   date = '2025-12-31';
 
-PRINT N'=== Пересборка [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] за период '
+PRINT N'=== Пересборка [mis].[Gold_Par_Restruct_Daily_Min1] за период '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';
 
 /* ========== Очистка temp-таблиц (повторный запуск) ========== */
@@ -17,13 +17,13 @@ IF OBJECT_ID('tempdb..#Joined_raw')   IS NOT NULL DROP TABLE #Joined_raw;
 IF OBJECT_ID('tempdb..#Joined')       IS NOT NULL DROP TABLE #Joined;
 
 /* ================== ЦЕЛЕВАЯ ТАБЛИЦА ================== */
-IF OBJECT_ID('[mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3]', 'U') IS NOT NULL
+IF OBJECT_ID('[mis].[Gold_Par_Restruct_Daily_Min1]', 'U') IS NOT NULL
 BEGIN
-    DROP TABLE [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3];
+    DROP TABLE [mis].[Gold_Par_Restruct_Daily_Min1];
     PRINT N'Старая таблица удалена.';
 END;
 
-CREATE TABLE [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] (
+CREATE TABLE [mis].[Gold_Par_Restruct_Daily_Min1] (
     SoldDate               date          NOT NULL,
     CreditID               varchar(64)   NOT NULL,
     ClientID               varchar(64)   NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] (
     IsSpecialBranch        bit           NULL,
     SegmentIFRS            nvarchar(20)  NULL,
     ParIFRS                nvarchar(20)  NULL,
-    CONSTRAINT PK_Gold_ParRestructDailyMinV2
+    CONSTRAINT PK_Gold_ParRestructDailyMin
         PRIMARY KEY (ClientID, CreditID, SoldDate)
 );
 
@@ -48,27 +48,27 @@ PRINT N'Шаг 1 — подготовка базы...';
 
 ;WITH cte AS (
     SELECT
-        s.SoldDate,
-        s.CreditID,
-        s.ClientID,
-        s.LP_Balance           AS Balance_Total,
-        s.DaysOverdue_Credit   AS DaysBucket_Credit,
-        s.DaysOverdue_Actual   AS DaysFact_Total,
-        s.DaysOverdue_IFRS     AS DaysIFRS,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,		
+        s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID] AS ClientID,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит]   AS Balance_Total,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки Кредит]   AS DaysBucket_Credit,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого]   AS DaysFact_Total,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО]     AS DaysIFRS,
         r.StateName            AS StateName_Final,
         r.TypeName_Sticky      AS TypeName_Sticky_Final,
         r.CreditStatus         AS CreditStatus_Base,
         ROW_NUMBER() OVER (
-            PARTITION BY s.ClientID, s.CreditID, s.SoldDate
-            ORDER BY s.LP_Balance DESC, s.DaysOverdue_Credit DESC
+            PARTITION BY s.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID],  s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID], 
+			s.[СуммыЗадолженностиПоПериодамПросрочки Дата]
+            ORDER BY s.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] DESC, s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки Кредит] DESC
         ) AS rn
-    FROM [ATK].[mis].[2tbl_Silver_Sold_Daily] s
-    LEFT JOIN [ATK].[mis].[2tbl_Silver_Restruct_Merged_SCD] r
-           ON r.CreditID = s.CreditID
-          AND s.SoldDate >= r.ValidFrom
-          AND s.SoldDate <= r.ValidTo
-    WHERE s.SoldDate >= @DateFrom
-      AND s.SoldDate <= @DateTo
+    FROM [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] s
+    LEFT JOIN [ATK].[mis].[Silver_Restruct_Merged_SCD] r
+           ON r.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+          AND s.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= r.ValidFrom
+          AND s.[СуммыЗадолженностиПоПериодамПросрочки Дата] <= r.ValidTo
+    WHERE s.[СуммыЗадолженностиПоПериодамПросрочки Дата] BETWEEN @DateFrom AND @DateTo
 )
 SELECT
     SoldDate, CreditID, ClientID,
@@ -104,7 +104,7 @@ CREATE UNIQUE CLUSTERED INDEX CIX_MaxDays ON #MaxDays (ClientID, SoldDate);
 /* ================== ШАГ 1.2. Флаги ================== */
 SELECT f.ClientID, f.SoldDate
 INTO #Flag
-FROM [ATK].[mis].[2tbl_Silver_Client_UnhealedFlag] f
+FROM [ATK].[mis].[Silver_Client_UnhealedFlag] f
 WHERE f.HasUnhealed = 1
   AND f.SoldDate >= @DateFrom
   AND f.SoldDate <= @DateTo;
@@ -114,7 +114,7 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Flag ON #Flag (ClientID, SoldDate);
 /* ======= ШАГ 2. Самая ранняя запись ответственных (fallback) ======= */
 ;WITH MinFrom AS (
     SELECT CreditID, MIN(ValidFrom) AS MinValidFrom
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD]
+    FROM [ATK].[mis].[Silver_Resp_SCD]
     GROUP BY CreditID
 )
 SELECT
@@ -123,7 +123,7 @@ SELECT
     r.FinalExpertID,
     r.IsSpecialBranch
 INTO #RespEarliest
-FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] r
+FROM [ATK].[mis].[Silver_Resp_SCD] r
 JOIN MinFrom m
   ON m.CreditID = r.CreditID
  AND m.MinValidFrom = r.ValidFrom;
@@ -152,7 +152,7 @@ INTO #Joined_raw
 FROM #Base b
 OUTER APPLY (
     SELECT TOP (1) r.*
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] r
+    FROM [ATK].[mis].[Silver_Resp_SCD] r
     WHERE r.CreditID = b.CreditID
       AND b.SoldDate >= r.ValidFrom
       AND b.SoldDate <= r.ValidTo
@@ -203,7 +203,7 @@ ON #Joined (ClientID, SoldDate, CreditID);
 /* ================ ШАГ 5. Вставка результата ================= */
 PRINT N'Шаг 3 — вставка результата...';
 
-INSERT /*+ TABLOCK */ INTO [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] WITH (TABLOCK)
+INSERT /*+ TABLOCK */ INTO [mis].[Gold_Par_Restruct_Daily_Min1] WITH (TABLOCK)
 (
     SoldDate, CreditID, ClientID,
     Balance_Total, DaysBucket_Credit, DaysFact_Total, DaysIFRS,
@@ -265,18 +265,18 @@ DROP TABLE #Joined;
 
 /* ================ ИТОГ ================= */
 DECLARE @cnt bigint;
-SELECT @cnt = COUNT_BIG(*) FROM [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3];
+SELECT @cnt = COUNT_BIG(*) FROM [mis].[Gold_Par_Restruct_Daily_Min1];
 PRINT N'🏁 Готово. Строк: ' + CONVERT(varchar(30), @cnt);
 
 /*===== РЕКОМЕНДУЕМЫЕ ИНДЕКСЫ (если есть права) =====*/
 --1) На источник ответственных:
 CREATE INDEX IX_RespSCD_Credit_FromTo
-ON [ATK].[mis].[2tbl_Silver_Resp_SCD](CreditID, ValidFrom, ValidTo)
+ON [ATK].[mis].[Silver_Resp_SCD](CreditID, ValidFrom, ValidTo)
 INCLUDE (FinalBranchID, FinalExpertID, IsSpecialBranch);
 
 /*-- 2) На итоговую под типовые запросы:*/
-CREATE INDEX IX_ParMinV2_SoldDate   ON [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3](SoldDate);
-CREATE INDEX IX_ParMinV2_ClientDate ON [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3](ClientID, SoldDate)
+CREATE INDEX IX_ParMin_SoldDate   ON [mis].[Gold_Par_Restruct_Daily_Min1](SoldDate);
+CREATE INDEX IX_ParMin_ClientDate ON [mis].[Gold_Par_Restruct_Daily_Min1](ClientID, SoldDate)
 INCLUDE (ParIFRS, SegmentIFRS, Balance_Total, CreditID);
 
 USE [ATK];
@@ -286,7 +286,7 @@ SET NOCOUNT ON;
 DECLARE @DateFrom date = '2024-01-01';
 DECLARE @DateTo   date = '2025-12-31';
 
-PRINT N'=== Пересборка [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] за период '
+PRINT N'=== Пересборка [mis].[Gold_Par_Restruct_Daily_Min1] за период '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';
 
 /* ========== Очистка temp-таблиц (повторный запуск) ========== */
@@ -298,13 +298,13 @@ IF OBJECT_ID('tempdb..#Joined_raw')   IS NOT NULL DROP TABLE #Joined_raw;
 IF OBJECT_ID('tempdb..#Joined')       IS NOT NULL DROP TABLE #Joined;
 
 /* ================== ЦЕЛЕВАЯ ТАБЛИЦА ================== */
-IF OBJECT_ID('[mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3]', 'U') IS NOT NULL
+IF OBJECT_ID('[mis].[Gold_Par_Restruct_Daily_Min1]', 'U') IS NOT NULL
 BEGIN
-    DROP TABLE [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3];
+    DROP TABLE [mis].[Gold_Par_Restruct_Daily_Min1];
     PRINT N'Старая таблица удалена.';
 END;
 
-CREATE TABLE [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] (
+CREATE TABLE [mis].[Gold_Par_Restruct_Daily_Min1] (
     SoldDate               date          NOT NULL,
     CreditID               varchar(64)   NOT NULL,
     ClientID               varchar(64)   NOT NULL,
@@ -329,27 +329,27 @@ PRINT N'Шаг 1 — подготовка базы...';
 
 ;WITH cte AS (
     SELECT
-        s.SoldDate,
-        s.CreditID,
-        s.ClientID,
-        s.LP_Balance           AS Balance_Total,
-        s.DaysOverdue_Credit   AS DaysBucket_Credit,
-        s.DaysOverdue_Actual   AS DaysFact_Total,
-        s.DaysOverdue_IFRS     AS DaysIFRS,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,		
+        s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID] AS ClientID,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит]   AS Balance_Total,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки Кредит]   AS DaysBucket_Credit,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого]   AS DaysFact_Total,
+        s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО]     AS DaysIFRS,
         r.StateName            AS StateName_Final,
         r.TypeName_Sticky      AS TypeName_Sticky_Final,
         r.CreditStatus         AS CreditStatus_Base,
         ROW_NUMBER() OVER (
-            PARTITION BY s.ClientID, s.CreditID, s.SoldDate
-            ORDER BY s.LP_Balance DESC, s.DaysOverdue_Credit DESC
+            PARTITION BY s.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID],  s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID], 
+			s.[СуммыЗадолженностиПоПериодамПросрочки Дата]
+            ORDER BY s.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] DESC, s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки Кредит] DESC
         ) AS rn
-    FROM [ATK].[mis].[2tbl_Silver_Sold_Daily] s
-    LEFT JOIN [ATK].[mis].[2tbl_Silver_Restruct_Merged_SCD] r
-           ON r.CreditID = s.CreditID
-          AND s.SoldDate >= r.ValidFrom
-          AND s.SoldDate <= r.ValidTo
-    WHERE s.SoldDate >= @DateFrom
-      AND s.SoldDate <= @DateTo
+    FROM [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] s
+    LEFT JOIN [ATK].[mis].[Silver_Restruct_Merged_SCD] r
+           ON r.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+          AND s.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= r.ValidFrom
+          AND s.[СуммыЗадолженностиПоПериодамПросрочки Дата] <= r.ValidTo
+    WHERE s.[СуммыЗадолженностиПоПериодамПросрочки Дата] BETWEEN @DateFrom AND @DateTo
 )
 SELECT
     SoldDate, CreditID, ClientID,
@@ -385,7 +385,7 @@ CREATE UNIQUE CLUSTERED INDEX CIX_MaxDays ON #MaxDays (ClientID, SoldDate);
 /* ================== ШАГ 1.2. Флаги ================== */
 SELECT f.ClientID, f.SoldDate
 INTO #Flag
-FROM [ATK].[mis].[2tbl_Silver_Client_UnhealedFlag] f
+FROM [ATK].[mis].[Silver_Client_UnhealedFlag] f
 WHERE f.HasUnhealed = 1
   AND f.SoldDate >= @DateFrom
   AND f.SoldDate <= @DateTo;
@@ -395,7 +395,7 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Flag ON #Flag (ClientID, SoldDate);
 /* ======= ШАГ 2. Самая ранняя запись ответственных (fallback) ======= */
 ;WITH MinFrom AS (
     SELECT CreditID, MIN(ValidFrom) AS MinValidFrom
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD]
+    FROM [ATK].[mis].[Silver_Resp_SCD]
     GROUP BY CreditID
 )
 SELECT
@@ -404,7 +404,7 @@ SELECT
     r.FinalExpertID,
     r.IsSpecialBranch
 INTO #RespEarliest
-FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] r
+FROM [ATK].[mis].[Silver_Resp_SCD] r
 JOIN MinFrom m
   ON m.CreditID = r.CreditID
  AND m.MinValidFrom = r.ValidFrom;
@@ -433,7 +433,7 @@ INTO #Joined_raw
 FROM #Base b
 OUTER APPLY (
     SELECT TOP (1) r.*
-    FROM [ATK].[mis].[2tbl_Silver_Resp_SCD] r
+    FROM [ATK].[mis].[Silver_Resp_SCD] r
     WHERE r.CreditID = b.CreditID
       AND b.SoldDate >= r.ValidFrom
       AND b.SoldDate <= r.ValidTo
@@ -484,7 +484,7 @@ ON #Joined (ClientID, SoldDate, CreditID);
 /* ================ ШАГ 5. Вставка результата ================= */
 PRINT N'Шаг 3 — вставка результата...';
 
-INSERT /*+ TABLOCK */ INTO [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3] WITH (TABLOCK)
+INSERT /*+ TABLOCK */ INTO [mis].[Gold_Par_Restruct_Daily_Min1] WITH (TABLOCK)
 (
     SoldDate, CreditID, ClientID,
     Balance_Total, DaysBucket_Credit, DaysFact_Total, DaysIFRS,
@@ -546,17 +546,17 @@ DROP TABLE #Joined;
 
 /* ================ ИТОГ ================= */
 DECLARE @cnt bigint;
-SELECT @cnt = COUNT_BIG(*) FROM [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3];
+SELECT @cnt = COUNT_BIG(*) FROM [mis].[Gold_Par_Restruct_Daily_Min1];
 PRINT N'🏁 Готово. Строк: ' + CONVERT(varchar(30), @cnt);
 
 /*===== РЕКОМЕНДУЕМЫЕ ИНДЕКСЫ (если есть права) =====*/
 --1) На источник ответственных:
 CREATE INDEX IX_RespSCD_Credit_FromTo
-ON [ATK].[mis].[2tbl_Silver_Resp_SCD](CreditID, ValidFrom, ValidTo)
+ON [ATK].[mis].[Silver_Resp_SCD](CreditID, ValidFrom, ValidTo)
 INCLUDE (FinalBranchID, FinalExpertID, IsSpecialBranch);
 
 /*-- 2) На итоговую под типовые запросы:*/
-CREATE INDEX IX_ParMinV2_SoldDate   ON [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3](SoldDate);
-CREATE INDEX IX_ParMinV2_ClientDate ON [mis].[2tbl_Gold_Par_Restruct_Daily_Min_v3](ClientID, SoldDate)
+CREATE INDEX IX_ParMin_SoldDate   ON [mis].[Gold_Par_Restruct_Daily_Min1](SoldDate);
+CREATE INDEX IX_ParMin_ClientDate ON [mis].[Gold_Par_Restruct_Daily_Min1](ClientID, SoldDate)
 INCLUDE (ParIFRS, SegmentIFRS, Balance_Total, CreditID);
 

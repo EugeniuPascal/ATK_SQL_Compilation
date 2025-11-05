@@ -1,4 +1,4 @@
-# compile_gold_tables_job_proc_idempotent.py
+# compile_silver_tables_job_proc_idempotent.py
 import os
 import re
 import logging
@@ -7,9 +7,9 @@ from datetime import datetime
 # ---- Settings ----
 DB_NAME        = "ATK"
 DEFAULT_SCHEMA = "mis"   # only schema you can use
-source_folder  = r"C:\ATK_Project\sql_scripts\Gold"
-output_file    = r"C:\ATK_Project\compiled\compiled_gold_job_proc.sql"
-log_file       = r"C:\ATK_Project\logs\compile_gold.log"
+source_folder  = r"C:\ATK_Project\sql_scripts\Silver"
+output_file    = r"C:\ATK_Project\compiled\compiled_silver_job_proc.sql"
+log_file       = r"C:\ATK_Project\logs\compile_silver.log"
 
 # ---- Logging ----
 os.makedirs(os.path.dirname(log_file), exist_ok=True)
@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
-logging.info("=== Starting Gold SQL Compilation Job ===")
+logging.info("=== Starting Silver SQL Compilation Job ===")
 
 # --------------------------------------------------------------------
 # Regexes
@@ -28,7 +28,7 @@ USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | 
 LINE_COMMENT_RE  = re.compile(r"--[^\r\n]*")
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 NAME_PART   = r'(?:\[[^\]]+\]|"[^"]+"|[^\s\(\[\]"\.]+)'
-NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*'
+NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*"
 CREATE_VIEW_RE  = re.compile(rf"(?im)\bCREATE\s+VIEW\s+({NAME_PATTERN})")
 CREATE_PROC_RE  = re.compile(rf"(?im)\bCREATE\s+PROCEDURE\s+({NAME_PATTERN})")
 CREATE_FUNC_RE  = re.compile(rf"(?im)\bCREATE\s+FUNCTION\s+({NAME_PATTERN})")
@@ -38,7 +38,9 @@ CREATE_TABLE_RE = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(?
 # Helpers
 # --------------------------------------------------------------------
 def strip_sql_comments(sql: str) -> str:
-    def _block_repl(m): return re.sub(r"[^\r\n]", " ", m.group(0))
+    """Remove SQL line and block comments safely."""
+    def _block_repl(m):
+        return re.sub(r"[^\r\n]", " ", m.group(0))
     sql = BLOCK_COMMENT_RE.sub(_block_repl, sql)
     sql = LINE_COMMENT_RE.sub("", sql)
     return sql
@@ -51,7 +53,13 @@ def normalize_object_name(name: str, default_schema: str) -> str:
         part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
         return f'[{default_schema}].{part}'
     parts = [p.strip() for p in n.split('.')]
-    return '.'.join([p if p.startswith('[') and p.endswith(']') else f'[{p}]' for p in parts])
+    norm = []
+    for p in parts:
+        if p.startswith('[') and p.endswith(']'):
+            norm.append(p)
+        else:
+            norm.append(f'[{p}]')
+    return '.'.join(norm)
 
 def make_idempotent(sql: str) -> str:
     sql = strip_sql_comments(sql)
@@ -66,32 +74,24 @@ def make_idempotent(sql: str) -> str:
         if raw.lstrip().startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
-        return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
+        return (f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\n"
+                f"CREATE TABLE {norm}")
+    sql = CREATE_TABLE_RE.sub(table_repl, sql)
 
-    return CREATE_TABLE_RE.sub(table_repl, sql).strip()
+    return sql.strip()
 
 # --------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------
 try:
-    # ---- Ordered list of Gold files ----
+    # ---- Ordered list of Silver files ----
     SQL_ORDER = [
-        "01_mis.Gold_Dim_AppUsers.sql",
-        "02_mis.Gold_Dim_Branch.sql",
-        "03_mis.Gold_Dim_Clients.sql",
-        "04_mis.Gold_Dim_Credits.sql",
-        "05_mis.Gold_Dim_EmployeePayrollData.sql",
-        "06_mis.Gold_Dim_Employees.sql",
-        "07_mis.Gold_Dim_EmployeesHistory.sql",
-        "08_mis.Gold_Dim_PartnersBranch.sql",
-        "09_mis.Gold_Fact_AdminTasks.sql",
-        "10_mis.Gold_Fact_ArchiveDocument.sql",
-        "11_mis.Gold_Fact_BudgetEmployees.sql",
-        "12_mis.Gold_Fact_CerereOnline.sql",
-        "13_mis.Gold_Fact_CreditsInShadowBranches.sql",
-        "14_mis.Gold_Fact_WriteOffCredits.sql",
-        "15_mis.Gold_Fact_Disbursement.sql",
-        "16_mis.Gold_Fact_Par_Restruct_Daily_Min.sql",
+        "01_mis.Silver_Restruct_SCD.sql",
+        "02_mis.Silver_RestructState_SCD.sql",
+        "03_mis.Silver_Restruct_Merged_SCD.sql",
+        "04_mis.Silver_Client_UnhealedFlag.sql",
+        "05_mis.Silver_Resp_SCD.sql",
+        "06_mis.Silver_Stages_SCD.sql",
         # add more as needed
     ]
 
@@ -119,7 +119,7 @@ try:
     with open(output_file, 'w', encoding='utf-8-sig') as f_out:
         # header
         f_out.write("-- =============================================\n")
-        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent\n")
+        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
         f_out.write(f"-- Source folder: {source_folder}\n")
         f_out.write(f"-- Files included: {len(sql_files)}\n")
@@ -130,9 +130,9 @@ try:
 
         # preamble
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
-        f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_GoldTables', 'P') IS NOT NULL\n")
-        f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_GoldTables;\nGO\n\n")
-        f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_GoldTables\nAS\nBEGIN\n")
+        f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_SilverTables', 'P') IS NOT NULL\n")
+        f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_SilverTables;\nGO\n\n")
+        f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_SilverTables\nAS\nBEGIN\n")
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 

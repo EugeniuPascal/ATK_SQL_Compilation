@@ -24,11 +24,17 @@ logging.info("=== Starting Gold SQL Compilation Job ===")
 # Regexes
 # --------------------------------------------------------------------
 GO_LINE_RE   = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
-USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | re.MULTILINE)
+USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$",
+                          re.IGNORECASE | re.MULTILINE)
+
+# SQL comments
 LINE_COMMENT_RE  = re.compile(r"--[^\r\n]*")
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+
+# Object name pattern (schema.object, [quoted], "double-quoted")
 NAME_PART   = r'(?:\[[^\]]+\]|"[^"]+"|[^\s\(\[\]"\.]+)'
-NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*'
+NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*"
+
 CREATE_VIEW_RE  = re.compile(rf"(?im)\bCREATE\s+VIEW\s+({NAME_PATTERN})")
 CREATE_PROC_RE  = re.compile(rf"(?im)\bCREATE\s+PROCEDURE\s+({NAME_PATTERN})")
 CREATE_FUNC_RE  = re.compile(rf"(?im)\bCREATE\s+FUNCTION\s+({NAME_PATTERN})")
@@ -38,7 +44,9 @@ CREATE_TABLE_RE = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(?
 # Helpers
 # --------------------------------------------------------------------
 def strip_sql_comments(sql: str) -> str:
-    def _block_repl(m): return re.sub(r"[^\r\n]", " ", m.group(0))
+    """Remove SQL line and block comments safely."""
+    def _block_repl(m):
+        return re.sub(r"[^\r\n]", " ", m.group(0))
     sql = BLOCK_COMMENT_RE.sub(_block_repl, sql)
     sql = LINE_COMMENT_RE.sub("", sql)
     return sql
@@ -51,69 +59,44 @@ def normalize_object_name(name: str, default_schema: str) -> str:
         part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
         return f'[{default_schema}].{part}'
     parts = [p.strip() for p in n.split('.')]
-    return '.'.join([p if p.startswith('[') and p.endswith(']') else f'[{p}]' for p in parts])
+    norm = []
+    for p in parts:
+        if p.startswith('[') and p.endswith(']'):
+            norm.append(p)
+        else:
+            norm.append(f'[{p}]')
+    return '.'.join(norm)
 
 def make_idempotent(sql: str) -> str:
+    # 0) strip comments
     sql = strip_sql_comments(sql)
+    # 1) remove GO/USE
     sql = GO_LINE_RE.sub("", sql)
     sql = USE_RE.sub("", sql)
+    # 2) programmable objects → CREATE OR ALTER
     sql = CREATE_VIEW_RE.sub(lambda m: f"CREATE OR ALTER VIEW {m.group(1)}", sql)
     sql = CREATE_PROC_RE.sub(lambda m: f"CREATE OR ALTER PROCEDURE {m.group(1)}", sql)
     sql = CREATE_FUNC_RE.sub(lambda m: f"CREATE OR ALTER FUNCTION {m.group(1)}", sql)
 
+    # 3) tables → drop-if-exists + create
     def table_repl(m):
         raw = m.group(1).strip()
         if raw.lstrip().startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
-        return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
+        return (f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\n"
+                f"CREATE TABLE {norm}")
+    sql = CREATE_TABLE_RE.sub(table_repl, sql)
 
-    return CREATE_TABLE_RE.sub(table_repl, sql).strip()
+    return sql.strip()
 
 # --------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------
 try:
-    # ---- Ordered list of Gold files ----
-    SQL_ORDER = [
-        "01_mis.Gold_Dim_AppUsers.sql",
-        "02_mis.Gold_Dim_Branch.sql",
-        "03_mis.Gold_Dim_Clients.sql",
-        "04_mis.Gold_Dim_Credits.sql",
-        "05_mis.Gold_Dim_EmployeePayrollData.sql",
-        "06_mis.Gold_Dim_Employees.sql",
-        "07_mis.Gold_Dim_EmployeesHistory.sql",
-        "08_mis.Gold_Dim_PartnersBranch.sql",
-        "09_mis.Gold_Fact_AdminTasks.sql",
-        "10_mis.Gold_Fact_ArchiveDocument.sql",
-        "11_mis.Gold_Fact_BudgetEmployees.sql",
-        "12_mis.Gold_Fact_CerereOnline.sql",
-        "13_mis.Gold_Fact_CreditsInShadowBranches.sql",
-        "14_mis.Gold_Fact_WriteOffCredits.sql",
-        "15_mis.Gold_Fact_Disbursement.sql",
-        "16_mis.Gold_Fact_Par_Restruct_Daily_Min.sql",
-        # add more as needed
-    ]
-
-    # 1) Build full list in order first
-    sql_files = []
-    processed_names = set()
-    all_files = sorted([f for f in os.listdir(source_folder) if f.lower().endswith('.sql')])
-
-    for f in SQL_ORDER:
-        full_path = os.path.join(source_folder, f)
-        if os.path.exists(full_path):
-            sql_files.append(f)
-            processed_names.add(f)
-        else:
-            logging.warning(f"File listed in SQL_ORDER but not found: {full_path}")
-
-    # 2) Append any remaining .sql files not in SQL_ORDER
-    for f in all_files:
-        if f not in processed_names:
-            sql_files.append(f)
-
-    logging.info(f"Total SQL files to process: {len(sql_files)}")
+    sql_files = sorted([f for f in os.listdir(source_folder)
+                        if f.lower().endswith('.sql')])
+    logging.info(f"Found {len(sql_files)} SQL files in {source_folder}")
 
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     with open(output_file, 'w', encoding='utf-8-sig') as f_out:
@@ -140,7 +123,8 @@ try:
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf}")
-                with open(os.path.join(source_folder, sf), 'r', encoding='utf-8-sig') as f_in:
+                with open(os.path.join(source_folder, sf), 'r',
+                          encoding='utf-8-sig') as f_in:
                     content = f_in.read()
                     transformed = make_idempotent(content)
                     safe = transformed.replace("'", "''")

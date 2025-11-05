@@ -1,13 +1,13 @@
-﻿IF OBJECT_ID('[ATK].[mis].[2tbl_Silver_RestructState_SCD1]','U') IS NULL
-CREATE TABLE [ATK].[mis].[2tbl_Silver_RestructState_SCD1] (
+﻿IF OBJECT_ID('[ATK].[mis].[Silver_RestructState_SCD]','U') IS NULL
+CREATE TABLE [ATK].[mis].[Silver_RestructState_SCD] (
     CreditID   varchar(64)   NOT NULL,
     ValidFrom  date          NOT NULL,
     ValidTo    date          NOT NULL,
     StateName  nvarchar(200) NULL,
-    CONSTRAINT PK_Silver_RestructState_SCD1 PRIMARY KEY (CreditID, ValidFrom)
+    CONSTRAINT PK_Silver_RestructState_SCD PRIMARY KEY (CreditID, ValidFrom)
 );
 ELSE
-TRUNCATE TABLE [ATK].[mis].[2tbl_Silver_RestructState_SCD1];
+TRUNCATE TABLE [ATK].[mis].[Silver_RestructState_SCD];
 GO
 
 ;WITH src AS (
@@ -35,7 +35,7 @@ rng AS (
         StateName
     FROM dedup
 )
-INSERT INTO [ATK].[mis].[2tbl_Silver_RestructState_SCD1]
+INSERT INTO [ATK].[mis].[Silver_RestructState_SCD]
     (CreditID, ValidFrom, ValidTo, StateName)
 SELECT
     CreditID,

@@ -1,16 +1,16 @@
 ﻿-- Создаём целевую SCD-таблицу (если ещё нет)
-IF OBJECT_ID('[ATK].[mis].[2tbl_Silver_Restruct_SCD1]','U') IS NULL
-CREATE TABLE [ATK].[mis].[2tbl_Silver_Restruct_SCD1] (
+IF OBJECT_ID('[ATK].[mis].[Silver_Restruct_SCD]','U') IS NULL
+CREATE TABLE [ATK].[mis].[Silver_Restruct_SCD] (
     CreditID        varchar(64)   NOT NULL,
     ValidFrom       date          NOT NULL,
     ValidTo         date          NOT NULL,   -- '9999-12-31' для открытого интервала
     TypeName        nvarchar(200) NULL,
     Reason          nvarchar(500) NULL,
     NonCommSeenUpTo bit           NOT NULL,
-    CONSTRAINT PK_Silver_Restruct_SCD1 PRIMARY KEY (CreditID, ValidFrom)
+    CONSTRAINT PK_Silver_Restruct_SCD PRIMARY KEY (CreditID, ValidFrom)
 );
 ELSE
-TRUNCATE TABLE [ATK].[mis].[2tbl_Silver_Restruct_SCD1];
+TRUNCATE TABLE [ATK].[mis].[Silver_Restruct_SCD];
 GO
 
 ;WITH src AS (
@@ -45,7 +45,7 @@ rng AS (    -- считаем интервалы
                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS NonCommSeenUpTo
     FROM dedup
 )
-INSERT INTO [ATK].[mis].[2tbl_Silver_Restruct_SCD1]
+INSERT INTO [ATK].[mis].[Silver_Restruct_SCD]
     (CreditID, ValidFrom, ValidTo, TypeName, Reason, NonCommSeenUpTo)
 SELECT
     CreditID,

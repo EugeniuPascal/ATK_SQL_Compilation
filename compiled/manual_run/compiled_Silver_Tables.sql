@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-05 11:18:47
+-- Generated: 2025-11-05 11:56:38
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (6):
 --   mis.Silver_Restruct_SCD.sql
@@ -15,54 +15,55 @@ SET NOCOUNT ON;
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Restruct_SCD.sql
 ----------------------------------------------------------------------------------------------------
--- Создаём целевую SCD-таблицу (если ещё нет)
-IF OBJECT_ID('[ATK].[mis].[Silver_Restruct_SCD]','U') IS NULL
-CREATE TABLE [ATK].[mis].[Silver_Restruct_SCD] (
-    CreditID        varchar(64)   NOT NULL,
-    ValidFrom       date          NOT NULL,
-    ValidTo         date          NOT NULL,   -- '9999-12-31' для открытого интервала
-    TypeName        nvarchar(200) NULL,
-    Reason          nvarchar(500) NULL,
-    NonCommSeenUpTo bit           NOT NULL,
-    CONSTRAINT PK_Silver_Restruct_SCD PRIMARY KEY (CreditID, ValidFrom)
-);
+IF OBJECT_ID('mis.Silver_Restruct_SCD','U') IS NULL
+BEGIN
+    CREATE TABLE mis.Silver_Restruct_SCD (
+        CreditID        varchar(64)   NOT NULL,
+        ValidFrom       date          NOT NULL,
+        ValidTo         date          NOT NULL,
+        TypeName        nvarchar(200) NULL,
+        Reason          nvarchar(500) NULL,
+        NonCommSeenUpTo bit           NOT NULL,
+        CONSTRAINT PK_Silver_Restruct_SCD PRIMARY KEY (CreditID, ValidFrom)
+    );
+END
 ELSE
-TRUNCATE TABLE [ATK].[mis].[Silver_Restruct_SCD];
-GO
+BEGIN
+    TRUNCATE TABLE mis.Silver_Restruct_SCD;
+END
 
 ;WITH src AS (
     SELECT
         r.[РеструктурированныеКредиты Кредит ID] AS CreditID,
-        CAST(r.[РеструктурированныеКредиты Период] AS date)       AS PeriodDate, -- считаем на лету
+        CAST(r.[РеструктурированныеКредиты Период] AS date) AS PeriodDate,
         r.[РеструктурированныеКредиты Тип Реструктуризации Долга] AS TypeName,
-        r.[РеструктурированныеКредиты Причина Реструктуризации]   AS Reason,
+        r.[РеструктурированныеКредиты Причина Реструктуризации] AS Reason,
         ROW_NUMBER() OVER (
             PARTITION BY
                 r.[РеструктурированныеКредиты Кредит ID],
                 CAST(r.[РеструктурированныеКредиты Период] AS date)
             ORDER BY r.[РеструктурированныеКредиты Период] DESC
         ) AS rn
-    FROM [ATK].[mis].[Bronze_РегистрыСведений.РеструктурированныеКредиты] r
+    FROM mis.[Bronze_РегистрыСведений.РеструктурированныеКредиты] r
 ),
-dedup AS (  -- по одному событию на день/кредит
+dedup AS (
     SELECT CreditID, PeriodDate, TypeName, Reason
     FROM src
     WHERE rn = 1
 ),
-rng AS (    -- считаем интервалы
+rng AS (
     SELECT
         CreditID,
         PeriodDate AS ValidFrom,
         LEAD(PeriodDate) OVER (PARTITION BY CreditID ORDER BY PeriodDate) AS NextFrom,
         TypeName,
         Reason,
-        -- флаг: «Некоммерческая… встречалась когда-либо ДО/НА этот интервал»
         MAX(CASE WHEN TypeName = N'НекоммерческаяРеструктуризация' THEN 1 ELSE 0 END)
             OVER (PARTITION BY CreditID ORDER BY PeriodDate
                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS NonCommSeenUpTo
     FROM dedup
 )
-INSERT INTO [ATK].[mis].[Silver_Restruct_SCD]
+INSERT INTO mis.Silver_Restruct_SCD
     (CreditID, ValidFrom, ValidTo, TypeName, Reason, NonCommSeenUpTo)
 SELECT
     CreditID,
@@ -72,7 +73,6 @@ SELECT
     Reason,
     NonCommSeenUpTo
 FROM rng;
-GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Silver_Restruct_SCD.sql
 ----------------------------------------------------------------------------------------------------
@@ -82,17 +82,20 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_RestructState_SCD.sql
 ----------------------------------------------------------------------------------------------------
-IF OBJECT_ID('[ATK].[mis].[Silver_RestructState_SCD]','U') IS NULL
-CREATE TABLE [ATK].[mis].[Silver_RestructState_SCD] (
-    CreditID   varchar(64)   NOT NULL,
-    ValidFrom  date          NOT NULL,
-    ValidTo    date          NOT NULL,
-    StateName  nvarchar(200) NULL,
-    CONSTRAINT PK_Silver_RestructState_SCD PRIMARY KEY (CreditID, ValidFrom)
-);
+IF OBJECT_ID('mis.Silver_RestructState_SCD','U') IS NULL
+BEGIN
+    CREATE TABLE mis.Silver_RestructState_SCD (
+        CreditID   varchar(64)   NOT NULL,
+        ValidFrom  date          NOT NULL,
+        ValidTo    date          NOT NULL,
+        StateName  nvarchar(200) NULL,
+        CONSTRAINT PK_Silver_RestructState_SCD PRIMARY KEY (CreditID, ValidFrom)
+    );
+END
 ELSE
-TRUNCATE TABLE [ATK].[mis].[Silver_RestructState_SCD];
-GO
+BEGIN
+    TRUNCATE TABLE mis.Silver_RestructState_SCD;
+END
 
 ;WITH src AS (
     SELECT
@@ -105,11 +108,12 @@ GO
                 CAST(s.[СостоянияРеструктурированныхКредитов Период] AS date)
             ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
         ) AS rn
-    FROM [ATK].[mis].[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
+    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
 ),
 dedup AS (
     SELECT CreditID, PeriodDate, StateName
-    FROM src WHERE rn = 1
+    FROM src
+    WHERE rn = 1
 ),
 rng AS (
     SELECT
@@ -119,7 +123,7 @@ rng AS (
         StateName
     FROM dedup
 )
-INSERT INTO [ATK].[mis].[Silver_RestructState_SCD]
+INSERT INTO mis.Silver_RestructState_SCD
     (CreditID, ValidFrom, ValidTo, StateName)
 SELECT
     CreditID,
@@ -127,7 +131,6 @@ SELECT
     COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo,
     StateName
 FROM rng;
-GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Silver_RestructState_SCD.sql
 ----------------------------------------------------------------------------------------------------
@@ -137,83 +140,65 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Restruct_Merged_SCD.sql
 ----------------------------------------------------------------------------------------------------
-/* ===== Создание / приведение схемы ===== */
-IF OBJECT_ID('[ATK].[mis].[Silver_Restruct_Merged_SCD]','U') IS NULL
+IF OBJECT_ID('mis.Silver_Restruct_Merged_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE [ATK].[mis].[Silver_Restruct_Merged_SCD] (
+    CREATE TABLE mis.Silver_Restruct_Merged_SCD (
         CreditID        varchar(64)   NOT NULL,
         ValidFrom       date          NOT NULL,
         ValidTo         date          NOT NULL,
         TypeName        nvarchar(200) NULL,
         Reason          nvarchar(500) NULL,
         StateName       nvarchar(200) NULL,
-        TypeName_Sticky nvarchar(200) NULL,   -- «Некоммерческая…» прилипает вперёд
-        CreditStatus    nvarchar(200) NULL,   -- <<< НОВОЕ: статус кредита (Активен/Закрыт и т.п.)
-        ClientID        varchar(64)   NULL,   -- владелец кредита
+        TypeName_Sticky nvarchar(200) NULL,
+        CreditStatus    nvarchar(200) NULL,
+        ClientID        varchar(64)   NULL,
         CONSTRAINT PK_Silver_Restruct_Merged_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END
 ELSE
 BEGIN
-    /* Добавим недостающие колонки, если их нет */
-    IF COL_LENGTH('ATK.mis.Silver_Restruct_Merged_SCD', 'ClientID') IS NULL
-        ALTER TABLE [ATK].[mis].[Silver_Restruct_Merged_SCD] ADD ClientID varchar(64) NULL;
+    IF COL_LENGTH('mis.Silver_Restruct_Merged_SCD', 'ClientID') IS NULL
+        ALTER TABLE mis.Silver_Restruct_Merged_SCD ADD ClientID varchar(64) NULL;
 
-    IF COL_LENGTH('ATK.mis.Silver_Restruct_Merged_SCD', 'CreditStatus') IS NULL
-        ALTER TABLE [ATK].[mis].[Silver_Restruct_Merged_SCD] ADD CreditStatus nvarchar(200) NULL;
+    IF COL_LENGTH('mis.Silver_Restruct_Merged_SCD', 'CreditStatus') IS NULL
+        ALTER TABLE mis.Silver_Restruct_Merged_SCD ADD CreditStatus nvarchar(200) NULL;
 
-    TRUNCATE TABLE [ATK].[mis].[Silver_Restruct_Merged_SCD];
+    TRUNCATE TABLE mis.Silver_Restruct_Merged_SCD;
 END;
-GO
 
-/* ===== Построение объединённой SCD с учётом статуса кредита ===== */
 ;WITH borders AS (
-    /* точки изменения типа/причины реструктуризации */
     SELECT CreditID, CAST(ValidFrom AS date) AS ValidFrom
-    FROM   [ATK].[mis].[Silver_Restruct_SCD]
+    FROM   mis.Silver_Restruct_SCD
     UNION
-    /* точки изменения состояния реструктуризации */
     SELECT CreditID, CAST(ValidFrom AS date) AS ValidFrom
-    FROM   [ATK].[mis].[Silver_RestructState_SCD]
+    FROM   mis.Silver_RestructState_SCD
     UNION
-    /* точки изменения статуса кредита (берём только активные записи регистра) */
     SELECT
         s.[СтатусыКредитовВыданных Кредит ID] AS CreditID,
         CAST(s.[СтатусыКредитовВыданных Период] AS date) AS ValidFrom
-    FROM [ATK].[mis].[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s
+    FROM mis.[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s
     WHERE s.[СтатусыКредитовВыданных Активность] = 1
 ),
 grid AS (
-    SELECT
-        CreditID,
-        ValidFrom,
-        LEAD(ValidFrom) OVER (PARTITION BY CreditID ORDER BY ValidFrom) AS NextFrom
+    SELECT CreditID, ValidFrom,
+           LEAD(ValidFrom) OVER (PARTITION BY CreditID ORDER BY ValidFrom) AS NextFrom
     FROM borders
 ),
 slices AS (
-    SELECT
-        CreditID,
-        ValidFrom,
-        COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo
+    SELECT CreditID, ValidFrom,
+           COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo
     FROM grid
 ),
-/* На начало каждого среза подтягиваем: Type/Reason, State и CreditStatus */
 joined AS (
-    SELECT
-        z.CreditID,
-        z.ValidFrom,
-        z.ValidTo,
-        r.TypeName,
-        r.Reason,
-        r.NonCommSeenUpTo,
-        s.StateName,
-        cs.[СтатусыКредитовВыданных Статус] AS CreditStatus,  -- активный статус на дату среза
-        /* локальный флаг для липкости */
-        COALESCE(r.NonCommSeenUpTo, 0) AS SeenNcHere
+    SELECT z.CreditID, z.ValidFrom, z.ValidTo,
+           r.TypeName, r.Reason, r.NonCommSeenUpTo,
+           s.StateName,
+           cs.[СтатусыКредитовВыданных Статус] AS CreditStatus,
+           COALESCE(r.NonCommSeenUpTo,0) AS SeenNcHere
     FROM slices z
     OUTER APPLY (
         SELECT TOP (1) rr.TypeName, rr.Reason, rr.NonCommSeenUpTo
-        FROM [ATK].[mis].[Silver_Restruct_SCD] rr
+        FROM mis.Silver_Restruct_SCD rr
         WHERE rr.CreditID = z.CreditID
           AND rr.ValidFrom <= z.ValidFrom
           AND rr.ValidTo   >= z.ValidFrom
@@ -221,16 +206,15 @@ joined AS (
     ) r
     OUTER APPLY (
         SELECT TOP (1) ss.StateName
-        FROM [ATK].[mis].[Silver_RestructState_SCD] ss
+        FROM mis.Silver_RestructState_SCD ss
         WHERE ss.CreditID = z.CreditID
           AND ss.ValidFrom <= z.ValidFrom
           AND ss.ValidTo   >= z.ValidFrom
         ORDER BY ss.ValidFrom DESC
     ) s
     OUTER APPLY (
-        /* активный статус на начало среза */
         SELECT TOP (1) s2.[СтатусыКредитовВыданных Статус]
-        FROM [ATK].[mis].[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s2
+        FROM mis.[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s2
         WHERE s2.[СтатусыКредитовВыданных Кредит ID] = z.CreditID
           AND s2.[СтатусыКредитовВыданных Активность] = 1
           AND CAST(s2.[СтатусыКредитовВыданных Период] AS date) <= z.ValidFrom
@@ -238,43 +222,30 @@ joined AS (
     ) cs
 ),
 stick AS (
-    SELECT
-        j.*,
-        /* «липкость» некоммерческой реструктуризации */
-        MAX(j.SeenNcHere) OVER (
-            PARTITION BY j.CreditID
-            ORDER BY j.ValidFrom
-            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS SeenNcCumulative
+    SELECT j.*,
+           MAX(j.SeenNcHere) OVER (PARTITION BY j.CreditID ORDER BY j.ValidFrom
+                                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SeenNcCumulative
     FROM joined j
 )
-INSERT INTO [ATK].[mis].[Silver_Restruct_Merged_SCD]
+INSERT INTO mis.Silver_Restruct_Merged_SCD
     (CreditID, ValidFrom, ValidTo, TypeName, Reason, StateName, TypeName_Sticky, CreditStatus, ClientID)
-SELECT
-    st.CreditID,
-    st.ValidFrom,
-    st.ValidTo,
-    st.TypeName,
-    st.Reason,
-    st.StateName,
-    CASE WHEN st.SeenNcCumulative = 1
-         THEN N'НекоммерческаяРеструктуризация'
-         ELSE st.TypeName
-    END AS TypeName_Sticky,
-    st.CreditStatus,  -- добавили статус кредита на периоде
-    cr.[Кредиты Владелец] AS ClientID
+SELECT st.CreditID, st.ValidFrom, st.ValidTo,
+       st.TypeName, st.Reason, st.StateName,
+       CASE WHEN st.SeenNcCumulative = 1 THEN N'НекоммерческаяРеструктуризация'
+            ELSE st.TypeName END AS TypeName_Sticky,
+       st.CreditStatus,
+       cr.[Кредиты Владелец] AS ClientID
 FROM stick st
-LEFT JOIN [ATK].[mis].[Bronze_Справочники.Кредиты] cr
+LEFT JOIN mis.[Bronze_Справочники.Кредиты] cr
        ON cr.[Кредиты ID] = st.CreditID;
-GO
 
-/* (необязательно) Индексы для ускорения дальнейших расчётов */
-IF NOT EXISTS (SELECT 1 FROM sys.indexes
-               WHERE object_id = OBJECT_ID('[ATK].[mis].[Silver_Restruct_Merged_SCD]')
-                 AND name = 'IX_Merged_ForIntervals')
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE object_id = OBJECT_ID('mis.Silver_Restruct_Merged_SCD')
+      AND name = 'IX_Merged_ForIntervals')
 BEGIN
     CREATE NONCLUSTERED INDEX IX_Merged_ForIntervals
-        ON [ATK].[mis].[Silver_Restruct_Merged_SCD] (CreditID, ValidFrom)
+        ON mis.Silver_Restruct_Merged_SCD (CreditID, ValidFrom)
         INCLUDE (ValidTo, StateName, TypeName, Reason, CreditStatus, TypeName_Sticky, ClientID);
 END;
 ----------------------------------------------------------------------------------------------------
@@ -286,23 +257,15 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Client_UnhealedFlag.sql
 ----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
-SET NOCOUNT ON;
-
-------------------------------------------------------------
--- 0) Ensure target table exists
-------------------------------------------------------------
-IF OBJECT_ID('[ATK].[mis].[Silver_Client_UnhealedFlag]', 'U') IS NULL
+IF OBJECT_ID('mis.Silver_Client_UnhealedFlag', 'U') IS NULL
 BEGIN
-    CREATE TABLE [ATK].[mis].[Silver_Client_UnhealedFlag] (
+    CREATE TABLE mis.Silver_Client_UnhealedFlag (
         ClientID    VARCHAR(64) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
         CONSTRAINT PK_Silver_Client_UnhealedFlag1 PRIMARY KEY (ClientID, SoldDate)
     );
-END
-GO
+END;
 
 ------------------------------------------------------------
 -- 1) Prepare parameters
@@ -315,13 +278,14 @@ IF (@DateTo > @Today) SET @DateTo = @Today;
 ------------------------------------------------------------
 -- 2) Clean up existing data only in range
 ------------------------------------------------------------
-DELETE FROM [ATK].[mis].[Silver_Client_UnhealedFlag]
+DELETE FROM mis.Silver_Client_UnhealedFlag
 WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
 
 ------------------------------------------------------------
 -- 3) Local table of dates
 ------------------------------------------------------------
 IF OBJECT_ID('tempdb..#Dates','U') IS NOT NULL DROP TABLE #Dates;
+
 ;WITH N AS (
     SELECT TOP (DATEDIFF(day,@DateFrom,@DateTo)+1)
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n
@@ -336,15 +300,15 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Dates ON #Dates(SoldDate);
 ------------------------------------------------------------
 -- 4) Insert only distinct client×day where conditions hold
 ------------------------------------------------------------
-INSERT INTO [ATK].[mis].[Silver_Client_UnhealedFlag] (ClientID, SoldDate, HasUnhealed)
+INSERT INTO mis.Silver_Client_UnhealedFlag (ClientID, SoldDate, HasUnhealed)
 SELECT m.ClientID, d.SoldDate, CAST(1 AS bit)
 FROM #Dates d
 JOIN (
     SELECT DISTINCT ClientID
-    FROM [ATK].[mis].[Silver_Restruct_Merged_SCD]
+    FROM mis.Silver_Restruct_Merged_SCD
     WHERE ClientID IS NOT NULL AND ClientID <> ''
 ) c ON 1=1
-JOIN [ATK].[mis].[Silver_Restruct_Merged_SCD] m
+JOIN mis.Silver_Restruct_Merged_SCD m
   ON m.ClientID = c.ClientID
  AND d.SoldDate BETWEEN m.ValidFrom AND m.ValidTo
  AND m.TypeName_Sticky IS NOT NULL
@@ -360,13 +324,6 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Resp_SCD.sql
 ----------------------------------------------------------------------------------------------------
-USE [ATK];
-SET NOCOUNT ON;
-
-PRINT N'=== Пересборка [mis].[Silver_Resp_SCD] с протяжкой НЕ-спец значений (множественные спец-филиалы) ===';
-
-DECLARE @DateFrom date = '2010-01-01';
-
 ------------------------------------------------------------
 -- 0) Набор спец-филиалов (которые нужно ИСКЛЮЧИТЬ и протягивать поверх)
 ------------------------------------------------------------
@@ -374,7 +331,7 @@ DECLARE @SpecialBranches TABLE (BranchID varchar(64) PRIMARY KEY);
 
 INSERT INTO @SpecialBranches (BranchID)
 VALUES
-  ('B73A00155D65140C11EDCF8EFC5B26C5'), -- существующий
+  ('B73A00155D65140C11EDCF8EFC5B26C5'),
   ('B8934CC39235AB0B41675ED45E7EE551'),
   ('B7D800155D65140C11F0316FD846B283'),
   ('80FE00155D65040111EB7DB987EF3B3A'),
@@ -383,10 +340,10 @@ VALUES
 ------------------------------------------------------------
 -- 1) Пересоздаём таблицу назначения
 ------------------------------------------------------------
-IF OBJECT_ID('[mis].[Silver_Resp_SCD]', 'U') IS NOT NULL
-    DROP TABLE [mis].[Silver_Resp_SCD];
+IF OBJECT_ID('mis.Silver_Resp_SCD', 'U') IS NOT NULL
+    DROP TABLE mis.Silver_Resp_SCD;
 
-CREATE TABLE [mis].[Silver_Resp_SCD] (
+CREATE TABLE mis.Silver_Resp_SCD (
     CreditID        varchar(64) NOT NULL,
     ValidFrom       date        NOT NULL,
     ValidTo         date        NOT NULL,
@@ -401,6 +358,8 @@ CREATE TABLE [mis].[Silver_Resp_SCD] (
 ------------------------------------------------------------
 -- 2) База по регистру: одна запись на дату (снимаем дубли)
 ------------------------------------------------------------
+DECLARE @DateFrom date = '2010-01-01';
+
 SELECT
     r.[ОтветственныеПоКредитамВыданным Кредит ID]            AS CreditID,
     CAST(r.[ОтветственныеПоКредитамВыданным Период] AS date) AS PeriodDate,
@@ -413,7 +372,7 @@ SELECT
                  r.[ОтветственныеПоКредитамВыданным ID] DESC
     ) AS rn
 INTO #RespBaseRaw
-FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] r
+FROM mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] r
 WHERE r.[ОтветственныеПоКредитамВыданным Активность] = 1
   AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS date) >= @DateFrom;
 
@@ -425,8 +384,7 @@ WHERE rn = 1;
 DROP TABLE #RespBaseRaw;
 
 ------------------------------------------------------------
--- 3) Интервалы + протяжка:
---    спец-филиалы = те, что входят в @SpecialBranches
+-- 3) Интервалы + протяжка
 ------------------------------------------------------------
 ;WITH stage AS (
     SELECT
@@ -437,13 +395,12 @@ DROP TABLE #RespBaseRaw;
         ExpertID,
         CASE WHEN EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = BranchID)
              THEN 1 ELSE 0 END AS IsSpecialBranch,
-        -- Номер группы НЕ-спец записей (для каскадной протяжки)
         SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = BranchID)
                  THEN 1 ELSE 0 END)
             OVER (PARTITION BY CreditID ORDER BY PeriodDate ROWS UNBOUNDED PRECEDING) AS grp
     FROM #RespBase
 )
-INSERT INTO [mis].[Silver_Resp_SCD] (
+INSERT INTO mis.Silver_Resp_SCD (
     CreditID, ValidFrom, ValidTo,
     BranchID, ExpertID,
     IsSpecialBranch, FinalBranchID, FinalExpertID
@@ -455,7 +412,6 @@ SELECT
     s.BranchID,
     s.ExpertID,
     s.IsSpecialBranch,
-    -- FinalBranchID: текущее НЕ-спец -> оно; иначе последний НЕ-спец в grp; если NULL — исходный BranchID
     COALESCE(
         CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
                   AND s.BranchID IS NOT NULL
@@ -465,7 +421,6 @@ SELECT
             OVER (PARTITION BY s.CreditID, s.grp),
         s.BranchID
     ) AS FinalBranchID,
-    -- FinalExpertID: по той же логике
     COALESCE(
         CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
                   AND s.ExpertID IS NOT NULL
@@ -478,18 +433,6 @@ SELECT
 FROM stage s;
 
 DROP TABLE #RespBase;
-
-------------------------------------------------------------
--- 4) Итог
-------------------------------------------------------------
-DECLARE @cnt bigint;
-SELECT @cnt = COUNT_BIG(*) FROM [mis].[Silver_Resp_SCD];
-PRINT N'✅ Готово: [mis].[Silver_Resp_SCD] пересобрана. Строк: ' + CONVERT(varchar(30), @cnt);
-
--- (опционально) индексы под выборки на дату/кредит:
--- CREATE INDEX IX_Resp_SCD_Credit_FromTo ON [mis].[Silver_Resp_SCD](CreditID, ValidFrom, ValidTo)
---     INCLUDE (BranchID, ExpertID, FinalBranchID, FinalExpertID, IsSpecialBranch);
--- CREATE INDEX IX_Resp_SCD_FromTo ON [mis].[Silver_Resp_SCD](ValidFrom, ValidTo);
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Silver_Resp_SCD.sql
 ----------------------------------------------------------------------------------------------------
@@ -499,13 +442,12 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Stages_SCD.sql
 ----------------------------------------------------------------------------------------------------
-USE [ATK];
-SET NOCOUNT ON;
-
-/* 1) Таблица */
-IF OBJECT_ID('[ATK].[mis].[Silver_Stages_SCD]','U') IS NULL
+------------------------------------------------------------
+-- 1) Ensure target table exists
+------------------------------------------------------------
+IF OBJECT_ID('mis.Silver_Stages_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE [ATK].[mis].[Silver_Stages_SCD] (
+    CREATE TABLE mis.Silver_Stages_SCD (
         CreditID   varchar(64)   NOT NULL,
         ValidFrom  date          NOT NULL,
         ValidTo    date          NOT NULL,
@@ -514,36 +456,34 @@ BEGIN
     );
 END
 ELSE
-    TRUNCATE TABLE [ATK].[mis].[Silver_Stages_SCD];
+BEGIN
+    TRUNCATE TABLE mis.Silver_Stages_SCD;
+END;
 
-/* 2) Пересборка без агрегатов, с сохранением NULL */
+------------------------------------------------------------
+-- 2) Rebuild SCD
+------------------------------------------------------------
 ;WITH src AS (
     SELECT
         CAST([СтадииКредитов Период] AS date) AS PeriodDate,
         [СтадииКредитов Кредит ID]           AS CreditID,
         [СтадииКредитов Стадия]              AS StageName,
         [СтадииКредитов ID]                  AS RowId
-    FROM [ATK].[dbo].[РегистрыСведений.СтадииКредитов]
+    FROM dbo.[РегистрыСведений.СтадииКредитов]
     WHERE [СтадииКредитов Кредит ID] IS NOT NULL
       AND [СтадииКредитов Период]    IS NOT NULL
 ),
--- Дедуп внутри дня: берём «последнюю» запись по дате (при множественных — по ID)
 dedup AS (
     SELECT
         CreditID, PeriodDate, StageName,
-        ROW_NUMBER() OVER (
-            PARTITION BY CreditID, PeriodDate
-            ORDER BY RowId DESC
-        ) AS rn
+        ROW_NUMBER() OVER (PARTITION BY CreditID, PeriodDate ORDER BY RowId DESC) AS rn
     FROM src
 ),
--- Оставляем по одной записи на день
 day_rows AS (
     SELECT CreditID, PeriodDate, StageName
     FROM dedup
     WHERE rn = 1
 ),
--- Границы изменений: учитываем NULL как отдельное значение
 borders AS (
     SELECT
         d.CreditID,
@@ -555,9 +495,8 @@ borders AS (
 starts AS (
     SELECT CreditID, ValidFrom, StageName
     FROM borders
-    WHERE ISNULL(PrevStage,   N'#NULL#') <>
-          ISNULL(StageName,   N'#NULL#')
-       OR PrevStage IS NULL -- первая запись по кредиту
+    WHERE ISNULL(PrevStage, N'#NULL#') <> ISNULL(StageName, N'#NULL#')
+       OR PrevStage IS NULL
 ),
 grid AS (
     SELECT
@@ -575,16 +514,17 @@ slices AS (
         COALESCE(DATEADD(day,-1,NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo
     FROM grid
 )
-INSERT INTO [ATK].[mis].[Silver_Stages_SCD] (CreditID, ValidFrom, ValidTo, StageName)
+INSERT INTO mis.Silver_Stages_SCD (CreditID, ValidFrom, ValidTo, StageName)
 SELECT CreditID, ValidFrom, ValidTo, StageName
-FROM slices
-ORDER BY CreditID, ValidFrom;
+FROM slices;
 
-/* 3) Индекс под интервальные джоины (с защитой от конфликта со статистикой) */
+------------------------------------------------------------
+-- 3) Index under interval joins
+------------------------------------------------------------
 DECLARE @schema sysname = N'mis';
 DECLARE @table  sysname = N'Silver_Stages_SCD';
 DECLARE @stat   sysname = N'IX_Stages_ForIntervals';
-DECLARE @obj_id int     = OBJECT_ID(QUOTENAME(@schema)+N'.'+QUOTENAME(@table));
+DECLARE @obj_id int = OBJECT_ID(QUOTENAME(@schema)+N'.'+QUOTENAME(@table));
 
 IF @obj_id IS NOT NULL
 BEGIN
@@ -599,7 +539,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=@obj_id AND name=@stat)
     BEGIN
         CREATE NONCLUSTERED INDEX IX_Stages_ForIntervals
-            ON [mis].[Silver_Stages_SCD] (CreditID, ValidFrom)
+            ON mis.Silver_Stages_SCD (CreditID, ValidFrom)
             INCLUDE (ValidTo, StageName);
     END;
 END;

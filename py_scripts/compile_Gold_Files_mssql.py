@@ -91,7 +91,8 @@ try:
         "mis.Gold_Fact_CreditsInShadowBranches.sql",
         "mis.Gold_Fact_WriteOffCredits.sql",
         "mis.Gold_Fact_Disbursement.sql",
-        "mis.Gold_Fact_Par_Restruct_Daily_Min.sql",
+        "mis.Gold_Restruct_Daily_Min.sql",
+        "mis.Gold_Fact_Sold_Par.sql"
         # add more as needed
     ]
 

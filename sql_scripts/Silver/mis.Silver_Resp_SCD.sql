@@ -68,10 +68,14 @@ DROP TABLE #RespBaseRaw;
         BranchID,
         ExpertID,
         CASE WHEN EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = BranchID)
-             THEN 1 ELSE 0 END AS IsSpecialBranch,
-        SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = BranchID)
-                 THEN 1 ELSE 0 END)
-            OVER (PARTITION BY CreditID ORDER BY PeriodDate ROWS UNBOUNDED PRECEDING) AS grp
+             THEN 1 
+			 ELSE 0 
+	    END AS IsSpecialBranch,
+        COALESCE(
+		     SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = BranchID)
+                 THEN 1 ELSE 0 
+			     END
+				 ) OVER (PARTITION BY CreditID ORDER BY PeriodDate ROWS UNBOUNDED PRECEDING), 0) AS grp
     FROM #RespBase
 )
 INSERT INTO mis.Silver_Resp_SCD (
@@ -86,24 +90,35 @@ SELECT
     s.BranchID,
     s.ExpertID,
     s.IsSpecialBranch,
-    COALESCE(
-        CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
-                  AND s.BranchID IS NOT NULL
-             THEN s.BranchID END,
-        MAX(CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
-                 THEN s.BranchID END)
-            OVER (PARTITION BY s.CreditID, s.grp),
-        s.BranchID
-    ) AS FinalBranchID,
-    COALESCE(
-        CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
-                  AND s.ExpertID IS NOT NULL
-             THEN s.ExpertID END,
-        MAX(CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
-                 THEN s.ExpertID END)
-            OVER (PARTITION BY s.CreditID, s.grp),
-        s.ExpertID
-    ) AS FinalExpertID
+COALESCE(
+    CASE 
+        WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
+             AND s.BranchID IS NOT NULL
+        THEN s.BranchID 
+    END,
+    MAX(ISNULL(
+        CASE 
+            WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
+            THEN s.BranchID 
+        END, '')
+    ) OVER (PARTITION BY s.CreditID, s.grp),
+    s.BranchID
+) AS FinalBranchID,
+
+COALESCE(
+    CASE 
+        WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
+             AND s.ExpertID IS NOT NULL
+        THEN s.ExpertID 
+    END,
+    MAX(ISNULL(
+        CASE 
+            WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
+            THEN s.ExpertID 
+        END, '')
+    ) OVER (PARTITION BY s.CreditID, s.grp),
+    s.ExpertID
+) AS FinalExpertID
 FROM stage s;
 
 DROP TABLE #RespBase;

@@ -1,10 +1,9 @@
-﻿USE [ATK];
-SET NOCOUNT ON;
-
-/* 1) Таблица */
-IF OBJECT_ID('[ATK].[mis].[Silver_Stages_SCD]','U') IS NULL
+﻿------------------------------------------------------------
+-- 1) Ensure target table exists
+------------------------------------------------------------
+IF OBJECT_ID('mis.Silver_Stages_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE [ATK].[mis].[Silver_Stages_SCD] (
+    CREATE TABLE mis.Silver_Stages_SCD (
         CreditID   varchar(64)   NOT NULL,
         ValidFrom  date          NOT NULL,
         ValidTo    date          NOT NULL,
@@ -13,36 +12,34 @@ BEGIN
     );
 END
 ELSE
-    TRUNCATE TABLE [ATK].[mis].[Silver_Stages_SCD];
+BEGIN
+    TRUNCATE TABLE mis.Silver_Stages_SCD;
+END;
 
-/* 2) Пересборка без агрегатов, с сохранением NULL */
+------------------------------------------------------------
+-- 2) Rebuild SCD
+------------------------------------------------------------
 ;WITH src AS (
     SELECT
         CAST([СтадииКредитов Период] AS date) AS PeriodDate,
         [СтадииКредитов Кредит ID]           AS CreditID,
         [СтадииКредитов Стадия]              AS StageName,
         [СтадииКредитов ID]                  AS RowId
-    FROM [ATK].[dbo].[РегистрыСведений.СтадииКредитов]
+    FROM dbo.[РегистрыСведений.СтадииКредитов]
     WHERE [СтадииКредитов Кредит ID] IS NOT NULL
       AND [СтадииКредитов Период]    IS NOT NULL
 ),
--- Дедуп внутри дня: берём «последнюю» запись по дате (при множественных — по ID)
 dedup AS (
     SELECT
         CreditID, PeriodDate, StageName,
-        ROW_NUMBER() OVER (
-            PARTITION BY CreditID, PeriodDate
-            ORDER BY RowId DESC
-        ) AS rn
+        ROW_NUMBER() OVER (PARTITION BY CreditID, PeriodDate ORDER BY RowId DESC) AS rn
     FROM src
 ),
--- Оставляем по одной записи на день
 day_rows AS (
     SELECT CreditID, PeriodDate, StageName
     FROM dedup
     WHERE rn = 1
 ),
--- Границы изменений: учитываем NULL как отдельное значение
 borders AS (
     SELECT
         d.CreditID,
@@ -54,9 +51,8 @@ borders AS (
 starts AS (
     SELECT CreditID, ValidFrom, StageName
     FROM borders
-    WHERE ISNULL(PrevStage,   N'#NULL#') <>
-          ISNULL(StageName,   N'#NULL#')
-       OR PrevStage IS NULL -- первая запись по кредиту
+    WHERE ISNULL(PrevStage, N'#NULL#') <> ISNULL(StageName, N'#NULL#')
+       OR PrevStage IS NULL
 ),
 grid AS (
     SELECT
@@ -74,16 +70,17 @@ slices AS (
         COALESCE(DATEADD(day,-1,NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo
     FROM grid
 )
-INSERT INTO [ATK].[mis].[Silver_Stages_SCD] (CreditID, ValidFrom, ValidTo, StageName)
+INSERT INTO mis.Silver_Stages_SCD (CreditID, ValidFrom, ValidTo, StageName)
 SELECT CreditID, ValidFrom, ValidTo, StageName
-FROM slices
-ORDER BY CreditID, ValidFrom;
+FROM slices;
 
-/* 3) Индекс под интервальные джоины (с защитой от конфликта со статистикой) */
+------------------------------------------------------------
+-- 3) Index under interval joins
+------------------------------------------------------------
 DECLARE @schema sysname = N'mis';
 DECLARE @table  sysname = N'Silver_Stages_SCD';
 DECLARE @stat   sysname = N'IX_Stages_ForIntervals';
-DECLARE @obj_id int     = OBJECT_ID(QUOTENAME(@schema)+N'.'+QUOTENAME(@table));
+DECLARE @obj_id int = OBJECT_ID(QUOTENAME(@schema)+N'.'+QUOTENAME(@table));
 
 IF @obj_id IS NOT NULL
 BEGIN
@@ -98,7 +95,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=@obj_id AND name=@stat)
     BEGIN
         CREATE NONCLUSTERED INDEX IX_Stages_ForIntervals
-            ON [mis].[Silver_Stages_SCD] (CreditID, ValidFrom)
+            ON mis.Silver_Stages_SCD (CreditID, ValidFrom)
             INCLUDE (ValidTo, StageName);
     END;
 END;

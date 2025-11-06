@@ -1,20 +1,12 @@
-﻿USE [ATK];
-GO
-SET NOCOUNT ON;
-
-------------------------------------------------------------
--- 0) Ensure target table exists
-------------------------------------------------------------
-IF OBJECT_ID('[ATK].[mis].[Silver_Client_UnhealedFlag]', 'U') IS NULL
+﻿IF OBJECT_ID('mis.Silver_Client_UnhealedFlag', 'U') IS NULL
 BEGIN
-    CREATE TABLE [ATK].[mis].[Silver_Client_UnhealedFlag] (
+    CREATE TABLE mis.Silver_Client_UnhealedFlag (
         ClientID    VARCHAR(64) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
         CONSTRAINT PK_Silver_Client_UnhealedFlag1 PRIMARY KEY (ClientID, SoldDate)
     );
-END
-GO
+END;
 
 ------------------------------------------------------------
 -- 1) Prepare parameters
@@ -27,13 +19,14 @@ IF (@DateTo > @Today) SET @DateTo = @Today;
 ------------------------------------------------------------
 -- 2) Clean up existing data only in range
 ------------------------------------------------------------
-DELETE FROM [ATK].[mis].[Silver_Client_UnhealedFlag]
+DELETE FROM mis.Silver_Client_UnhealedFlag
 WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
 
 ------------------------------------------------------------
 -- 3) Local table of dates
 ------------------------------------------------------------
 IF OBJECT_ID('tempdb..#Dates','U') IS NOT NULL DROP TABLE #Dates;
+
 ;WITH N AS (
     SELECT TOP (DATEDIFF(day,@DateFrom,@DateTo)+1)
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n
@@ -48,15 +41,15 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Dates ON #Dates(SoldDate);
 ------------------------------------------------------------
 -- 4) Insert only distinct client×day where conditions hold
 ------------------------------------------------------------
-INSERT INTO [ATK].[mis].[Silver_Client_UnhealedFlag] (ClientID, SoldDate, HasUnhealed)
+INSERT INTO mis.Silver_Client_UnhealedFlag (ClientID, SoldDate, HasUnhealed)
 SELECT m.ClientID, d.SoldDate, CAST(1 AS bit)
 FROM #Dates d
 JOIN (
     SELECT DISTINCT ClientID
-    FROM [ATK].[mis].[Silver_Restruct_Merged_SCD]
+    FROM mis.Silver_Restruct_Merged_SCD
     WHERE ClientID IS NOT NULL AND ClientID <> ''
 ) c ON 1=1
-JOIN [ATK].[mis].[Silver_Restruct_Merged_SCD] m
+JOIN mis.Silver_Restruct_Merged_SCD m
   ON m.ClientID = c.ClientID
  AND d.SoldDate BETWEEN m.ValidFrom AND m.ValidTo
  AND m.TypeName_Sticky IS NOT NULL

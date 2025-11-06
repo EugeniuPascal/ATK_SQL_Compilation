@@ -5,7 +5,7 @@ SET NOCOUNT ON;
 DECLARE @DateFrom date = '2024-01-01';
 DECLARE @DateTo   date = '2025-12-31';
 
-PRINT N'=== Пересборка [mis].[Gold_Par_Restruct_Daily_Min] за период '
+PRINT N'=== Пересборка [mis].[Gold_Restruct_Daily_Min] за период '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';
 
 BEGIN TRAN; -- Опционально для консистентности
@@ -19,13 +19,13 @@ IF OBJECT_ID('tempdb..#Joined_raw')   IS NOT NULL DROP TABLE #Joined_raw;
 IF OBJECT_ID('tempdb..#Joined')       IS NOT NULL DROP TABLE #Joined;
 
 /* ================== ЦЕЛЕВАЯ ТАБЛИЦА ================== */
-IF OBJECT_ID('[mis].[Gold_Par_Restruct_Daily_Min]', 'U') IS NOT NULL
+IF OBJECT_ID('[mis].[Gold_Restruct_Daily_Min]', 'U') IS NOT NULL
 BEGIN
-    DROP TABLE [mis].[Gold_Par_Restruct_Daily_Min];
+    DROP TABLE [mis].[Gold_Restruct_Daily_Min];
     PRINT N'Старая таблица удалена.';
 END;
 
-CREATE TABLE [mis].[Gold_Par_Restruct_Daily_Min] (
+CREATE TABLE [mis].[Gold_Restruct_Daily_Min] (
     SoldDate               date          NOT NULL,
     CreditID               varchar(64)   NOT NULL,
     ClientID               varchar(64)   NOT NULL,
@@ -206,7 +206,7 @@ ON #Joined (ClientID, SoldDate, CreditID);
 /* ================ ШАГ 5. Вставка результата ================= */
 PRINT N'Шаг 3 — вставка результата...';
 
-INSERT /*+ TABLOCK */ INTO [mis].[Gold_Par_Restruct_Daily_Min] WITH (TABLOCK)
+INSERT /*+ TABLOCK */ INTO [mis].[Gold_Restruct_Daily_Min] WITH (TABLOCK)
 (
     SoldDate, CreditID, ClientID,
     Balance_Total, DaysBucket_Credit, DaysFact_Total, DaysIFRS,
@@ -264,7 +264,7 @@ DROP TABLE #Joined;
 
 /* ================ ИТОГ ================= */
 DECLARE @cnt bigint;
-SELECT @cnt = COUNT_BIG(*) FROM [mis].[Gold_Par_Restruct_Daily_Min];
+SELECT @cnt = COUNT_BIG(*) FROM [mis].[Gold_Restruct_Daily_Min];
 PRINT N'🏁 Готово. Строк: ' + CONVERT(varchar(30), @cnt);
 
 COMMIT TRAN;
@@ -274,6 +274,6 @@ CREATE INDEX IX_RespSCD_Credit_FromTo
 ON [ATK].[mis].[Silver_Resp_SCD](CreditID, ValidFrom, ValidTo)
 INCLUDE (FinalBranchID, FinalExpertID, IsSpecialBranch);
 
-CREATE INDEX IX_ParMin_SoldDate   ON [mis].[Gold_Par_Restruct_Daily_Min](SoldDate);
-CREATE INDEX IX_ParMin_ClientDate ON [mis].[Gold_Par_Restruct_Daily_Min](ClientID, SoldDate)
+CREATE INDEX IX_ParMin_SoldDate   ON [mis].[Gold_Restruct_Daily_Min](SoldDate);
+CREATE INDEX IX_ParMin_ClientDate ON [mis].[Gold_Restruct_Daily_Min](ClientID, SoldDate)
 INCLUDE (ParIFRS, SegmentIFRS, Balance_Total, CreditID);

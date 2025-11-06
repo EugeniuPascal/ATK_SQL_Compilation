@@ -11,22 +11,23 @@ DIV = "-" * 100
 
 # ---- list your files in the specific order you want first ----
 SQL_ORDER = [
-    "mis.Gold_Dim_AppUsers.sql",
-    "mis.Gold_Dim_Branch.sql",
-    "mis.Gold_Dim_Clients.sql",
-    "mis.Gold_Dim_Credits.sql",
-    "mis.Gold_Dim_EmployeePayrollData.sql",
-    "mis.Gold_Dim_Employees.sql",
-    "mis.Gold_Dim_EmployeesHistory.sql",
-    "mis.Gold_Dim_PartnersBranch.sql",
-    "mis.Gold_Fact_AdminTasks.sql",
-    "mis.Gold_Fact_ArchiveDocument.sql",
-    "mis.Gold_Fact_BudgetEmployees.sql",
-    "mis.Gold_Fact_CerereOnline.sql",
-    "mis.Gold_Fact_CreditsInShadowBranches.sql",
-    "mis.Gold_Fact_WriteOffCredits.sql",
-    "mis.Gold_Fact_Disbursement.sql",
-    "mis.Gold_Fact_Par_Restruct_Daily_Min.sql",
+        "mis.Gold_Dim_AppUsers.sql",
+        "mis.Gold_Dim_Branch.sql",
+        "mis.Gold_Dim_Clients.sql",
+        "mis.Gold_Dim_Credits.sql",
+        "mis.Gold_Dim_EmployeePayrollData.sql",
+        "mis.Gold_Dim_Employees.sql",
+        "mis.Gold_Dim_EmployeesHistory.sql",
+        "mis.Gold_Dim_PartnersBranch.sql",
+        "mis.Gold_Fact_AdminTasks.sql",
+        "mis.Gold_Fact_ArchiveDocument.sql",
+        "mis.Gold_Fact_BudgetEmployees.sql",
+        "mis.Gold_Fact_CerereOnline.sql",
+        "mis.Gold_Fact_CreditsInShadowBranches.sql",
+        "mis.Gold_Fact_WriteOffCredits.sql",
+        "mis.Gold_Fact_Disbursement.sql",
+        "mis.Gold_Restruct_Daily_Min.sql",
+        "mis.Gold_Fact_Sold_Par.sql"
     # add all your filenames here in the desired order
 ]
 

@@ -1,14 +1,17 @@
-﻿IF OBJECT_ID('[ATK].[mis].[Silver_RestructState_SCD]','U') IS NULL
-CREATE TABLE [ATK].[mis].[Silver_RestructState_SCD] (
-    CreditID   varchar(64)   NOT NULL,
-    ValidFrom  date          NOT NULL,
-    ValidTo    date          NOT NULL,
-    StateName  nvarchar(200) NULL,
-    CONSTRAINT PK_Silver_RestructState_SCD PRIMARY KEY (CreditID, ValidFrom)
-);
+﻿IF OBJECT_ID('mis.Silver_RestructState_SCD','U') IS NULL
+BEGIN
+    CREATE TABLE mis.Silver_RestructState_SCD (
+        CreditID   varchar(64)   NOT NULL,
+        ValidFrom  date          NOT NULL,
+        ValidTo    date          NOT NULL,
+        StateName  nvarchar(200) NULL,
+        CONSTRAINT PK_Silver_RestructState_SCD PRIMARY KEY (CreditID, ValidFrom)
+    );
+END
 ELSE
-TRUNCATE TABLE [ATK].[mis].[Silver_RestructState_SCD];
-GO
+BEGIN
+    TRUNCATE TABLE mis.Silver_RestructState_SCD;
+END
 
 ;WITH src AS (
     SELECT
@@ -21,11 +24,12 @@ GO
                 CAST(s.[СостоянияРеструктурированныхКредитов Период] AS date)
             ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
         ) AS rn
-    FROM [ATK].[mis].[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
+    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
 ),
 dedup AS (
     SELECT CreditID, PeriodDate, StateName
-    FROM src WHERE rn = 1
+    FROM src
+    WHERE rn = 1
 ),
 rng AS (
     SELECT
@@ -35,7 +39,7 @@ rng AS (
         StateName
     FROM dedup
 )
-INSERT INTO [ATK].[mis].[Silver_RestructState_SCD]
+INSERT INTO mis.Silver_RestructState_SCD
     (CreditID, ValidFrom, ValidTo, StateName)
 SELECT
     CreditID,
@@ -43,4 +47,3 @@ SELECT
     COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo,
     StateName
 FROM rng;
-GO

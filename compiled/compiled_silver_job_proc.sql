@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2025-11-05 17:09:19.547211
+-- Generated: 2025-11-06 09:16:01.763125
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 6
 --   mis.Silver_Restruct_SCD.sql
@@ -235,14 +235,18 @@ joined AS (
 ),
 stick AS (
     SELECT j.*,
-           MAX(j.SeenNcHere) OVER (PARTITION BY j.CreditID ORDER BY j.ValidFrom
-                                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SeenNcCumulative
+           MAX(COALESCE(j.SeenNcHere, 0)) OVER 
+		   (PARTITION BY j.CreditID 
+		   ORDER BY j.ValidFrom
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+		   ) AS SeenNcCumulative
     FROM joined j
 )
 INSERT INTO mis.Silver_Restruct_Merged_SCD
     (CreditID, ValidFrom, ValidTo, TypeName, Reason, StateName, TypeName_Sticky, CreditStatus, ClientID)
 SELECT st.CreditID, st.ValidFrom, st.ValidTo,
-       st.TypeName, st.Reason, st.StateName,
+       st.TypeName, st.Reason, 
+	   COALESCE(st.StateName, N''Unknown'') AS StateName,
        CASE WHEN st.SeenNcCumulative = 1 THEN N''НекоммерческаяРеструктуризация''
             ELSE st.TypeName END AS TypeName_Sticky,
        st.CreditStatus,

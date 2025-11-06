@@ -3,18 +3,19 @@ import os
 import re
 import logging
 from datetime import datetime
+from pathlib import Path
 
 # ---- Settings ----
 DB_NAME        = "ATK"
 DEFAULT_SCHEMA = "mis"   # only schema you can use
-source_folder  = r"C:\ATK_Project\sql_scripts\Gold"
-output_file    = r"C:\ATK_Project\compiled\compiled_gold_job_proc.sql"
-log_file       = r"C:\ATK_Project\logs\compile_gold.log"
+SOURCE_FOLDER  = Path(r"C:\ATK_Project\sql_scripts\Gold")
+OUTPUT_FILE    = Path(r"C:\ATK_Project\compiled\compiled_gold_job_proc.sql")
+LOG_FILE       = Path(r"C:\ATK_Project\logs\compile_gold.log")
 
 # ---- Logging ----
-os.makedirs(os.path.dirname(log_file), exist_ok=True)
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
-    filename=log_file,
+    filename=str(LOG_FILE),
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
@@ -90,42 +91,51 @@ try:
         "mis.Gold_Fact_CerereOnline.sql",
         "mis.Gold_Fact_CreditsInShadowBranches.sql",
         "mis.Gold_Fact_WriteOffCredits.sql",
-        "mis.Gold_Fact_Disbursement.sql",
-        "mis.Gold_Restruct_Daily_Min.sql",
+        "mis.Gold_Fact_Restruct_Daily_Min.sql",
+        "mis.Gold_Fact_Disbursement.sql",      
         "mis.Gold_Fact_Sold_Par.sql"
-        # add more as needed
     ]
 
-    # 1) Build full list in order first
+    # ---- 1) List all SQL files in folder ----
+    all_files = sorted([f.name for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
+
+    # ---- 2) Identify extra files not in SQL_ORDER ----
+    extra_files = [f for f in all_files if f not in SQL_ORDER]
+    if extra_files:
+        logging.info(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER:")
+        for f in extra_files:
+            logging.info(f"   {f}")
+            print(f"ℹ Extra file appended: {f}")
+
+    # ---- 3) Build final ordered list ----
     sql_files = []
     processed_names = set()
-    all_files = sorted([f for f in os.listdir(source_folder) if f.lower().endswith('.sql')])
 
-    for f in SQL_ORDER:
-        full_path = os.path.join(source_folder, f)
-        if os.path.exists(full_path):
-            sql_files.append(f)
-            processed_names.add(f)
+    for fname in SQL_ORDER:
+        fpath = SOURCE_FOLDER / fname
+        if fpath.exists():
+            sql_files.append(fpath)
+            processed_names.add(fname)
         else:
-            logging.warning(f"File listed in SQL_ORDER but not found: {full_path}")
+            logging.warning(f"File listed in SQL_ORDER but not found: {fpath}")
+            print(f"⚠ Warning: file listed but not found -> {fpath}")
 
-    # 2) Append any remaining .sql files not in SQL_ORDER
-    for f in all_files:
-        if f not in processed_names:
-            sql_files.append(f)
+    # Append extra files
+    sql_files.extend([SOURCE_FOLDER / f for f in extra_files])
 
     logging.info(f"Total SQL files to process: {len(sql_files)}")
 
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    with open(output_file, 'w', encoding='utf-8-sig') as f_out:
+    # ---- 4) Generate stored procedure
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
         # header
         f_out.write("-- =============================================\n")
         f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
-        f_out.write(f"-- Source folder: {source_folder}\n")
+        f_out.write(f"-- Source folder: {SOURCE_FOLDER}\n")
         f_out.write(f"-- Files included: {len(sql_files)}\n")
         for sf in sql_files:
-            f_out.write(f"--   {sf}\n")
+            f_out.write(f"--   {sf.name}\n")
         f_out.write("-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER\n")
         f_out.write("-- =============================================\n\n")
 
@@ -140,12 +150,12 @@ try:
         # process each file
         for sf in sql_files:
             try:
-                logging.info(f"Processing file: {sf}")
-                with open(os.path.join(source_folder, sf), 'r', encoding='utf-8-sig') as f_in:
+                logging.info(f"Processing file: {sf.name}")
+                with sf.open("r", encoding="utf-8-sig") as f_in:
                     content = f_in.read()
                     transformed = make_idempotent(content)
                     safe = transformed.replace("'", "''")
-                    f_out.write(f"    -- Start of: {sf}\n")
+                    f_out.write(f"    -- Start of: {sf.name}\n")
                     f_out.write("    SET @sql = N'" + safe + "';\n")
                     f_out.write("    BEGIN TRY\n")
                     f_out.write("        EXEC sys.sp_executesql @sql;\n")
@@ -153,15 +163,15 @@ try:
                     f_out.write("    BEGIN CATCH\n")
                     f_out.write("        THROW;\n")
                     f_out.write("    END CATCH;\n\n")
-                logging.info(f"Finished file: {sf}")
+                logging.info(f"Finished file: {sf.name}")
             except Exception as e:
-                logging.error(f"Error processing {sf}: {e}")
+                logging.error(f"Error processing {sf.name}: {e}")
                 raise
 
         f_out.write("END\nGO\n")
 
-    logging.info(f"✅ Stored procedure script generated successfully: {output_file}")
-    print(f"✅ Stored procedure script generated successfully: {output_file}")
+    logging.info(f"✅ Stored procedure script generated successfully: {OUTPUT_FILE}")
+    print(f"✅ Stored procedure script generated successfully: {OUTPUT_FILE}")
 
 except Exception as e:
     logging.exception("💥 Fatal error during compilation")

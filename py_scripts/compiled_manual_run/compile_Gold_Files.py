@@ -11,26 +11,26 @@ DIV = "-" * 100
 
 # ---- list your files in the specific order you want first ----
 SQL_ORDER = [
-        "mis.Gold_Dim_AppUsers.sql",
-        "mis.Gold_Dim_Branch.sql",
-        "mis.Gold_Dim_Clients.sql",
-        "mis.Gold_Dim_Credits.sql",
-        "mis.Gold_Dim_EmployeePayrollData.sql",
-        "mis.Gold_Dim_Employees.sql",
-        "mis.Gold_Dim_EmployeesHistory.sql",
-        "mis.Gold_Dim_PartnersBranch.sql",
-        "mis.Gold_Fact_AdminTasks.sql",
-        "mis.Gold_Fact_ArchiveDocument.sql",
-        "mis.Gold_Fact_BudgetEmployees.sql",
-        "mis.Gold_Fact_CerereOnline.sql",
-        "mis.Gold_Fact_CreditsInShadowBranches.sql",
-        "mis.Gold_Fact_WriteOffCredits.sql",
-        "mis.Gold_Fact_Disbursement.sql",
-        "mis.Gold_Restruct_Daily_Min.sql",
-        "mis.Gold_Fact_Sold_Par.sql"
-    # add all your filenames here in the desired order
+    "mis.Gold_Dim_AppUsers.sql",
+    "mis.Gold_Dim_Branch.sql",
+    "mis.Gold_Dim_Clients.sql",
+    "mis.Gold_Dim_Credits.sql",
+    "mis.Gold_Dim_EmployeePayrollData.sql",
+    "mis.Gold_Dim_Employees.sql",
+    "mis.Gold_Dim_EmployeesHistory.sql",
+    "mis.Gold_Dim_PartnersBranch.sql",
+    "mis.Gold_Fact_AdminTasks.sql",
+    "mis.Gold_Fact_ArchiveDocument.sql",
+    "mis.Gold_Fact_BudgetEmployees.sql",
+    "mis.Gold_Fact_CerereOnline.sql",
+    "mis.Gold_Fact_CreditsInShadowBranches.sql",
+    "mis.Gold_Fact_WriteOffCredits.sql",
+    "mis.Gold_Fact_Restruct_Daily_Min.sql",
+    "mis.Gold_Fact_Disbursement.sql",
+    "mis.Gold_Fact_Sold_Par.sql"
 ]
 
+# ---- helper to read files with fallback encodings ----
 def read_text_with_fallback(p: Path) -> str | None:
     for enc in FALLBACK_ENCODINGS:
         try:
@@ -40,29 +40,30 @@ def read_text_with_fallback(p: Path) -> str | None:
     return None
 
 def compile_sql():
-    # 1) build full paths in the desired order
+    # ---- 1) all .sql files in the folder
+    all_files = sorted([f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
+
+    # ---- 2) compute extra files not in SQL_ORDER
+    extra_files = [f for f in all_files if f.name not in SQL_ORDER]
+    if extra_files:
+        print(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER:")
+        for f in extra_files:
+            print(f"   {f.name}")
+
+    # ---- 3) build final processing list: SQL_ORDER first, then extras
     sql_files = []
     processed_names = set()
-
-    # Add files from SQL_ORDER first
-    for f in SQL_ORDER:
-        full_path = MAIN_DIR / f
-        if full_path.exists():
-            sql_files.append(full_path)
-            processed_names.add(full_path.name)
+    for fname in SQL_ORDER:
+        fpath = MAIN_DIR / fname
+        if fpath.exists():
+            sql_files.append(fpath)
+            processed_names.add(fname)
         else:
-            print(f"⚠ Warning: file listed but not found -> {full_path}")
+            print(f"⚠ Warning: file listed but not found -> {fpath}")
 
-    # 2) append any extra .sql files not listed in SQL_ORDER
-    extra_files = sorted(
-        [f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql" and f.name not in processed_names],
-        key=lambda p: p.name.lower()
-    )
-    if extra_files:
-        print(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER.")
     sql_files.extend(extra_files)
 
-    # 3) build header
+    # ---- 4) header for compiled file
     header = (
         f"-- Compiled SQL bundle\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
@@ -71,12 +72,12 @@ def compile_sql():
         f"{DIV}\n\nSET NOCOUNT ON;\n\n"
     )
 
-    processed = set()  # keep absolute paths to avoid duplicates
+    processed = set()  # track absolute paths to avoid duplicates
 
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT.open("w", encoding="utf-8", newline="\n") as out:
         out.write(header)
 
-        # 4) write all files
         for f in sql_files:
             if f.resolve() in processed:
                 continue

@@ -29,7 +29,7 @@ def read_text_with_fallback(p: Path) -> str | None:
     return None
 
 def compile_sql():
-    # 1) build full paths in the desired order
+    # 1) Build full paths in the desired order
     sql_files = []
     processed_names = set()
 
@@ -42,13 +42,15 @@ def compile_sql():
         else:
             print(f"⚠ Warning: file listed but not found -> {full_path}")
 
-    # 2) append any extra .sql files not listed in SQL_ORDER
-    extra_files = sorted(
-        [f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql" and f.name not in processed_names],
-        key=lambda p: p.name.lower()
-    )
+    # 2) Find any extra .sql files not in SQL_ORDER
+    all_files = sorted([f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
+    extra_files = [f for f in all_files if f.name not in processed_names]
+
     if extra_files:
-        print(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER.")
+        print(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER:")
+        for f in extra_files:
+            print(f"   {f.name}")
+
     sql_files.extend(extra_files)
 
     # 3) build header

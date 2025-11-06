@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-06 12:33:34
+-- Generated: 2025-11-06 17:01:39
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (6):
 --   mis.Silver_Restruct_SCD.sql
@@ -274,7 +274,7 @@ END;
 ------------------------------------------------------------
 -- 1) Prepare parameters
 ------------------------------------------------------------
-DECLARE @DateFrom date = '2024-01-01';
+DECLARE @DateFrom date = '2023-09-01';
 DECLARE @DateTo   date = '2025-12-31';
 DECLARE @Today    date = CAST(GETDATE() AS date);
 IF (@DateTo > @Today) SET @DateTo = @Today;
@@ -362,7 +362,7 @@ CREATE TABLE mis.Silver_Resp_SCD (
 ------------------------------------------------------------
 -- 2) База по регистру: одна запись на дату (снимаем дубли)
 ------------------------------------------------------------
-DECLARE @DateFrom date = '2010-01-01';
+DECLARE @DateFrom date = '2023-09-01';
 
 SELECT
     r.[ОтветственныеПоКредитамВыданным Кредит ID]            AS CreditID,

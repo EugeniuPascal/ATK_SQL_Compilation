@@ -2,7 +2,7 @@
 SET NOCOUNT ON;
 
 /* ================== ПАРАМЕТРЫ ================== */
-DECLARE @DateFrom date = '2024-01-01';
+DECLARE @DateFrom date = '2023-09-01';
 DECLARE @DateTo   date = '2025-12-31';
 
 PRINT N'=== Пересборка [mis].[Gold_Restruct_Daily_Min] за период '

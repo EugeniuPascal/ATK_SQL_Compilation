@@ -81,14 +81,18 @@ joined AS (
 ),
 stick AS (
     SELECT j.*,
-           MAX(j.SeenNcHere) OVER (PARTITION BY j.CreditID ORDER BY j.ValidFrom
-                                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SeenNcCumulative
+           MAX(COALESCE(j.SeenNcHere, 0)) OVER 
+		   (PARTITION BY j.CreditID 
+		   ORDER BY j.ValidFrom
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+		   ) AS SeenNcCumulative
     FROM joined j
 )
 INSERT INTO mis.Silver_Restruct_Merged_SCD
     (CreditID, ValidFrom, ValidTo, TypeName, Reason, StateName, TypeName_Sticky, CreditStatus, ClientID)
 SELECT st.CreditID, st.ValidFrom, st.ValidTo,
-       st.TypeName, st.Reason, st.StateName,
+       st.TypeName, st.Reason, 
+	   COALESCE(st.StateName, N'Unknown') AS StateName,
        CASE WHEN st.SeenNcCumulative = 1 THEN N'НекоммерческаяРеструктуризация'
             ELSE st.TypeName END AS TypeName_Sticky,
        st.CreditStatus,

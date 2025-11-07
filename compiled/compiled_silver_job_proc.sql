@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2025-11-06 17:01:49.795819
+-- Generated: 2025-11-07 11:09:32.188606
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 6
 --   mis.Silver_Restruct_SCD.sql
@@ -30,12 +30,12 @@ BEGIN
 BEGIN
     IF OBJECT_ID(N''[mis].[Silver_Restruct_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Restruct_SCD];
 CREATE TABLE [mis].[Silver_Restruct_SCD](
-        CreditID        varchar(64)   NOT NULL,
-        ValidFrom       date          NOT NULL,
-        ValidTo         date          NOT NULL,
-        TypeName        nvarchar(200) NULL,
-        Reason          nvarchar(500) NULL,
-        NonCommSeenUpTo bit           NOT NULL,
+        CreditID        VARCHAR(36)   NOT NULL,
+        ValidFrom       DATE          NOT NULL,
+        ValidTo         DATE          NOT NULL,
+        TypeName        NVARCHAR(200) NULL,
+        Reason          NVARCHAR(500) NULL,
+        NonCommSeenUpTo BIT           NOT NULL,
         CONSTRAINT PK_Silver_Restruct_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END
@@ -47,13 +47,13 @@ END
 ;WITH src AS (
     SELECT
         r.[РеструктурированныеКредиты Кредит ID] AS CreditID,
-        CAST(r.[РеструктурированныеКредиты Период] AS date) AS PeriodDate,
+        CAST(r.[РеструктурированныеКредиты Период] AS DATE) AS PeriodDate,
         r.[РеструктурированныеКредиты Тип Реструктуризации Долга] AS TypeName,
         r.[РеструктурированныеКредиты Причина Реструктуризации] AS Reason,
         ROW_NUMBER() OVER (
             PARTITION BY
                 r.[РеструктурированныеКредиты Кредит ID],
-                CAST(r.[РеструктурированныеКредиты Период] AS date)
+                CAST(r.[РеструктурированныеКредиты Период] AS DATE)
             ORDER BY r.[РеструктурированныеКредиты Период] DESC
         ) AS rn
     FROM mis.[Bronze_РегистрыСведений.РеструктурированныеКредиты] r
@@ -80,7 +80,7 @@ INSERT INTO mis.Silver_Restruct_SCD
 SELECT
     CreditID,
     ValidFrom,
-    COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,''9999-12-31'')) AS ValidTo,
+    COALESCE(DATEADD(day,-1, NextFrom), CONVERT(DATE,''9999-12-31'')) AS ValidTo,
     TypeName,
     Reason,
     NonCommSeenUpTo
@@ -97,10 +97,10 @@ FROM rng;';
 BEGIN
     IF OBJECT_ID(N''[mis].[Silver_RestructState_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_RestructState_SCD];
 CREATE TABLE [mis].[Silver_RestructState_SCD](
-        CreditID   varchar(64)   NOT NULL,
-        ValidFrom  date          NOT NULL,
-        ValidTo    date          NOT NULL,
-        StateName  nvarchar(200) NULL,
+        CreditID   VARCHAR(36)   NOT NULL,
+        ValidFrom  DATE          NOT NULL,
+        ValidTo    DATE          NOT NULL,
+        StateName  NVARCHAR(50)  NULL,
         CONSTRAINT PK_Silver_RestructState_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END
@@ -112,12 +112,12 @@ END
 ;WITH src AS (
     SELECT
         s.[СостоянияРеструктурированныхКредитов Кредит ID] AS CreditID,
-        CAST(s.[СостоянияРеструктурированныхКредитов Период] AS date) AS PeriodDate,
+        CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE) AS PeriodDate,
         s.[СостоянияРеструктурированныхКредитов Состояние Реструктурированного Кредита] AS StateName,
         ROW_NUMBER() OVER (
             PARTITION BY
                 s.[СостоянияРеструктурированныхКредитов Кредит ID],
-                CAST(s.[СостоянияРеструктурированныхКредитов Период] AS date)
+                CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE)
             ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
         ) AS rn
     FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
@@ -140,7 +140,7 @@ INSERT INTO mis.Silver_RestructState_SCD
 SELECT
     CreditID,
     ValidFrom,
-    COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,''9999-12-31'')) AS ValidTo,
+    COALESCE(DATEADD(day,-1, NextFrom), CONVERT(DATE,''9999-12-31'')) AS ValidTo,
     StateName
 FROM rng;';
     BEGIN TRY
@@ -155,15 +155,15 @@ FROM rng;';
 BEGIN
     IF OBJECT_ID(N''[mis].[Silver_Restruct_Merged_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Restruct_Merged_SCD];
 CREATE TABLE [mis].[Silver_Restruct_Merged_SCD](
-        CreditID        varchar(64)   NOT NULL,
-        ValidFrom       date          NOT NULL,
-        ValidTo         date          NOT NULL,
-        TypeName        nvarchar(200) NULL,
-        Reason          nvarchar(500) NULL,
-        StateName       nvarchar(200) NULL,
-        TypeName_Sticky nvarchar(200) NULL,
-        CreditStatus    nvarchar(200) NULL,
-        ClientID        varchar(64)   NULL,
+        CreditID        VARCHAR(36)   NOT NULL,
+        ValidFrom       DATE          NOT NULL,
+        ValidTo         DATE          NOT NULL,
+        TypeName        NVARCHAR(200) NULL,
+        Reason          NVARCHAR(500) NULL,
+        StateName       NVARCHAR(200) NULL,
+        TypeName_Sticky NVARCHAR(200) NULL,
+        CreditStatus    NVARCHAR(200) NULL,
+        ClientID        VARCHAR(36)   NULL,
         CONSTRAINT PK_Silver_Restruct_Merged_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END
@@ -179,15 +179,15 @@ BEGIN
 END;
 
 ;WITH borders AS (
-    SELECT CreditID, CAST(ValidFrom AS date) AS ValidFrom
+    SELECT CreditID, CAST(ValidFrom AS DATE) AS ValidFrom
     FROM   mis.Silver_Restruct_SCD
     UNION
-    SELECT CreditID, CAST(ValidFrom AS date) AS ValidFrom
+    SELECT CreditID, CAST(ValidFrom AS DATE) AS ValidFrom
     FROM   mis.Silver_RestructState_SCD
     UNION
     SELECT
         s.[СтатусыКредитовВыданных Кредит ID] AS CreditID,
-        CAST(s.[СтатусыКредитовВыданных Период] AS date) AS ValidFrom
+        CAST(s.[СтатусыКредитовВыданных Период] AS DATE) AS ValidFrom
     FROM mis.[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s
     WHERE s.[СтатусыКредитовВыданных Активность] = 1
 ),
@@ -198,7 +198,7 @@ grid AS (
 ),
 slices AS (
     SELECT CreditID, ValidFrom,
-           COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,''9999-12-31'')) AS ValidTo
+           COALESCE(DATEADD(day,-1, NextFrom), CONVERT(DATE,''9999-12-31'')) AS ValidTo
     FROM grid
 ),
 joined AS (
@@ -229,7 +229,7 @@ joined AS (
         FROM mis.[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s2
         WHERE s2.[СтатусыКредитовВыданных Кредит ID] = z.CreditID
           AND s2.[СтатусыКредитовВыданных Активность] = 1
-          AND CAST(s2.[СтатусыКредитовВыданных Период] AS date) <= z.ValidFrom
+          AND CAST(s2.[СтатусыКредитовВыданных Период] AS DATE) <= z.ValidFrom
         ORDER BY s2.[СтатусыКредитовВыданных Период] DESC
     ) cs
 ),
@@ -339,7 +339,7 @@ GROUP BY m.ClientID, d.SoldDate;';
     END CATCH;
 
     -- Start of: mis.Silver_Resp_SCD.sql
-    SET @sql = N'DECLARE @SpecialBranches TABLE (BranchID varchar(64) PRIMARY KEY);
+    SET @sql = N'DECLARE @SpecialBranches TABLE (BranchID VARCHAR(36) PRIMARY KEY);
 
 INSERT INTO @SpecialBranches (BranchID)
 VALUES
@@ -357,37 +357,37 @@ IF OBJECT_ID(''mis.Silver_Resp_SCD'', ''U'') IS NOT NULL
 
 IF OBJECT_ID(N''[mis].[Silver_Resp_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Resp_SCD];
 CREATE TABLE [mis].[Silver_Resp_SCD](
-    CreditID        varchar(64) NOT NULL,
-    ValidFrom       date        NOT NULL,
-    ValidTo         date        NOT NULL,
-    BranchID        varchar(64) NULL,
-    ExpertID        varchar(64) NULL,
-    IsSpecialBranch bit         NOT NULL,
-    FinalBranchID   varchar(64) NULL,
-    FinalExpertID   varchar(64) NULL,
+    CreditID        VARCHAR(36) NOT NULL,
+    ValidFrom       DATE        NOT NULL,
+    ValidTo         DATE        NOT NULL,
+    BranchID        VARCHAR(36) NULL,
+    ExpertID        VARCHAR(36) NULL,
+    IsSpecialBranch BIT         NOT NULL,
+    FinalBranchID   VARCHAR(36) NULL,
+    FinalExpertID   VARCHAR(36) NULL,
     CONSTRAINT PK_Resp_SCD PRIMARY KEY (CreditID, ValidFrom)
 );
 
 
 
 
-DECLARE @DateFrom date = ''2023-09-01'';
+DECLARE @DateFrom DATE = ''2023-09-01'';
 
 SELECT
     r.[ОтветственныеПоКредитамВыданным Кредит ID]            AS CreditID,
-    CAST(r.[ОтветственныеПоКредитамВыданным Период] AS date) AS PeriodDate,
+    CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) AS PeriodDate,
     r.[ОтветственныеПоКредитамВыданным Филиал ID]            AS BranchID,
     r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS ExpertID,
     ROW_NUMBER() OVER (
         PARTITION BY r.[ОтветственныеПоКредитамВыданным Кредит ID],
-                     CAST(r.[ОтветственныеПоКредитамВыданным Период] AS date)
+                     CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE)
         ORDER BY r.[ОтветственныеПоКредитамВыданным Номер Строки] DESC,
                  r.[ОтветственныеПоКредитамВыданным ID] DESC
     ) AS rn
 INTO #RespBaseRaw
 FROM mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] r
 WHERE r.[ОтветственныеПоКредитамВыданным Активность] = 1
-  AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS date) >= @DateFrom;
+  AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) >= @DateFrom;
 
 SELECT CreditID, PeriodDate, BranchID, ExpertID
 INTO #RespBase
@@ -425,7 +425,7 @@ INSERT INTO mis.Silver_Resp_SCD (
 SELECT
     s.CreditID,
     s.ValidFrom,
-    COALESCE(DATEADD(DAY,-1,s.NextFrom), CONVERT(date,''9999-12-31'')) AS ValidTo,
+    COALESCE(DATEADD(DAY,-1,s.NextFrom), CONVERT(DATE,''9999-12-31'')) AS ValidTo,
     s.BranchID,
     s.ExpertID,
     s.IsSpecialBranch,
@@ -473,10 +473,10 @@ DROP TABLE #RespBase;';
 BEGIN
     IF OBJECT_ID(N''[mis].[Silver_Stages_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Stages_SCD];
 CREATE TABLE [mis].[Silver_Stages_SCD](
-        CreditID   varchar(64)   NOT NULL,
-        ValidFrom  date          NOT NULL,
-        ValidTo    date          NOT NULL,
-        StageName  nvarchar(200) NULL,
+        CreditID   VARCHAR(36)  NULL,
+        ValidFrom  DATE          NOT NULL,
+        ValidTo    DATE          NOT NULL,
+        StageName  NVARCHAR(50) NULL,
         CONSTRAINT PK_Silver_Stages_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END
@@ -490,7 +490,7 @@ END;
 
 ;WITH src AS (
     SELECT
-        CAST([СтадииКредитов Период] AS date) AS PeriodDate,
+        CAST([СтадииКредитов Период] AS DATE) AS PeriodDate,
         [СтадииКредитов Кредит ID]           AS CreditID,
         [СтадииКредитов Стадия]              AS StageName,
         [СтадииКредитов ID]                  AS RowId
@@ -536,7 +536,7 @@ slices AS (
         CreditID,
         StageName,
         ValidFrom,
-        COALESCE(DATEADD(day,-1,NextFrom), CONVERT(date,''9999-12-31'')) AS ValidTo
+        COALESCE(DATEADD(day,-1,NextFrom), CONVERT(DATE,''9999-12-31'')) AS ValidTo
     FROM grid
 )
 INSERT INTO mis.Silver_Stages_SCD (CreditID, ValidFrom, ValidTo, StageName)
@@ -556,7 +556,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM sys.stats  WHERE object_id=@obj_id AND name=@stat)
        AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=@obj_id AND name=@stat)
     BEGIN
-        DECLARE @sql nvarchar(4000)=
+        DECLARE @sql NVARCHAR(4000)=
             N''DROP STATISTICS ''+QUOTENAME(@schema)+N''.''+QUOTENAME(@table)+N''.''+QUOTENAME(@stat)+N'';'';
         EXEC (@sql);
     END;

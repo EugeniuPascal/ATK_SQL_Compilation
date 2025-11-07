@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-07 11:09:10
+-- Generated: 2025-11-07 11:33:17
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (6):
 --   mis.Silver_Restruct_SCD.sql
@@ -467,10 +467,10 @@ GO
 IF OBJECT_ID('mis.Silver_Stages_SCD','U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Stages_SCD (
-        CreditID   VARCHAR(36)  NULL,
+        CreditID   VARCHAR(36)   NOT NULL,
         ValidFrom  DATE          NOT NULL,
         ValidTo    DATE          NOT NULL,
-        StageName  NVARCHAR(50) NULL,
+        StageName  NVARCHAR(50)  NULL,
         CONSTRAINT PK_Silver_Stages_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END

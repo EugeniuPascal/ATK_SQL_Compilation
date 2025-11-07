@@ -4,10 +4,10 @@
 IF OBJECT_ID('mis.Silver_Stages_SCD','U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Stages_SCD (
-        CreditID   VARCHAR(36)  NULL,
+        CreditID   VARCHAR(36)   NOT NULL,
         ValidFrom  DATE          NOT NULL,
         ValidTo    DATE          NOT NULL,
-        StageName  NVARCHAR(50) NULL,
+        StageName  NVARCHAR(50)  NULL,
         CONSTRAINT PK_Silver_Stages_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END

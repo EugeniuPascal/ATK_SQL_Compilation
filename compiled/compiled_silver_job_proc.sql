@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2025-11-07 11:09:32.188606
+-- Generated: 2025-11-07 11:33:24.937607
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 6
 --   mis.Silver_Restruct_SCD.sql
@@ -473,10 +473,10 @@ DROP TABLE #RespBase;';
 BEGIN
     IF OBJECT_ID(N''[mis].[Silver_Stages_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Stages_SCD];
 CREATE TABLE [mis].[Silver_Stages_SCD](
-        CreditID   VARCHAR(36)  NULL,
+        CreditID   VARCHAR(36)   NOT NULL,
         ValidFrom  DATE          NOT NULL,
         ValidTo    DATE          NOT NULL,
-        StageName  NVARCHAR(50) NULL,
+        StageName  NVARCHAR(50)  NULL,
         CONSTRAINT PK_Silver_Stages_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END

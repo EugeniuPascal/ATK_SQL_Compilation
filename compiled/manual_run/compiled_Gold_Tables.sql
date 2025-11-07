@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-07 15:44:31
+-- Generated: 2025-11-07 16:23:17
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (17):
 --   mis.Gold_Dim_AppUsers.sql
@@ -2570,16 +2570,14 @@ CREATE CLUSTERED INDEX CX_EmployeePos_Emp_Period ON #EmployeePos (EmployeeID, Pe
 IF OBJECT_ID('tempdb..#IRR') IS NOT NULL DROP TABLE #IRR;
 CREATE TABLE #IRR (
     CreditID VARCHAR(36) NOT NULL,
-	ClientID VARCHAR(36)  NOT NULL,
     IRR_Year DECIMAL(18,6) NULL,
     IRR_Client DECIMAL(18,6) NULL,
     IRRDate DATETIME2 NULL
 );
 
-INSERT INTO #IRR (CreditID, ClientID, IRR_Year, IRR_Client, IRRDate)
+INSERT INTO #IRR (CreditID, IRR_Year, IRR_Client, IRRDate)
 SELECT
     i.[УстановкаДанныхКредита Кредит ID],
-	i.[УстановкаДанныхКредита Клиент ID],
     i.[УстановкаДанныхКредита Внутренняя Норма Доходности Годовая],
     i.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая],
     i.[УстановкаДанныхКредита Дата]
@@ -2616,7 +2614,7 @@ INSERT INTO mis.[Gold_Fact_Sold_Par] WITH (TABLOCK)
 )
 SELECT
     sd.[СуммыЗадолженностиПоПериодамПросрочки Дата],
-	irr.ClientID,
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID],
     sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID],
     sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит],
     sd.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО],
@@ -2669,7 +2667,7 @@ LEFT JOIN ShadowRanges sh
 
 -- IRR
 OUTER APPLY (
-    SELECT TOP (1) i.IRR_Year, i.IRR_Client, i.ClientID
+    SELECT TOP (1) i.IRR_Year, i.IRR_Client
     FROM #IRR i
     WHERE i.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
       AND CAST(i.IRRDate AS DATE) <= CAST(sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE)

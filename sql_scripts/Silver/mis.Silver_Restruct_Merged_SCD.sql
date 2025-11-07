@@ -1,15 +1,15 @@
 ﻿IF OBJECT_ID('mis.Silver_Restruct_Merged_SCD','U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Restruct_Merged_SCD (
-        CreditID        varchar(64)   NOT NULL,
-        ValidFrom       date          NOT NULL,
-        ValidTo         date          NOT NULL,
-        TypeName        nvarchar(200) NULL,
-        Reason          nvarchar(500) NULL,
-        StateName       nvarchar(200) NULL,
-        TypeName_Sticky nvarchar(200) NULL,
-        CreditStatus    nvarchar(200) NULL,
-        ClientID        varchar(64)   NULL,
+        CreditID        VARCHAR(36)   NOT NULL,
+        ValidFrom       DATE          NOT NULL,
+        ValidTo         DATE          NOT NULL,
+        TypeName        NVARCHAR(200) NULL,
+        Reason          NVARCHAR(500) NULL,
+        StateName       NVARCHAR(200) NULL,
+        TypeName_Sticky NVARCHAR(200) NULL,
+        CreditStatus    NVARCHAR(200) NULL,
+        ClientID        VARCHAR(36)   NULL,
         CONSTRAINT PK_Silver_Restruct_Merged_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END
@@ -25,15 +25,15 @@ BEGIN
 END;
 
 ;WITH borders AS (
-    SELECT CreditID, CAST(ValidFrom AS date) AS ValidFrom
+    SELECT CreditID, CAST(ValidFrom AS DATE) AS ValidFrom
     FROM   mis.Silver_Restruct_SCD
     UNION
-    SELECT CreditID, CAST(ValidFrom AS date) AS ValidFrom
+    SELECT CreditID, CAST(ValidFrom AS DATE) AS ValidFrom
     FROM   mis.Silver_RestructState_SCD
     UNION
     SELECT
         s.[СтатусыКредитовВыданных Кредит ID] AS CreditID,
-        CAST(s.[СтатусыКредитовВыданных Период] AS date) AS ValidFrom
+        CAST(s.[СтатусыКредитовВыданных Период] AS DATE) AS ValidFrom
     FROM mis.[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s
     WHERE s.[СтатусыКредитовВыданных Активность] = 1
 ),
@@ -44,7 +44,7 @@ grid AS (
 ),
 slices AS (
     SELECT CreditID, ValidFrom,
-           COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo
+           COALESCE(DATEADD(day,-1, NextFrom), CONVERT(DATE,'9999-12-31')) AS ValidTo
     FROM grid
 ),
 joined AS (
@@ -75,7 +75,7 @@ joined AS (
         FROM mis.[Bronze_РегистрыСведений.СтатусыКредитовВыданных] s2
         WHERE s2.[СтатусыКредитовВыданных Кредит ID] = z.CreditID
           AND s2.[СтатусыКредитовВыданных Активность] = 1
-          AND CAST(s2.[СтатусыКредитовВыданных Период] AS date) <= z.ValidFrom
+          AND CAST(s2.[СтатусыКредитовВыданных Период] AS DATE) <= z.ValidFrom
         ORDER BY s2.[СтатусыКредитовВыданных Период] DESC
     ) cs
 ),

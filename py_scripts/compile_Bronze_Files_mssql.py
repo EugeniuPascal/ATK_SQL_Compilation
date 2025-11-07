@@ -1,60 +1,66 @@
-# compile_silver_tables_job_proc_idempotent.py
-import os
+# compile_bronze_tables_job_proc_idempotent.py
 import re
 import logging
 from datetime import datetime
+from pathlib import Path
 
 # ---- Settings ----
 DB_NAME        = "ATK"
 DEFAULT_SCHEMA = "mis"
-source_folder  = r"C:\ATK_Project\sql_scripts\Bronze"
-output_file    = r"C:\ATK_Project\compiled\compiled_bronze_job_proc.sql"
-log_file       = r"C:\ATK_Project\logs\compile_Bronze.log"
+SOURCE_FOLDER  = Path(r"C:\ATK_Project\sql_scripts\Bronze")
+OUTPUT_FILE    = Path(r"C:\ATK_Project\compiled\compiled_bronze_job_proc.sql")
+LOG_FILE       = Path(r"C:\ATK_Project\logs\compile_bronze.log")
 
 # ---- Logging ----
-os.makedirs(os.path.dirname(log_file), exist_ok=True)
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
-    filename=log_file,
+    filename=str(LOG_FILE),
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logging.info("=== Starting Bronze SQL Compilation Job ===")
 
-# --- Regexes (Unicode-friendly) ---
+# --------------------------------------------------------------------
+# Regexes
+# --------------------------------------------------------------------
 GO_LINE_RE   = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
 USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | re.MULTILINE)
-OBJ_NAME     = r'([\w\.\[\]" ]+)'
-CREATE_VIEW_RE  = re.compile(r"\bCREATE\s+VIEW\s+" + OBJ_NAME, re.IGNORECASE)
-CREATE_PROC_RE  = re.compile(r"\bCREATE\s+PROCEDURE\s+" + OBJ_NAME, re.IGNORECASE)
-CREATE_FUNC_RE  = re.compile(r"\bCREATE\s+FUNCTION\s+" + OBJ_NAME, re.IGNORECASE)
-CREATE_TABLE_RE = re.compile(r"\bCREATE\s+TABLE\s+" + OBJ_NAME, re.IGNORECASE)
+LINE_COMMENT_RE  = re.compile(r"--[^\r\n]*")
+BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+NAME_PART   = r'(?:\[[^\]]+\]|"[^"]+"|[^\s\(\[\]"\.]+)'
+NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*"
+CREATE_VIEW_RE  = re.compile(rf"(?im)\bCREATE\s+VIEW\s+({NAME_PATTERN})")
+CREATE_PROC_RE  = re.compile(rf"(?im)\bCREATE\s+PROCEDURE\s+({NAME_PATTERN})")
+CREATE_FUNC_RE  = re.compile(rf"(?im)\bCREATE\s+FUNCTION\s+({NAME_PATTERN})")
+CREATE_TABLE_RE = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(?=\()")
 
-# ---- Normalize object name (handles dots inside object names) ----
+# --------------------------------------------------------------------
+# Helpers
+# --------------------------------------------------------------------
+def strip_sql_comments(sql: str) -> str:
+    """Remove block and line comments safely (preserving newlines)."""
+    def _block_repl(m): return re.sub(r"[^\r\n]", " ", m.group(0))
+    sql = BLOCK_COMMENT_RE.sub(_block_repl, sql)
+    sql = LINE_COMMENT_RE.sub("", sql)
+    return sql
+
 def normalize_object_name(name: str, default_schema: str) -> str:
+    """Normalize table/view names to include schema and brackets."""
     n = name.strip()
-
-    # If name contains quotes, leave as is
     if '"' in n:
         return n
+    if re.match(rf"^\[?{default_schema}\]?\.", n, re.IGNORECASE):
+        parts = [p.strip() for p in n.split('.')]
+        return '.'.join([p if p.startswith('[') and p.endswith(']') else f'[{p}]' for p in parts])
+    if '.' not in n:
+        part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
+        return f'[{default_schema}].{part}'
+    parts = [p.strip() for p in n.split('.')]
+    return '.'.join([p if p.startswith('[') and p.endswith(']') else f'[{p}]' for p in parts])
 
-    # Split on first dot only (schema.object), keep rest as part of object name
-    if '.' in n:
-        schema, obj = n.split('.', 1)
-        schema = schema.strip()
-        obj = obj.strip()
-        # Wrap in brackets if needed
-        if not (schema.startswith('[') and schema.endswith(']')):
-            schema = f'[{schema}]'
-        if not (obj.startswith('[') and obj.endswith(']')):
-            obj = f'[{obj}]'
-        return f"{schema}.{obj}"
-
-    # No dot → prepend default schema
-    part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
-    return f'[{default_schema}].{part}'
-
-# ---- Make SQL idempotent ----
 def make_idempotent(sql: str) -> str:
+    """Clean SQL and make CREATE statements idempotent."""
+    sql = strip_sql_comments(sql)
     sql = GO_LINE_RE.sub("", sql)
     sql = USE_RE.sub("", sql)
     sql = CREATE_VIEW_RE.sub(lambda m: f"CREATE OR ALTER VIEW {m.group(1)}", sql)
@@ -66,27 +72,35 @@ def make_idempotent(sql: str) -> str:
         if raw.lstrip().startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
-        return (f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\n"
-                f"CREATE TABLE {norm}")
-    sql = CREATE_TABLE_RE.sub(table_repl, sql)
-    return sql.strip()
+        return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
 
-# ---- Main compilation ----
+    return CREATE_TABLE_RE.sub(table_repl, sql).strip()
+
+# --------------------------------------------------------------------
+# Main
+# --------------------------------------------------------------------
 try:
-    sql_files = sorted([f for f in os.listdir(source_folder) if f.lower().endswith('.sql')])
-    logging.info(f"Found {len(sql_files)} SQL files in {source_folder}")
+    # ---- 1) Collect all SQL files alphabetically ----
+    sql_files = sorted([f for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
+    logging.info(f"Found {len(sql_files)} SQL files to compile.")
+    if not sql_files:
+        raise FileNotFoundError(f"No .sql files found in {SOURCE_FOLDER}")
 
-    with open(output_file, 'w', encoding='utf-8-sig') as f_out:
+    # ---- 2) Generate stored procedure ----
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
+        # Header
         f_out.write("-- =============================================\n")
         f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
-        f_out.write(f"-- Source folder: {source_folder}\n")
+        f_out.write(f"-- Source folder: {SOURCE_FOLDER}\n")
         f_out.write(f"-- Files included: {len(sql_files)}\n")
         for sf in sql_files:
-            f_out.write(f"--   {sf}\n")
+            f_out.write(f"--   {sf.name}\n")
         f_out.write("-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER\n")
         f_out.write("-- =============================================\n\n")
 
+        # Procedure header
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
         f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_BronzeTables', 'P') IS NOT NULL\n")
         f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables;\nGO\n\n")
@@ -94,14 +108,15 @@ try:
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 
+        # ---- 3) Process each file ----
         for sf in sql_files:
             try:
-                logging.info(f"Processing file: {sf}")
-                with open(os.path.join(source_folder, sf), 'r', encoding='utf-8-sig') as f_in:
+                logging.info(f"Processing file: {sf.name}")
+                with sf.open("r", encoding="utf-8-sig") as f_in:
                     content = f_in.read()
                     transformed = make_idempotent(content)
                     safe = transformed.replace("'", "''")
-                    f_out.write(f"    -- Start of: {sf}\n")
+                    f_out.write(f"    -- Start of: {sf.name}\n")
                     f_out.write("    SET @sql = N'" + safe + "';\n")
                     f_out.write("    BEGIN TRY\n")
                     f_out.write("        EXEC sys.sp_executesql @sql;\n")
@@ -109,16 +124,16 @@ try:
                     f_out.write("    BEGIN CATCH\n")
                     f_out.write("        THROW;\n")
                     f_out.write("    END CATCH;\n\n")
-                logging.info(f"Finished file: {sf}")                
+                logging.info(f"Finished file: {sf.name}")
             except Exception as e:
-                logging.error(f"Error processing {sf}: {e}")
+                logging.error(f"Error processing {sf.name}: {e}")
                 raise
 
         f_out.write("END\nGO\n")
 
-    logging.info(f"✅ Stored procedure script generated successfully: {output_file}")
-    print(f"✅ Stored procedure script generated successfully: {output_file}")
-    
+    logging.info(f"✅ Stored procedure script generated successfully: {OUTPUT_FILE}")
+    print(f"✅ Stored procedure script generated successfully: {OUTPUT_FILE}")
+
 except Exception as e:
     logging.exception("💥 Fatal error during compilation")
     raise

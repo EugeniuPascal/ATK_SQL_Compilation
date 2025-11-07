@@ -1,4 +1,4 @@
-# compile_silver_tables_folder.py
+# compile_bronze_tables_folder.py
 from pathlib import Path
 from datetime import datetime
 
@@ -9,14 +9,16 @@ FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
 def read_text_with_fallback(p: Path) -> str | None:
+    """Try multiple encodings to safely read SQL text files."""
     for enc in FALLBACK_ENCODINGS:
         try:
             return p.read_text(encoding=enc)
         except Exception:
-            pass
+            continue
     return None
 
 def compile_sql():
+    """Compile all .sql files in MAIN_DIR into one bundle, sorted alphabetically."""
     sql_files = sorted(
         [f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"],
         key=lambda p: p.name.lower()
@@ -39,7 +41,7 @@ def compile_sql():
             out.write((content.rstrip() if content else "-- Could not decode file") + "\n")
             out.write(f"{DIV}\n-- End of:   {f.name}\n{DIV}\n\nGO\n\n")
 
-    print(f"Compiled SQL file created at: {OUTPUT}")
+    print(f"✅ Compiled SQL file created at: {OUTPUT}")
 
 if __name__ == "__main__":
     compile_sql()

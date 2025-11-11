@@ -6,11 +6,11 @@ DECLARE @DateFrom DATE = '2023-09-01';
 -----------------------------------------------------
 -- Drop & recreate main GOLD table with single Par column
 -----------------------------------------------------
-DROP TABLE IF EXISTS mis.[Gold_Fact_Sold_Par];
+DROP TABLE IF EXISTS mis.[Gold_Fact_Sold_Par_1];
 
-CREATE TABLE mis.[Gold_Fact_Sold_Par] (
-    SoldDate                DATE         NOT NULL,	
-	ClientID                VARCHAR(36)  NULL,
+CREATE TABLE mis.[Gold_Fact_Sold_Par_1] (
+    SoldDate                DATE         NOT NULL,    
+    ClientID                VARCHAR(36)  NULL,
     CreditID                VARCHAR(36)  NOT NULL,
     SoldAmount              DECIMAL(18,2) NULL,
     NumberOfOverdueDaysIFRS DECIMAL(15,2) NULL,
@@ -23,8 +23,7 @@ CREATE TABLE mis.[Gold_Fact_Sold_Par] (
 ) WITH (DATA_COMPRESSION = PAGE);
 
 -----------------------------------------------------
--- Step 1: Shadow Branch, Responsible, EmployeePos, IRR temp tables
--- NOTE: cast periods/dates to DATE to avoid time-of-day mismatches
+-- Step 1: Prepare temp tables
 -----------------------------------------------------
 
 -- Shadow Branch
@@ -32,57 +31,57 @@ IF OBJECT_ID('tempdb..#ShadowBranch') IS NOT NULL DROP TABLE #ShadowBranch;
 SELECT 
     [КредитыВТеневыхФилиалах Кредит ID] AS CreditID,
     [КредитыВТеневыхФилиалах Филиал] AS BranchShadow,
-    CAST([КредитыВТеневыхФилиалах Период] AS DATE) AS Period
+    [КредитыВТеневыхФилиалах Период] AS Period
 INTO #ShadowBranch
 FROM mis.[Bronze_РегистрыСведений.КредитыВТеневыхФилиалах];
 
 CREATE NONCLUSTERED INDEX IX_Shadow_Credit_Period ON #ShadowBranch (CreditID, Period);
 
--- MaxDays per client per date (SoldDate already as DATE)
+-- MaxDays per client per date
 IF OBJECT_ID('tempdb..#MaxDays') IS NOT NULL DROP TABLE #MaxDays;
 SELECT
     [СуммыЗадолженностиПоПериодамПросрочки Клиент ID] AS ClientID,
-    CAST([СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE) AS SoldDate,
-    MAX([СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого]) AS MaxDaysPerClientDay
+    [СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,
+    MAX([СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки Кредит]) AS MaxDaysPerClientDay
 INTO #MaxDays
 FROM mis.[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
 GROUP BY
     [СуммыЗадолженностиПоПериодамПросрочки Клиент ID],
-    CAST([СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE);
+    [СуммыЗадолженностиПоПериодамПросрочки Дата];
 
 CREATE NONCLUSTERED INDEX IX_MaxDays_Client_SoldDate ON #MaxDays(ClientID, SoldDate);
 
--- Responsible (cast Period -> DATE)
+-- Responsible
 IF OBJECT_ID('tempdb..#Responsible') IS NOT NULL DROP TABLE #Responsible;
 SELECT
     [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
     [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS EmployeeID,
     [ОтветственныеПоКредитамВыданным Филиал ID] AS BranchID,
-    CAST([ОтветственныеПоКредитамВыданным Период] AS DATE) AS Period
+    [ОтветственныеПоКредитамВыданным Период] AS Period
 INTO #Responsible
 FROM mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным];
 
 CREATE NONCLUSTERED INDEX IX_Resp_Credit_Period ON #Responsible (CreditID, Period);
 
--- Employee Position (cast Period -> DATE)
+-- Employee Position
 IF OBJECT_ID('tempdb..#EmployeePos') IS NOT NULL DROP TABLE #EmployeePos;
 SELECT
     [СотрудникиДанныеПоЗарплате Сотрудник ID] AS EmployeeID,
     [СотрудникиДанныеПоЗарплате Должность ID] AS PositionID,
-    CAST([СотрудникиДанныеПоЗарплате Период] AS DATE) AS Period
+    [СотрудникиДанныеПоЗарплате Период] AS Period
 INTO #EmployeePos
 FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате]
-WHERE CAST([СотрудникиДанныеПоЗарплате Период] AS DATE) >= DATEADD(YEAR,-1,@DateFrom);
+WHERE [СотрудникиДанныеПоЗарплате Период] >= DATEADD(year,-1,@DateFrom);
 
 CREATE CLUSTERED INDEX CX_EmployeePos_Emp_Period ON #EmployeePos (EmployeeID, Period);
 
--- IRR (cast to DATE)
+-- IRR
 IF OBJECT_ID('tempdb..#IRR') IS NOT NULL DROP TABLE #IRR;
 SELECT
     [УстановкаДанныхКредита Кредит ID] AS CreditID,
     [УстановкаДанныхКредита Внутренняя Норма Доходности Годовая] AS IRR_Year,
     [УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая] AS IRR_Client,
-    CAST([УстановкаДанныхКредита Дата] AS DATE) AS IRRDate
+    [УстановкаДанныхКредита Дата] AS IRRDate
 INTO #IRR
 FROM mis.[Bronze_Документы.УстановкаДанныхКредита]
 WHERE [УстановкаДанныхКредита Кредит ID] IS NOT NULL;
@@ -90,51 +89,38 @@ WHERE [УстановкаДанныхКредита Кредит ID] IS NOT NULL
 CREATE NONCLUSTERED INDEX IX_IRR_Credit_Date ON #IRR (CreditID, IRRDate DESC);
 
 -----------------------------------------------------
--- Step 2: SourceData (pre-cast SoldDate) and insert Gold Fact
+-- Step 2: Insert Gold Fact
 -----------------------------------------------------
-;WITH SourceData AS (
-    SELECT
-        CAST([СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE) AS SoldDate,
-        [СуммыЗадолженностиПоПериодамПросрочки Клиент ID] AS ClientID,
-        [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
-        [СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
-        [СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО] AS NumberOfOverdueDaysIFRS
-    FROM mis.[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
-    WHERE [СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
-      AND CAST([СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE) >= @DateFrom
-)
-INSERT INTO mis.[Gold_Fact_Sold_Par] WITH (TABLOCK)
+INSERT INTO mis.[Gold_Fact_Sold_Par_1] WITH (TABLOCK)
 (
     SoldDate, ClientID, CreditID, SoldAmount, NumberOfOverdueDaysIFRS, IRR_Values,
     BranchShadow, EmployeeID, BranchID, EmployeePositionID, Par
 )
 SELECT
-    sd.SoldDate,
-    sd.ClientID,
-    sd.CreditID,
-    sd.SoldAmount,
-    sd.NumberOfOverdueDaysIFRS,
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID] AS ClientID,
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount,
+    sd.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО] AS NumberOfOverdueDaysIFRS,
 
-    -- IRR Values (latest IRR where IRRDate <= SoldDate)
+    -- IRR Values
     ROUND(
         COALESCE(
             CASE WHEN irr.IRR_Year IS NOT NULL AND irr.IRR_Year < 100 THEN irr.IRR_Year
                  ELSE irr.IRR_Client
             END, 0
-        ) * sd.SoldAmount, 2
+        ) * sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит], 2
     ) AS IRR_Values,
 
-    -- BranchShadow: latest shadow row with Period <= SoldDate
+    -- Shadow Branch
     sh.BranchShadow,
 
-    -- Employee & Branch: latest responsible row with Period <= SoldDate
+    -- Employee / Branch / Position
     r.EmployeeID,
     r.BranchID,
-
-    -- EmployeePositionID: latest employee position row (by Period) for r.EmployeeID where Period <= SoldDate
     empPos.PositionID AS EmployeePositionID,
 
-    -- Par by MaxDays (max days per client per date)
+    -- Single Par column
     CASE
         WHEN md.MaxDaysPerClientDay BETWEEN 1   AND 30  THEN N'Par0'
         WHEN md.MaxDaysPerClientDay BETWEEN 31  AND 60  THEN N'Par30'
@@ -146,57 +132,57 @@ SELECT
         ELSE NULL
     END AS Par
 
-FROM SourceData sd
+FROM mis.[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] sd
 
-
--- latest Responsible row for the credit where Period <= SoldDate
+-- Latest Responsible before SoldDate
 OUTER APPLY (
-    SELECT TOP (1)
-        rr.EmployeeID,
-        rr.BranchID
+    SELECT TOP (1) EmployeeID, BranchID
     FROM #Responsible rr
-    WHERE rr.CreditID = sd.CreditID
-      AND rr.Period <= sd.SoldDate
+    WHERE rr.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+      AND rr.Period <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
     ORDER BY rr.Period DESC
 ) AS r
 
--- latest Employee position for the picked employee where Period <= SoldDate
+-- Latest Employee Position before SoldDate
 OUTER APPLY (
-    SELECT TOP (1) ep.PositionID
+    SELECT TOP (1) PositionID
     FROM #EmployeePos ep
     WHERE ep.EmployeeID = r.EmployeeID
-      AND ep.Period <= sd.SoldDate
+      AND ep.Period <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
     ORDER BY ep.Period DESC
 ) AS empPos
 
--- latest ShadowBranch for credit where Period <= SoldDate
+-- Latest Shadow Branch before SoldDate
 OUTER APPLY (
-    SELECT TOP (1) sb.BranchShadow
+    SELECT TOP (1) BranchShadow
     FROM #ShadowBranch sb
-    WHERE sb.CreditID = sd.CreditID
-      AND sb.Period <= sd.SoldDate
+    WHERE sb.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+      AND sb.Period <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
     ORDER BY sb.Period DESC
 ) AS sh
 
--- MaxDays join (exact sold date)
+-- MaxDays join
 LEFT JOIN #MaxDays md
-    ON md.ClientID = sd.ClientID
-   AND md.SoldDate = sd.SoldDate
+    ON md.ClientID = sd.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID]
+   AND md.SoldDate = sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
 
--- IRR lookup (already used above via outer apply in IRR_Values)
+-- IRR latest before SoldDate
 OUTER APPLY (
-    SELECT TOP (1) i.IRR_Year, i.IRR_Client
+    SELECT TOP (1) IRR_Year, IRR_Client
     FROM #IRR i
-    WHERE i.CreditID = sd.CreditID
-      AND i.IRRDate <= sd.SoldDate
+    WHERE i.CreditID = sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+      AND i.IRRDate <= sd.[СуммыЗадолженностиПоПериодамПросрочки Дата]
     ORDER BY i.IRRDate DESC
 ) AS irr
-;
+
+WHERE sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0
+  AND sd.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= @DateFrom;
+
 -----------------------------------------------------
 -- Columnstore
 -----------------------------------------------------
-CREATE CLUSTERED COLUMNSTORE INDEX CCSI_Gold_Fact_Sold_Par
-ON mis.[Gold_Fact_Sold_Par];
+CREATE CLUSTERED COLUMNSTORE INDEX CCSI_Gold_Fact_Sold_Par_1
+ON mis.[Gold_Fact_Sold_Par_1];
 
 -- Drop temp tables
 DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR, #MaxDays;

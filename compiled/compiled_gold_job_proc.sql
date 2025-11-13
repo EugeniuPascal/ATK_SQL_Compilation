@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-11-11 14:24:08.905642
+-- Generated: 2025-11-13 10:34:37.500307
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 17
 --   mis.Gold_Dim_AppUsers.sql
@@ -366,6 +366,8 @@ CREATE TABLE [mis].[Gold_Dim_Credits](
     [FinancialProductsMainGroup] NVARCHAR(255) NULL,
     [IssuedCreditsStatus] NVARCHAR(50) NULL,
     [CreditApplicationPartnerID] VARCHAR(36) NULL,
+    [First_CreditPartnerName] NVARCHAR(255) NULL,
+    [CreditPartnerName] NVARCHAR(255) NULL,
     [FirstFilialID] VARCHAR(36) NULL,
     [FirstEmployeeID] VARCHAR(36) NULL,
     [LastFilialID] VARCHAR(36) NULL,
@@ -378,9 +380,9 @@ CREATE TABLE [mis].[Gold_Dim_Credits](
     [CommitteeProt_CrPurpose] NVARCHAR(150) NULL,
     [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL,
     [DigitalSign] NVARCHAR(50) NULL,
-	[EconomicSectorEFSE] NVARCHAR(50) NULL,
-	[EconomicSector] NVARCHAR(50) NULL,
-	[Agro] NVARCHAR(50) NULL
+    [EconomicSectorEFSE] NVARCHAR(50) NULL,
+    [EconomicSector] NVARCHAR(50) NULL,
+    [Agro] NVARCHAR(50) NULL
 );
 
 WITH
@@ -497,7 +499,36 @@ GreenCredit AS (
         FROM [ATK].[dbo].[Документы.ПротоколКомитета] gc
     ) t
     WHERE rn = 1
+),
+
+ClientPartner AS (
+    SELECT 
+        c.[Кредиты ID] AS CreditID,
+        
+        cpLatest.CreditPartnerName,
+        
+        cpFirst.First_CreditPartnerName
+    FROM Credits c
+    OUTER APPLY (
+        SELECT TOP 1
+            CASE 
+                WHEN c.[Кредиты Дата Выдачи] = ''1753-01-01'' THEN NULL
+                ELSE znk.[ЗаявкаНаКредит Партнер]
+            END AS CreditPartnerName
+        FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
+        WHERE znk.[ЗаявкаНаКредит Кредит ID] = c.[Кредиты ID]
+        ORDER BY znk.[ЗаявкаНаКредит Дата] DESC, znk.[ЗаявкаНаКредит ID] DESC
+    ) cpLatest
+    OUTER APPLY (
+        SELECT TOP 1 znk.[ЗаявкаНаКредит Партнер] AS First_CreditPartnerName
+        FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
+        WHERE znk.[ЗаявкаНаКредит Клиент ID] = c.[Кредиты Владелец]
+          AND znk.[ЗаявкаНаКредит Партнер] IS NOT NULL
+          AND c.[Кредиты Дата Выдачи] <> ''1753-01-01''
+        ORDER BY znk.[ЗаявкаНаКредит Дата] ASC, znk.[ЗаявкаНаКредит ID] ASC
+    ) cpFirst
 )
+
 
 INSERT INTO mis.[Gold_Dim_Credits] (
     [CreditID], [Owner], [Code], [Name],
@@ -506,110 +537,89 @@ INSERT INTO mis.[Gold_Dim_Credits] (
     [AgroCredit], [LocalityType], [Currency], [ProductID],
     [Product], [Purpose], [RemoveFundingSource],
     [ContractType], [ContractDate], [IncomeSegment],
-    [UsagePurpose], [PurposeDescription],
-    [ProductType], [EconomicUsageArea], [SigningSource],
-    [FinancialProductsMainGroup], [IssuedCreditsStatus],
-    [CreditApplicationPartnerID], [FirstFilialID], [FirstEmployeeID],
-    [LastFilialID], [LastEmployeeID], [DealerID], [Source],
-    [LatestOutstandingAmount], [SegmentRevenue], [GreenCredit],
-    [CommitteeProt_CrPurpose], [CommitteeProt_AMLRiskCat],
-    [DigitalSign], [EconomicSectorEFSE], [EconomicSector], [Agro]
+    [UsagePurpose], [PurposeDescription], [ProductType],
+    [EconomicUsageArea], [SigningSource], [FinancialProductsMainGroup],
+    [IssuedCreditsStatus], [CreditApplicationPartnerID],
+    [First_CreditPartnerName], [CreditPartnerName],
+    [FirstFilialID], [FirstEmployeeID], [LastFilialID], [LastEmployeeID],
+    [DealerID], [Source], [LatestOutstandingAmount],
+    [SegmentRevenue], [GreenCredit], [CommitteeProt_CrPurpose],
+    [CommitteeProt_AMLRiskCat], [DigitalSign],
+    [EconomicSectorEFSE], [EconomicSector], [Agro]
 )
 SELECT
     c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
     c.[Кредиты Дата Выдачи], c.[Кредиты Срок Кредита], c.[Кредиты Сумма Кредита],
-    c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], 
-	c.[Кредиты Финансовый Продукт],
-	
+    c.[Кредиты Сектор Экономики], c.[Кредиты Финансовый Продукт ID], c.[Кредиты Финансовый Продукт],
     CASE c.[Кредиты Агро]
-	     WHEN ''Агро'' THEN ''AgroCredit''
-         WHEN ''НеАгро'' THEN ''nonAgro''
-		 ELSE c.[Кредиты Агро]
-	END AS AgroCredit, 
-	CASE c.[Кредиты Тип Местности]
-	     WHEN ''ГородБольшой'' THEN ''bigCity''
-         WHEN ''Пригород'' THEN ''suburb''
-	     WHEN ''Город'' THEN ''city''
-		 ELSE c.[Кредиты Тип Местности]
-	END AS LocalityType,
-    c.[Кредиты Валюта],	
-	
-	c.[Кредиты Кредитный Продукт ID],
-    c.[Кредиты Кредитный Продукт],
-    c.[Кредиты Цель Кредита],	
-	
-	c.[Кредиты Удалить Источник Финансирования],
+        WHEN ''Агро'' THEN ''AgroCredit''
+        WHEN ''НеАгро'' THEN ''nonAgro''
+        ELSE c.[Кредиты Агро]
+    END AS AgroCredit,
+    CASE c.[Кредиты Тип Местности]
+        WHEN ''ГородБольшой'' THEN ''bigCity''
+        WHEN ''Пригород'' THEN ''suburb''
+        WHEN ''Город'' THEN ''city''
+        ELSE c.[Кредиты Тип Местности]
+    END AS LocalityType,
+    c.[Кредиты Валюта], c.[Кредиты Кредитный Продукт ID], c.[Кредиты Кредитный Продукт],
+    c.[Кредиты Цель Кредита], c.[Кредиты Удалить Источник Финансирования],
     CASE c.[Кредиты Вид Контракта]
-	     WHEN ''Контракт'' THEN ''Contract''
-		 WHEN ''Приложение'' THEN ''App''
-		 ELSE c.[Кредиты Вид Контракта]
-	END AS ContractType, 
-	c.[Кредиты Дата Контракта],
-    c.[Кредиты Сегмент Доходов],	
-
-	c.[Кредиты Назначение Использования Кредита],
-    
-	c.[Кредиты Цель Кредита Описание],
-	c.[Кредиты Тип Кредитного Продукта],
-   
-    c.[Кредиты Сфера Использования Кредита],
-	
-	CASE c.[Кредиты Источник Подписания]
-	     WHEN ''Приложение'' THEN ''MobileApp''
-		 WHEN ''Сайт'' THEN ''WebSite''
-		 ELSE c.[Кредиты Источник Подписания]
-	END AS SigningSource,
-	fp.FinancialProductsMainGroup,
-    
+        WHEN ''Контракт'' THEN ''Contract''
+        WHEN ''Приложение'' THEN ''App''
+        ELSE c.[Кредиты Вид Контракта]
+    END AS ContractType,
+    c.[Кредиты Дата Контракта], c.[Кредиты Сегмент Доходов], c.[Кредиты Назначение Использования Кредита],
+    c.[Кредиты Цель Кредита Описание], c.[Кредиты Тип Кредитного Продукта], c.[Кредиты Сфера Использования Кредита],
+    CASE c.[Кредиты Источник Подписания]
+        WHEN ''Приложение'' THEN ''MobileApp''
+        WHEN ''Сайт'' THEN ''WebSite''
+        ELSE c.[Кредиты Источник Подписания]
+    END AS SigningSource,
+    fp.FinancialProductsMainGroup,
     CASE st.IssuedCreditsStatus
-	     WHEN ''Закрыт'' THEN ''Closed''
-		 WHEN ''Выдан'' THEN ''Disbursed''
-		 WHEN ''Списан'' THEN ''Written off''
-	     ELSE st.IssuedCreditsStatus
-	END AS IssuedCreditsStatus,
+        WHEN ''Закрыт'' THEN ''Closed''
+        WHEN ''Выдан'' THEN ''Disbursed''
+        WHEN ''Списан'' THEN ''Written off''
+        ELSE st.IssuedCreditsStatus
+    END AS IssuedCreditsStatus,
     cr.ApplicationPartnerID,
+    cp.First_CreditPartnerName,
+    cp.CreditPartnerName,
     COALESCE(r.FirstFilialID, cr.FilialID),
     COALESCE(r.FirstEmployeeID, cr.EmployeeID),
     COALESCE(r.LastFilialID, cr.FilialID),
     COALESCE(r.LastEmployeeID, cr.EmployeeID),
     cr.DealerID,
     CASE cr.Source
-         WHEN ''Партнер'' THEN ''Parteners''
-         WHEN ''Кассир'' THEN ''CCR''
-         WHEN ''СотрудникCallCenter'' THEN ''CallCenter''
-         WHEN ''Сайт'' THEN ''WebSite''
-         WHEN ''Плагин'' THEN ''API''
-	     WHEN ''МобильноеПриложение'' THEN ''MobileApp''
-	     WHEN ''КредитныйЭксперт'' THEN ''Employee''
-	     WHEN ''Другой'' THEN ''Other''
-         ELSE cr.Source
+        WHEN ''Партнер'' THEN ''Partners''
+        WHEN ''Кассир'' THEN ''CCR''
+        WHEN ''СотрудникCallCenter'' THEN ''CallCenter''
+        WHEN ''Сайт'' THEN ''WebSite''
+        WHEN ''Плагин'' THEN ''API''
+        WHEN ''МобильноеПриложение'' THEN ''MobileApp''
+        WHEN ''КредитныйЭксперт'' THEN ''Employee''
+        WHEN ''Другой'' THEN ''Other''
+        ELSE cr.Source
     END AS Source,
     lo.LatestOutstandingAmount,
-	seg.SegmentRevenue,
-    
+    seg.SegmentRevenue,
     gc.GreenCredit,
-    gc.CommitteeProt_CrPurpose,	
-	
-	CASE gc.CommitteeProt_AMLRiskCat
-	   WHEN ''Высокий'' THEN ''High_Risk''
-       WHEN ''Средний'' THEN ''Medium_Risk''
-       WHEN ''Низкий'' THEN ''Low_Risk''
-	   ELSE  gc.CommitteeProt_AMLRiskCat
-	END AS CommitteeProt_AMLRiskCat,
-    CASE WHEN c.[Кредиты Источник Подписания] IS NOT NULL 
-	     THEN ''True'' 
-		 ELSE ''False'' 
-    END AS DigitalSign,
-	e.[СекторыЭкономики Сектор Экономики EFSE] AS EconomicSectorEFSE,
-	e.[СекторыЭкономики Основной Раздел] AS EconimicSector,
-	
-	CASE 
-	   WHEN fp.FinancialProductsMainGroup = ''Business''
-	   AND e.[СекторыЭкономики Основной Раздел] = ''1. Agricultura''
-	   THEN ''Agro''
-	   ELSE ''NonAgro''
-	END AS Agro
-	
+    gc.CommitteeProt_CrPurpose,
+    CASE gc.CommitteeProt_AMLRiskCat
+        WHEN ''Высокий'' THEN ''High_Risk''
+        WHEN ''Средний'' THEN ''Medium_Risk''
+        WHEN ''Низкий'' THEN ''Low_Risk''
+        ELSE gc.CommitteeProt_AMLRiskCat
+    END AS CommitteeProt_AMLRiskCat,
+    CASE WHEN c.[Кредиты Источник Подписания] IS NOT NULL THEN ''True'' ELSE ''False'' END AS DigitalSign,
+    e.[СекторыЭкономики Сектор Экономики EFSE] AS EconomicSectorEFSE,
+    e.[СекторыЭкономики Основной Раздел] AS EconomicSector,
+    CASE
+        WHEN fp.FinancialProductsMainGroup = ''Business'' AND e.[СекторыЭкономики Основной Раздел] = ''1. Agricultura''
+        THEN ''Agro''
+        ELSE ''NonAgro''
+    END AS Agro
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.[Кредиты ID] = cr.CreditID
 LEFT JOIN Resp r ON c.[Кредиты ID] = r.CreditID
@@ -618,6 +628,7 @@ LEFT JOIN Statuses st ON c.[Кредиты ID] = st.CreditID
 LEFT JOIN LatestOutstanding lo ON c.[Кредиты ID] = lo.CreditID
 LEFT JOIN SegmentRevenue seg ON c.[Кредиты Кредитный Продукт ID] = seg.ProductID
 LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID
+LEFT JOIN ClientPartner cp ON c.[Кредиты ID] = cp.CreditID
 LEFT JOIN [ATK].[dbo].[Справочники.СекторыЭкономики] AS e ON c.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;

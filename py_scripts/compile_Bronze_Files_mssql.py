@@ -23,16 +23,15 @@ logging.info("=== Starting Bronze SQL Compilation Job ===")
 # --------------------------------------------------------------------
 # Regexes
 # --------------------------------------------------------------------
-GO_LINE_RE   = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
-USE_RE       = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | re.MULTILINE)
+GO_LINE_RE       = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
+USE_RE           = re.compile(r"^\s*USE\s+\[?[^\]\r\n]+]?\s*;\s*$", re.IGNORECASE | re.MULTILINE)
 LINE_COMMENT_RE  = re.compile(r"--[^\r\n]*")
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
-NAME_PART   = r'(?:\[[^\]]+\]|"[^"]+"|[^\s\(\[\]"\.]+)'
-NAME_PATTERN = rf"{NAME_PART}(?:\.{NAME_PART})*"
-CREATE_VIEW_RE  = re.compile(rf"(?im)\bCREATE\s+VIEW\s+({NAME_PATTERN})")
-CREATE_PROC_RE  = re.compile(rf"(?im)\bCREATE\s+PROCEDURE\s+({NAME_PATTERN})")
-CREATE_FUNC_RE  = re.compile(rf"(?im)\bCREATE\s+FUNCTION\s+({NAME_PATTERN})")
-CREATE_TABLE_RE = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(?=\()")
+NAME_PART        = r'(?:\[[^\]]+\]|"[^"]+"|[^\s\(\[\]"\.]+)'
+NAME_PATTERN     = rf"{NAME_PART}(?:\.{NAME_PART})*"
+CREATE_VIEW_RE   = re.compile(rf"(?im)\bCREATE\s+VIEW\s+({NAME_PATTERN})")
+CREATE_FUNC_RE   = re.compile(rf"(?im)\bCREATE\s+FUNCTION\s+({NAME_PATTERN})")
+CREATE_TABLE_RE  = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(?=\()")
 
 # --------------------------------------------------------------------
 # Helpers
@@ -59,12 +58,12 @@ def normalize_object_name(name: str, default_schema: str) -> str:
     return '.'.join([p if p.startswith('[') and p.endswith(']') else f'[{p}]' for p in parts])
 
 def make_idempotent(sql: str) -> str:
-    """Clean SQL and make CREATE statements idempotent."""
+    """Clean SQL and make CREATE statements idempotent for tables/views/functions."""
     sql = strip_sql_comments(sql)
     sql = GO_LINE_RE.sub("", sql)
     sql = USE_RE.sub("", sql)
+    # Only transform views/functions/tables
     sql = CREATE_VIEW_RE.sub(lambda m: f"CREATE OR ALTER VIEW {m.group(1)}", sql)
-    sql = CREATE_PROC_RE.sub(lambda m: f"CREATE OR ALTER PROCEDURE {m.group(1)}", sql)
     sql = CREATE_FUNC_RE.sub(lambda m: f"CREATE OR ALTER FUNCTION {m.group(1)}", sql)
 
     def table_repl(m):
@@ -100,7 +99,7 @@ try:
         f_out.write("-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER\n")
         f_out.write("-- =============================================\n\n")
 
-        # Procedure header
+        # Procedure header (static)
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
         f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_BronzeTables', 'P') IS NOT NULL\n")
         f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables;\nGO\n\n")
@@ -116,19 +115,21 @@ try:
                     content = f_in.read()
                     transformed = make_idempotent(content)
                     safe = transformed.replace("'", "''")
-                    f_out.write(f"    -- Start of: {sf.name}\n")
-                    f_out.write("    SET @sql = N'" + safe + "';\n")
-                    f_out.write("    BEGIN TRY\n")
-                    f_out.write("        EXEC sys.sp_executesql @sql;\n")
-                    f_out.write("    END TRY\n")
-                    f_out.write("    BEGIN CATCH\n")
-                    f_out.write("        THROW;\n")
-                    f_out.write("    END CATCH;\n\n")
+                    if safe.strip():  # skip empty files
+                        f_out.write(f"    -- Start of: {sf.name}\n")
+                        f_out.write("    SET @sql = N'" + safe + "';\n")
+                        f_out.write("    BEGIN TRY\n")
+                        f_out.write("        EXEC sys.sp_executesql @sql;\n")
+                        f_out.write("    END TRY\n")
+                        f_out.write("    BEGIN CATCH\n")
+                        f_out.write("        THROW;\n")
+                        f_out.write("    END CATCH;\n\n")
                 logging.info(f"Finished file: {sf.name}")
             except Exception as e:
                 logging.error(f"Error processing {sf.name}: {e}")
                 raise
 
+        # Procedure end
         f_out.write("END\nGO\n")
 
     logging.info(f"✅ Stored procedure script generated successfully: {OUTPUT_FILE}")

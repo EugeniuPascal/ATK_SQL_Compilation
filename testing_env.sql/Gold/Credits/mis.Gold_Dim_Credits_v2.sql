@@ -36,7 +36,9 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits_v3] (
     [FinancialProductsMainGroup] NVARCHAR(255) NULL,
     [IssuedCreditsStatus] NVARCHAR(50) NULL,
     [CreditApplicationPartnerID] VARCHAR(36) NULL,
+    [First_CreditApplicationPartnerID] VARCHAR(36) NULL,
     [First_CreditPartnerName] NVARCHAR(255) NULL,
+    [CreditPartnerApplicationID] VARCHAR(36) NULL,
     [CreditPartnerName] NVARCHAR(255) NULL,
     [FirstFilialID] VARCHAR(36) NULL,
     [FirstEmployeeID] VARCHAR(36) NULL,
@@ -52,9 +54,19 @@ CREATE TABLE mis.[2tbl_Gold_Dim_Credits_v3] (
     [DigitalSign] NVARCHAR(50) NULL,
     [EconomicSectorEFSE] NVARCHAR(50) NULL,
     [EconomicSector] NVARCHAR(50) NULL,
-    [Agro] NVARCHAR(50) NULL
+    [Agro] NVARCHAR(50) NULL,
+    [CreditAppPartnerID_2023] VARCHAR(36) NULL,
+    [First_CreditApplicationPartnerID_2023] VARCHAR(36) NULL,
+    [CreditPartnerAppID_2023] VARCHAR(36) NULL,
+    [CreditAppPartnerID_2024] VARCHAR(36) NULL,
+    [First_CreditApplicationPartnerID_2024] VARCHAR(36) NULL,
+    [CreditPartnerAppID_2024] VARCHAR(36) NULL,
+    [CreditAppPartnerID_2025] VARCHAR(36) NULL,
+    [First_CreditApplicationPartnerID_2025] VARCHAR(36) NULL,
+    [CreditPartnerAppID_2025] VARCHAR(36) NULL
 );
 GO
+
 
 WITH
 -- Latest credit per CreditID
@@ -172,32 +184,84 @@ GreenCredit AS (
     WHERE rn = 1
 ),
 -- Client/Partner info
-ClientPartner AS (
+ClientPartnerTimeFrames AS (
     SELECT 
         c.[Кредиты ID] AS CreditID,
-        -- latest partner per credit, NULL if credit date = 1753-01-01
+        -- Current (existing)
+        cpLatest.CreditPartnerID,
         cpLatest.CreditPartnerName,
-        -- first non-null partner per client/owner, ignoring placeholder date
-        cpFirst.First_CreditPartnerName
+        cpFirst.First_CreditPartnerID,
+        cpFirst.First_CreditPartnerName,
+        -- 2023+
+        cp2023.CreditAppPartnerID_2023,
+        cp2023.First_CreditApplicationPartnerID_2023,
+        cp2023.CreditPartnerAppID_2023,
+        -- 2024+
+        cp2024.CreditAppPartnerID_2024,
+        cp2024.First_CreditApplicationPartnerID_2024,
+        cp2024.CreditPartnerAppID_2024,
+        -- 2025+
+        cp2025.CreditAppPartnerID_2025,
+        cp2025.First_CreditApplicationPartnerID_2025,
+        cp2025.CreditPartnerAppID_2025
     FROM Credits c
+    -- existing latest
     OUTER APPLY (
         SELECT TOP 1
-            CASE 
-                WHEN c.[Кредиты Дата Выдачи] = '1753-01-01' THEN NULL
-                ELSE znk.[ЗаявкаНаКредит Партнер]
+            CASE WHEN c.[Кредиты Дата Выдачи] = '1753-01-01' THEN NULL
+                 ELSE znk.[ЗаявкаНаКредит Партнер ID]
+            END AS CreditPartnerID,
+            CASE WHEN c.[Кредиты Дата Выдачи] = '1753-01-01' THEN NULL
+                 ELSE znk.[ЗаявкаНаКредит Партнер]
             END AS CreditPartnerName
         FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
         WHERE znk.[ЗаявкаНаКредит Кредит ID] = c.[Кредиты ID]
         ORDER BY znk.[ЗаявкаНаКредит Дата] DESC, znk.[ЗаявкаНаКредит ID] DESC
     ) cpLatest
+    -- existing first per client
     OUTER APPLY (
-        SELECT TOP 1 znk.[ЗаявкаНаКредит Партнер] AS First_CreditPartnerName
+        SELECT TOP 1 
+              znk.[ЗаявкаНаКредит Партнер ID] AS First_CreditPartnerID,
+              znk.[ЗаявкаНаКредит Партнер] AS First_CreditPartnerName
         FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
         WHERE znk.[ЗаявкаНаКредит Клиент ID] = c.[Кредиты Владелец]
           AND znk.[ЗаявкаНаКредит Партнер] IS NOT NULL
           AND c.[Кредиты Дата Выдачи] <> '1753-01-01'
         ORDER BY znk.[ЗаявкаНаКредит Дата] ASC, znk.[ЗаявкаНаКредит ID] ASC
     ) cpFirst
+    -- 2023+
+    OUTER APPLY (
+        SELECT TOP 1
+            znk.[ЗаявкаНаКредит Партнер ID] AS CreditAppPartnerID_2023,
+            znk.[ЗаявкаНаКредит Партнер ID] AS First_CreditApplicationPartnerID_2023, -- or logic for first
+            znk.[ЗаявкаНаКредит Партнер ID] AS CreditPartnerAppID_2023
+        FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
+        WHERE znk.[ЗаявкаНаКредит Кредит ID] = c.[Кредиты ID]
+          AND znk.[ЗаявкаНаКредит Дата] >= '2023-01-01'
+        ORDER BY znk.[ЗаявкаНаКредит Дата] DESC
+    ) cp2023
+    -- 2024+
+    OUTER APPLY (
+        SELECT TOP 1
+            znk.[ЗаявкаНаКредит Партнер ID] AS CreditAppPartnerID_2024,
+            znk.[ЗаявкаНаКредит Партнер ID] AS First_CreditApplicationPartnerID_2024,
+            znk.[ЗаявкаНаКредит Партнер ID] AS CreditPartnerAppID_2024
+        FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
+        WHERE znk.[ЗаявкаНаКредит Кредит ID] = c.[Кредиты ID]
+          AND znk.[ЗаявкаНаКредит Дата] >= '2024-01-01'
+        ORDER BY znk.[ЗаявкаНаКредит Дата] DESC
+    ) cp2024
+    -- 2025+
+    OUTER APPLY (
+        SELECT TOP 1
+            znk.[ЗаявкаНаКредит Партнер ID] AS CreditAppPartnerID_2025,
+            znk.[ЗаявкаНаКредит Партнер ID] AS First_CreditApplicationPartnerID_2025,
+            znk.[ЗаявкаНаКредит Партнер ID] AS CreditPartnerAppID_2025
+        FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
+        WHERE znk.[ЗаявкаНаКредит Кредит ID] = c.[Кредиты ID]
+          AND znk.[ЗаявкаНаКредит Дата] >= '2025-01-01'
+        ORDER BY znk.[ЗаявкаНаКредит Дата] DESC
+    ) cp2025
 )
 
 -- Final insert
@@ -210,13 +274,16 @@ INSERT INTO mis.[2tbl_Gold_Dim_Credits_v3] (
     [ContractType], [ContractDate], [IncomeSegment],
     [UsagePurpose], [PurposeDescription], [ProductType],
     [EconomicUsageArea], [SigningSource], [FinancialProductsMainGroup],
-    [IssuedCreditsStatus], [CreditApplicationPartnerID],
-    [First_CreditPartnerName], [CreditPartnerName],
+    [IssuedCreditsStatus], [CreditApplicationPartnerID],[First_CreditApplicationPartnerID],
+    [CreditPartnerApplicationID], [First_CreditPartnerName], [CreditPartnerName],
     [FirstFilialID], [FirstEmployeeID], [LastFilialID], [LastEmployeeID],
     [DealerID], [Source], [LatestOutstandingAmount],
     [SegmentRevenue], [GreenCredit], [CommitteeProt_CrPurpose],
     [CommitteeProt_AMLRiskCat], [DigitalSign],
-    [EconomicSectorEFSE], [EconomicSector], [Agro]
+    [EconomicSectorEFSE], [EconomicSector], [Agro],
+    [CreditAppPartnerID_2023], [First_CreditApplicationPartnerID_2023], [CreditPartnerAppID_2023],
+    [CreditAppPartnerID_2024], [First_CreditApplicationPartnerID_2024], [CreditPartnerAppID_2024],
+    [CreditAppPartnerID_2025], [First_CreditApplicationPartnerID_2025], [CreditPartnerAppID_2025]
 )
 SELECT
     c.[Кредиты ID], c.[Кредиты Владелец], c.[Кредиты Код], c.[Кредиты Наименование],
@@ -255,6 +322,8 @@ SELECT
         ELSE st.IssuedCreditsStatus
     END AS IssuedCreditsStatus,
     cr.ApplicationPartnerID,
+    cp.First_CreditPartnerID,
+    cp.CreditPartnerID,
     cp.First_CreditPartnerName,
     cp.CreditPartnerName,
     COALESCE(r.FirstFilialID, cr.FilialID),
@@ -290,7 +359,13 @@ SELECT
         WHEN fp.FinancialProductsMainGroup = 'Business' AND e.[СекторыЭкономики Основной Раздел] = '1. Agricultura'
         THEN 'Agro'
         ELSE 'NonAgro'
-    END AS Agro
+    END AS Agro,
+	 -- 2023+
+    cp.CreditAppPartnerID_2023, cp.First_CreditApplicationPartnerID_2023, cp.CreditPartnerAppID_2023,
+    -- 2024+
+    cp.CreditAppPartnerID_2024, cp.First_CreditApplicationPartnerID_2024, cp.CreditPartnerAppID_2024,
+    -- 2025+
+    cp.CreditAppPartnerID_2025, cp.First_CreditApplicationPartnerID_2025, cp.CreditPartnerAppID_2025
 FROM Credits c
 LEFT JOIN CreditRequest cr ON c.[Кредиты ID] = cr.CreditID
 LEFT JOIN Resp r ON c.[Кредиты ID] = r.CreditID
@@ -299,6 +374,7 @@ LEFT JOIN Statuses st ON c.[Кредиты ID] = st.CreditID
 LEFT JOIN LatestOutstanding lo ON c.[Кредиты ID] = lo.CreditID
 LEFT JOIN SegmentRevenue seg ON c.[Кредиты Кредитный Продукт ID] = seg.ProductID
 LEFT JOIN GreenCredit gc ON c.[Кредиты ID] = gc.CreditID
-LEFT JOIN ClientPartner cp ON c.[Кредиты ID] = cp.CreditID
+LEFT JOIN ClientPartnerTimeFrames cp ON c.[Кредиты ID] = cp.CreditID
 LEFT JOIN [ATK].[dbo].[Справочники.СекторыЭкономики] AS e ON c.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID];
+--WHERE c.[Кредиты Владелец] = '80D300155D010F0111E6BD2A754DD3BA';
 

@@ -38,19 +38,13 @@ CREATE_TABLE_RE  = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(
 # --------------------------------------------------------------------
 def strip_sql_comments(sql: str) -> str:
     """Remove block and line comments safely (preserving newlines)."""
-    def _block_repl(m): 
-        return re.sub(r"[^\r\n]", " ", m.group(0))
+    def _block_repl(m): return re.sub(r"[^\r\n]", " ", m.group(0))
     sql = BLOCK_COMMENT_RE.sub(_block_repl, sql)
     sql = LINE_COMMENT_RE.sub("", sql)
     return sql
 
 def normalize_object_name(name: str, default_schema: str) -> str:
-    """
-    Normalize to [schema].[object] format without adding extra brackets.
-    Multi-part names like Bronze_РегистрыСведений.КредитыВТеневыхФилиалах
-    become: [mis].[Bronze_РегистрыСведений.КредитыВТеневыхФилиалах]
-    Temp tables (#temp) are returned untouched.
-    """
+
     n = name.strip().strip('"')
 
     if n.startswith('#'):
@@ -65,7 +59,6 @@ def normalize_object_name(name: str, default_schema: str) -> str:
     # Wrap schema and object in single brackets
     return f'[{default_schema}].[{obj_name}]'
 
-
 def make_idempotent(sql: str) -> str:
     """Clean SQL and make CREATE statements idempotent for tables/views/functions."""
     sql = strip_sql_comments(sql)
@@ -76,6 +69,7 @@ def make_idempotent(sql: str) -> str:
 
     def table_repl(m):
         raw = m.group(1).strip()
+        # Keep temp tables (#temp) untouched
         if raw.startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
@@ -87,11 +81,13 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
+    # ---- 1) Collect all SQL files alphabetically ----
     sql_files = sorted([f for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
     logging.info(f"Found {len(sql_files)} SQL files to compile.")
     if not sql_files:
         raise FileNotFoundError(f"No .sql files found in {SOURCE_FOLDER}")
 
+    # ---- 2) Generate stored procedure ----
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
         # Header
@@ -113,7 +109,7 @@ try:
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 
-        # Process each file
+        # ---- 3) Process each file ----
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf.name}")
@@ -121,9 +117,9 @@ try:
                     content = f_in.read()
                     transformed = make_idempotent(content)
                     safe = transformed.replace("'", "''")
-                    if safe.strip():  # skip empty
+                    if safe.strip():  # skip empty files
                         f_out.write(f"    -- Start of: {sf.name}\n")
-                        f_out.write(f"    SET @sql = N'{safe}';\n")
+                        f_out.write("    SET @sql = N'" + safe + "';\n")
                         f_out.write("    BEGIN TRY\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("    END TRY\n")
@@ -135,6 +131,7 @@ try:
                 logging.error(f"Error processing {sf.name}: {e}")
                 raise
 
+        # Procedure end
         f_out.write("END\nGO\n")
 
     logging.info(f"✅ Stored procedure script generated successfully: {OUTPUT_FILE}")

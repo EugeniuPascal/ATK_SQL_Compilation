@@ -44,31 +44,48 @@ def strip_sql_comments(sql: str) -> str:
     return sql
 
 def normalize_object_name(name: str, default_schema: str) -> str:
-    """Normalize table/view names to include schema and brackets."""
+    """
+    Normalize table/view names to include schema and brackets.
+    Avoids double-wrapping brackets and keeps maximum of [schema].[object].
+    """
     n = name.strip()
-    if '"' in n:
-        return n
-    if re.match(rf"^\[?{default_schema}\]?\.", n, re.IGNORECASE):
-        parts = [p.strip() for p in n.split('.')]
-        return '.'.join([p if p.startswith('[') and p.endswith(']') else f'[{p}]' for p in parts])
-    if '.' not in n:
-        part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
+    n = n.strip('"')  # remove quotes
+
+    parts = n.split('.')
+    
+    if len(parts) == 1:
+        # No schema given, prepend default schema
+        part = parts[0]
+        if not (part.startswith('[') and part.endswith(']')):
+            part = f'[{part}]'
         return f'[{default_schema}].{part}'
-    parts = [p.strip() for p in n.split('.')]
-    return '.'.join([p if p.startswith('[') and p.endswith(']') else f'[{p}]' for p in parts])
+    
+    elif len(parts) == 2:
+        # Already schema.object
+        schema, obj = parts
+        schema = schema if (schema.startswith('[') and schema.endswith(']')) else f'[{schema}]'
+        obj = obj if (obj.startswith('[') and obj.endswith(']')) else f'[{obj}]'
+        return f'{schema}.{obj}'
+    
+    else:
+        # More than 2 parts, join all but last as schema
+        *schemas, obj = parts
+        schemas = [s if s.startswith('[') and s.endswith(']') else f'[{s}]' for s in schemas]
+        obj = obj if obj.startswith('[') and obj.endswith(']') else f'[{obj}]'
+        return '.'.join(schemas + [obj])
 
 def make_idempotent(sql: str) -> str:
     """Clean SQL and make CREATE statements idempotent for tables/views/functions."""
     sql = strip_sql_comments(sql)
     sql = GO_LINE_RE.sub("", sql)
     sql = USE_RE.sub("", sql)
-    # Only transform views/functions/tables
     sql = CREATE_VIEW_RE.sub(lambda m: f"CREATE OR ALTER VIEW {m.group(1)}", sql)
     sql = CREATE_FUNC_RE.sub(lambda m: f"CREATE OR ALTER FUNCTION {m.group(1)}", sql)
 
     def table_repl(m):
         raw = m.group(1).strip()
-        if raw.lstrip().startswith('#'):
+        # Keep temp tables (#temp) untouched
+        if raw.startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
         return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
@@ -99,7 +116,7 @@ try:
         f_out.write("-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER\n")
         f_out.write("-- =============================================\n\n")
 
-        # Procedure header (static)
+        # Procedure header
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
         f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_BronzeTables', 'P') IS NOT NULL\n")
         f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables;\nGO\n\n")

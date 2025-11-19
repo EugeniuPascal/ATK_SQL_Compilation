@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-19 10:45:44
+-- Generated: 2025-11-19 11:39:52
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (6):
 --   mis.Silver_Restruct_SCD.sql
@@ -17,7 +17,8 @@ SET NOCOUNT ON;
 ----------------------------------------------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_Restruct_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_Restruct_SCD (
+    CREATE TABLE mis.Silver_Restruct_SCD 
+	(
         CreditID        VARCHAR(36)   NOT NULL,
         ValidFrom       DATE          NOT NULL,
         ValidTo         DATE          NOT NULL,
@@ -84,7 +85,8 @@ GO
 ----------------------------------------------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_RestructState_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_RestructState_SCD (
+    CREATE TABLE mis.Silver_RestructState_SCD 
+	(
         CreditID   VARCHAR(36)   NOT NULL,
         ValidFrom  DATE          NOT NULL,
         ValidTo    DATE          NOT NULL,
@@ -142,7 +144,8 @@ GO
 ----------------------------------------------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_Restruct_Merged_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_Restruct_Merged_SCD (
+    CREATE TABLE mis.Silver_Restruct_Merged_SCD 
+	(
         CreditID        VARCHAR(36)   NOT NULL,
         ValidFrom       DATE          NOT NULL,
         ValidTo         DATE          NOT NULL,
@@ -263,7 +266,8 @@ GO
 ----------------------------------------------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_Client_UnhealedFlag', 'U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_Client_UnhealedFlag (
+    CREATE TABLE mis.Silver_Client_UnhealedFlag 
+	(
         ClientID    VARCHAR(64) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
@@ -304,7 +308,8 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Dates ON #Dates(SoldDate);
 ------------------------------------------------------------
 -- 4) Insert only distinct client×day where conditions hold
 ------------------------------------------------------------
-INSERT INTO mis.Silver_Client_UnhealedFlag (ClientID, SoldDate, HasUnhealed)
+INSERT INTO mis.Silver_Client_UnhealedFlag 
+           (ClientID, SoldDate, HasUnhealed)
 SELECT m.ClientID, d.SoldDate, CAST(1 AS bit)
 FROM #Dates d
 JOIN (
@@ -347,7 +352,8 @@ VALUES
 IF OBJECT_ID('mis.Silver_Resp_SCD', 'U') IS NOT NULL
     DROP TABLE mis.Silver_Resp_SCD;
 
-CREATE TABLE mis.Silver_Resp_SCD (
+CREATE TABLE mis.Silver_Resp_SCD 
+(
     CreditID        VARCHAR(36) NOT NULL,
     ValidFrom       DATE        NOT NULL,
     ValidTo         DATE        NOT NULL,
@@ -408,7 +414,8 @@ DROP TABLE #RespBaseRaw;
 				 ) OVER (PARTITION BY CreditID ORDER BY PeriodDate ROWS UNBOUNDED PRECEDING), 0) AS grp
     FROM #RespBase
 )
-INSERT INTO mis.Silver_Resp_SCD (
+INSERT INTO mis.Silver_Resp_SCD 
+(
     CreditID, ValidFrom, ValidTo,
     BranchID, ExpertID,
     IsSpecialBranch, FinalBranchID, FinalExpertID
@@ -466,7 +473,8 @@ GO
 ------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_Stages_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_Stages_SCD (
+    CREATE TABLE mis.Silver_Stages_SCD 
+	(
         CreditID   VARCHAR(36)   NOT NULL,
         ValidFrom  DATE          NOT NULL,
         ValidTo    DATE          NOT NULL,
@@ -533,7 +541,8 @@ slices AS (
         COALESCE(DATEADD(day,-1,NextFrom), CONVERT(DATE,'9999-12-31')) AS ValidTo
     FROM grid
 )
-INSERT INTO mis.Silver_Stages_SCD (CreditID, ValidFrom, ValidTo, StageName)
+INSERT INTO mis.Silver_Stages_SCD 
+           (CreditID, ValidFrom, ValidTo, StageName)
 SELECT CreditID, ValidFrom, ValidTo, StageName
 FROM slices;
 

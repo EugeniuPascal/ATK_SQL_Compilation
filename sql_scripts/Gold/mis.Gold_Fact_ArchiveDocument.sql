@@ -5,7 +5,8 @@ IF OBJECT_ID('mis.[Gold_Fact_ArchiveDocument]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_ArchiveDocument];
 GO
 
-CREATE TABLE mis.[Gold_Fact_ArchiveDocument] (
+CREATE TABLE mis.[Gold_Fact_ArchiveDocument] 
+(
     [АктыПередачиКредитныхДел Период]         DATETIME NULL,
     [АктыПередачиКредитныхДел ID]             VARCHAR(36) NULL,
     [АктыПередачиКредитныхДел Номер Строки]   INT NULL,

@@ -8,7 +8,8 @@ IF OBJECT_ID('mis.[Gold_Fact_CerereOnline]', 'U') IS NOT NULL
 GO
 
 -- Create table
-CREATE TABLE mis.[Gold_Fact_CerereOnline] (
+CREATE TABLE mis.[Gold_Fact_CerereOnline] 
+(
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
     [Status]                NVARCHAR(256)  NULL,

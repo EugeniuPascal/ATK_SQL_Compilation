@@ -217,7 +217,8 @@ GO
         WHERE p.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] = doc.[НаправлениеНаВыплату ID]
     ) pay
 )
-INSERT INTO mis.[Gold_Fact_AdminTasks] (
+INSERT INTO mis.[Gold_Fact_AdminTasks] 
+(
     [AdminTask_ID], [AdminTask_Deleted], [AdminTask_Date], [AdminTask_Number], [AdminTask_Completed],
     [AdminTask_Author_ID], [AdminTask_Author], [AdminTask_Branch_ID], [AdminTask_Branch],
     [AdminTask_Category_ID], [AdminTask_Category], [AdminTask_Type_ID], [AdminTask_Type],

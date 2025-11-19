@@ -6,7 +6,8 @@ IF OBJECT_ID('mis.[Gold_CreditsInShadowBranches]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_CreditsInShadowBranches];
 GO
 
-CREATE TABLE mis.[Gold_CreditsInShadowBranches] (
+CREATE TABLE mis.[Gold_CreditsInShadowBranches] 
+(
     Period DATETIME NULL,
     ID VARCHAR(32) NOT NULL,
     RowNumber INT NULL,

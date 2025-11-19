@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-19 10:45:42
+-- Generated: 2025-11-19 11:39:56
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (17):
 --   mis.Gold_Dim_AppUsers.sql
@@ -75,7 +75,8 @@ IF OBJECT_ID(N'mis.[Gold_Dim_Branch]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Branch];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Branch] (
+CREATE TABLE mis.[Gold_Dim_Branch] 
+(
     BranchID VARCHAR(36) NOT NULL,
     BranchCode DECIMAL(3, 0) NULL,
     BranchName NVARCHAR(100) NULL,
@@ -157,7 +158,8 @@ IF OBJECT_ID(N'mis.[Gold_Dim_Clients]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Clients];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Clients] (
+CREATE TABLE mis.[Gold_Dim_Clients] 
+(
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
     [BranchID]              VARCHAR(36)    NULL,
@@ -348,7 +350,8 @@ IF OBJECT_ID(N'mis.[Gold_Dim_Credits]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Credits];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Credits] (
+CREATE TABLE mis.[Gold_Dim_Credits] 
+(
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -693,7 +696,8 @@ IF OBJECT_ID('mis.[Gold_Dim_Employees]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Employees];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Employees] (
+CREATE TABLE mis.[Gold_Dim_Employees] 
+(
     [EmployeeID] VARCHAR(36) NOT NULL,
 	[BranchID] VARCHAR(36) NULL,
     [EmployeeCode] INT NULL,
@@ -886,7 +890,8 @@ IF OBJECT_ID('mis.[Gold_Dim_EmployeesHistory]', 'U') IS NOT NULL
 GO
 
 
-CREATE TABLE mis.[Gold_Dim_EmployeesHistory] (
+CREATE TABLE mis.[Gold_Dim_EmployeesHistory] 
+(
     Period       DATETIME      NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
@@ -901,7 +906,8 @@ CREATE TABLE mis.[Gold_Dim_EmployeesHistory] (
 );
 GO
 
-INSERT INTO mis.[Gold_Dim_EmployeesHistory] (
+INSERT INTO mis.[Gold_Dim_EmployeesHistory] 
+(
     Period,
     ID,
     RowNumber,
@@ -1229,7 +1235,8 @@ GO
         WHERE p.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] = doc.[НаправлениеНаВыплату ID]
     ) pay
 )
-INSERT INTO mis.[Gold_Fact_AdminTasks] (
+INSERT INTO mis.[Gold_Fact_AdminTasks] 
+(
     [AdminTask_ID], [AdminTask_Deleted], [AdminTask_Date], [AdminTask_Number], [AdminTask_Completed],
     [AdminTask_Author_ID], [AdminTask_Author], [AdminTask_Branch_ID], [AdminTask_Branch],
     [AdminTask_Category_ID], [AdminTask_Category], [AdminTask_Type_ID], [AdminTask_Type],
@@ -1290,7 +1297,8 @@ IF OBJECT_ID('mis.[Gold_Fact_ArchiveDocument]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_ArchiveDocument];
 GO
 
-CREATE TABLE mis.[Gold_Fact_ArchiveDocument] (
+CREATE TABLE mis.[Gold_Fact_ArchiveDocument] 
+(
     [АктыПередачиКредитныхДел Период]         DATETIME NULL,
     [АктыПередачиКредитныхДел ID]             VARCHAR(36) NULL,
     [АктыПередачиКредитныхДел Номер Строки]   INT NULL,
@@ -1497,7 +1505,8 @@ IF OBJECT_ID('mis.[Gold_Fact_CerereOnline]', 'U') IS NOT NULL
 GO
 
 -- Create table
-CREATE TABLE mis.[Gold_Fact_CerereOnline] (
+CREATE TABLE mis.[Gold_Fact_CerereOnline] 
+(
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
     [Status]                NVARCHAR(256)  NULL,
@@ -1697,7 +1706,8 @@ IF OBJECT_ID('mis.[Gold_CreditsInShadowBranches]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_CreditsInShadowBranches];
 GO
 
-CREATE TABLE mis.[Gold_CreditsInShadowBranches] (
+CREATE TABLE mis.[Gold_CreditsInShadowBranches] 
+(
     Period DATETIME NULL,
     ID VARCHAR(32) NOT NULL,
     RowNumber INT NULL,
@@ -1936,7 +1946,8 @@ BEGIN
     PRINT N'Старая таблица удалена.';
 END;
 
-CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min] (
+CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min] 
+(
     SoldDate               date          NOT NULL,
     CreditID               varchar(64)   NOT NULL,
     ClientID               varchar(64)   NOT NULL,
@@ -2503,7 +2514,8 @@ DECLARE @DateFrom DATE = '2023-09-01';
 -----------------------------------------------------
 DROP TABLE IF EXISTS mis.[Gold_Fact_Sold_Par];
 
-CREATE TABLE mis.[Gold_Fact_Sold_Par] (
+CREATE TABLE mis.[Gold_Fact_Sold_Par] 
+(
     SoldDate                DATE         NOT NULL,	
 	ClientID                VARCHAR(36)  NULL,
     CreditID                VARCHAR(36)  NOT NULL,

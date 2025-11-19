@@ -17,7 +17,8 @@ VALUES
 IF OBJECT_ID('mis.Silver_Resp_SCD', 'U') IS NOT NULL
     DROP TABLE mis.Silver_Resp_SCD;
 
-CREATE TABLE mis.Silver_Resp_SCD (
+CREATE TABLE mis.Silver_Resp_SCD 
+(
     CreditID        VARCHAR(36) NOT NULL,
     ValidFrom       DATE        NOT NULL,
     ValidTo         DATE        NOT NULL,
@@ -78,7 +79,8 @@ DROP TABLE #RespBaseRaw;
 				 ) OVER (PARTITION BY CreditID ORDER BY PeriodDate ROWS UNBOUNDED PRECEDING), 0) AS grp
     FROM #RespBase
 )
-INSERT INTO mis.Silver_Resp_SCD (
+INSERT INTO mis.Silver_Resp_SCD 
+(
     CreditID, ValidFrom, ValidTo,
     BranchID, ExpertID,
     IsSpecialBranch, FinalBranchID, FinalExpertID

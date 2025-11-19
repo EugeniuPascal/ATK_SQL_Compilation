@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-11-19 10:45:48.652124
+-- Generated: 2025-11-19 11:40:09.040009
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 17
 --   mis.Gold_Dim_AppUsers.sql
@@ -76,8 +76,8 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.СведенияОПо
     SET @sql = N'IF OBJECT_ID(N''mis.[Gold_Dim_Branch]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Branch];
 
-IF OBJECT_ID(N''[mis].[Gold_Dim_Branch]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Dim_Branch];
-CREATE TABLE [mis].[Gold_Dim_Branch](
+CREATE TABLE mis.[Gold_Dim_Branch] 
+(
     BranchID VARCHAR(36) NOT NULL,
     BranchCode DECIMAL(3, 0) NULL,
     BranchName NVARCHAR(100) NULL,
@@ -153,8 +153,8 @@ LEFT JOIN LastSvedeniya s
 IF OBJECT_ID(N''mis.[Gold_Dim_Clients]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Clients];
 
-IF OBJECT_ID(N''[mis].[Gold_Dim_Clients]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Dim_Clients];
-CREATE TABLE [mis].[Gold_Dim_Clients](
+CREATE TABLE mis.[Gold_Dim_Clients] 
+(
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
     [BranchID]              VARCHAR(36)    NULL,
@@ -336,8 +336,8 @@ CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[Gold_Dim_Clients](IsGroup
     SET @sql = N'IF OBJECT_ID(N''mis.[Gold_Dim_Credits]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Credits];
 
-IF OBJECT_ID(N''[mis].[Gold_Dim_Credits]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Dim_Credits];
-CREATE TABLE [mis].[Gold_Dim_Credits](
+CREATE TABLE mis.[Gold_Dim_Credits] 
+(
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -669,8 +669,8 @@ FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанн�
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_Employees]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Employees];
 
-IF OBJECT_ID(N''[mis].[Gold_Dim_Employees]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Dim_Employees];
-CREATE TABLE [mis].[Gold_Dim_Employees](
+CREATE TABLE mis.[Gold_Dim_Employees] 
+(
     [EmployeeID] VARCHAR(36) NOT NULL,
 	[BranchID] VARCHAR(36) NULL,
     [EmployeeCode] INT NULL,
@@ -854,8 +854,8 @@ OUTER APPLY (
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_EmployeesHistory]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_EmployeesHistory];
 
-IF OBJECT_ID(N''[mis].[Gold_Dim_EmployeesHistory]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Dim_EmployeesHistory];
-CREATE TABLE [mis].[Gold_Dim_EmployeesHistory](
+CREATE TABLE mis.[Gold_Dim_EmployeesHistory] 
+(
     Period       DATETIME      NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
@@ -869,7 +869,8 @@ CREATE TABLE [mis].[Gold_Dim_EmployeesHistory](
     DateTo       DATETIME      NULL
 );
 
-INSERT INTO mis.[Gold_Dim_EmployeesHistory] (
+INSERT INTO mis.[Gold_Dim_EmployeesHistory] 
+(
     Period,
     ID,
     RowNumber,
@@ -1182,7 +1183,8 @@ CREATE TABLE mis.[Gold_Fact_AdminTasks]
         WHERE p.[СведенияОНаправленияхНаВыплату Направление на Выплату ID] = doc.[НаправлениеНаВыплату ID]
     ) pay
 )
-INSERT INTO mis.[Gold_Fact_AdminTasks] (
+INSERT INTO mis.[Gold_Fact_AdminTasks] 
+(
     [AdminTask_ID], [AdminTask_Deleted], [AdminTask_Date], [AdminTask_Number], [AdminTask_Completed],
     [AdminTask_Author_ID], [AdminTask_Author], [AdminTask_Branch_ID], [AdminTask_Branch],
     [AdminTask_Category_ID], [AdminTask_Category], [AdminTask_Type_ID], [AdminTask_Type],
@@ -1240,8 +1242,8 @@ WHERE rn = 1;';
 IF OBJECT_ID(''mis.[Gold_Fact_ArchiveDocument]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_ArchiveDocument];
 
-IF OBJECT_ID(N''[mis].[Gold_Fact_ArchiveDocument]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Fact_ArchiveDocument];
-CREATE TABLE [mis].[Gold_Fact_ArchiveDocument](
+CREATE TABLE mis.[Gold_Fact_ArchiveDocument] 
+(
     [АктыПередачиКредитныхДел Период]         DATETIME NULL,
     [АктыПередачиКредитныхДел ID]             VARCHAR(36) NULL,
     [АктыПередачиКредитныхДел Номер Строки]   INT NULL,
@@ -1433,8 +1435,8 @@ WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';';
 IF OBJECT_ID(''mis.[Gold_Fact_CerereOnline]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_CerereOnline];
 
-IF OBJECT_ID(N''[mis].[Gold_Fact_CerereOnline]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Fact_CerereOnline];
-CREATE TABLE [mis].[Gold_Fact_CerereOnline](
+CREATE TABLE mis.[Gold_Fact_CerereOnline] 
+(
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
     [Status]                NVARCHAR(256)  NULL,
@@ -1625,8 +1627,8 @@ WHERE c.[Контрагенты Тестовый Контрагент] = 0;';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_CreditsInShadowBranches]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_CreditsInShadowBranches];
 
-IF OBJECT_ID(N''[mis].[Gold_CreditsInShadowBranches]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_CreditsInShadowBranches];
-CREATE TABLE [mis].[Gold_CreditsInShadowBranches](
+CREATE TABLE mis.[Gold_CreditsInShadowBranches] 
+(
     Period DATETIME NULL,
     ID VARCHAR(32) NOT NULL,
     RowNumber INT NULL,
@@ -1854,8 +1856,8 @@ BEGIN
     PRINT N''Старая таблица удалена.'';
 END;
 
-IF OBJECT_ID(N''[mis].[Gold_Fact_Restruct_Daily_Min]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Fact_Restruct_Daily_Min];
-CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min](
+CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min] 
+(
     SoldDate               date          NOT NULL,
     CreditID               varchar(64)   NOT NULL,
     ClientID               varchar(64)   NOT NULL,
@@ -2388,8 +2390,8 @@ DECLARE @DateFrom DATE = ''2023-09-01'';
 
 DROP TABLE IF EXISTS mis.[Gold_Fact_Sold_Par];
 
-IF OBJECT_ID(N''[mis].[Gold_Fact_Sold_Par]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Fact_Sold_Par];
-CREATE TABLE [mis].[Gold_Fact_Sold_Par](
+CREATE TABLE mis.[Gold_Fact_Sold_Par] 
+(
     SoldDate                DATE         NOT NULL,	
 	ClientID                VARCHAR(36)  NULL,
     CreditID                VARCHAR(36)  NOT NULL,

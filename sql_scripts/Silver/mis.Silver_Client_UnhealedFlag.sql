@@ -1,6 +1,7 @@
 ﻿IF OBJECT_ID('mis.Silver_Client_UnhealedFlag', 'U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_Client_UnhealedFlag (
+    CREATE TABLE mis.Silver_Client_UnhealedFlag 
+	(
         ClientID    VARCHAR(64) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
@@ -41,7 +42,8 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Dates ON #Dates(SoldDate);
 ------------------------------------------------------------
 -- 4) Insert only distinct client×day where conditions hold
 ------------------------------------------------------------
-INSERT INTO mis.Silver_Client_UnhealedFlag (ClientID, SoldDate, HasUnhealed)
+INSERT INTO mis.Silver_Client_UnhealedFlag 
+           (ClientID, SoldDate, HasUnhealed)
 SELECT m.ClientID, d.SoldDate, CAST(1 AS bit)
 FROM #Dates d
 JOIN (

@@ -6,7 +6,8 @@ IF OBJECT_ID('mis.[Bronze_Справочники.Кредиты]', 'U') IS NOT N
     DROP TABLE mis.[Bronze_Справочники.Кредиты];
 GO
 
-CREATE TABLE mis.[Bronze_Справочники.Кредиты] (
+CREATE TABLE mis.[Bronze_Справочники.Кредиты] 
+(
     [Кредиты ID] VARCHAR(36) NULL,
     [Кредиты Владелец] VARCHAR(36) NULL,
     [Кредиты Код] NVARCHAR(12) NULL,
@@ -37,7 +38,8 @@ CREATE TABLE mis.[Bronze_Справочники.Кредиты] (
 );
 GO
 
-INSERT INTO mis.[Bronze_Справочники.Кредиты] (
+INSERT INTO mis.[Bronze_Справочники.Кредиты] 
+(
     [Кредиты ID],
     [Кредиты Владелец],
     [Кредиты Код],

@@ -6,7 +6,8 @@ IF OBJECT_ID(N'mis.[Gold_Dim_Clients]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Clients];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Clients] (
+CREATE TABLE mis.[Gold_Dim_Clients] 
+(
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
     [BranchID]              VARCHAR(36)    NULL,

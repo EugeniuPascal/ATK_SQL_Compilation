@@ -3,7 +3,8 @@
 ------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_Stages_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_Stages_SCD (
+    CREATE TABLE mis.Silver_Stages_SCD 
+	(
         CreditID   VARCHAR(36)   NOT NULL,
         ValidFrom  DATE          NOT NULL,
         ValidTo    DATE          NOT NULL,
@@ -70,7 +71,8 @@ slices AS (
         COALESCE(DATEADD(day,-1,NextFrom), CONVERT(DATE,'9999-12-31')) AS ValidTo
     FROM grid
 )
-INSERT INTO mis.Silver_Stages_SCD (CreditID, ValidFrom, ValidTo, StageName)
+INSERT INTO mis.Silver_Stages_SCD 
+           (CreditID, ValidFrom, ValidTo, StageName)
 SELECT CreditID, ValidFrom, ValidTo, StageName
 FROM slices;
 

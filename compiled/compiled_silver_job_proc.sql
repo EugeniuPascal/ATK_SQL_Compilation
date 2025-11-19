@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2025-11-19 10:45:51.899905
+-- Generated: 2025-11-19 11:40:05.651520
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 6
 --   mis.Silver_Restruct_SCD.sql
@@ -28,8 +28,8 @@ BEGIN
     -- Start of: mis.Silver_Restruct_SCD.sql
     SET @sql = N'IF OBJECT_ID(''mis.Silver_Restruct_SCD'',''U'') IS NULL
 BEGIN
-    IF OBJECT_ID(N''[mis].[Silver_Restruct_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Restruct_SCD];
-CREATE TABLE [mis].[Silver_Restruct_SCD](
+    CREATE TABLE mis.Silver_Restruct_SCD 
+	(
         CreditID        VARCHAR(36)   NOT NULL,
         ValidFrom       DATE          NOT NULL,
         ValidTo         DATE          NOT NULL,
@@ -95,8 +95,8 @@ FROM rng;';
     -- Start of: mis.Silver_RestructState_SCD.sql
     SET @sql = N'IF OBJECT_ID(''mis.Silver_RestructState_SCD'',''U'') IS NULL
 BEGIN
-    IF OBJECT_ID(N''[mis].[Silver_RestructState_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_RestructState_SCD];
-CREATE TABLE [mis].[Silver_RestructState_SCD](
+    CREATE TABLE mis.Silver_RestructState_SCD 
+	(
         CreditID   VARCHAR(36)   NOT NULL,
         ValidFrom  DATE          NOT NULL,
         ValidTo    DATE          NOT NULL,
@@ -153,8 +153,8 @@ FROM rng;';
     -- Start of: mis.Silver_Restruct_Merged_SCD.sql
     SET @sql = N'IF OBJECT_ID(''mis.Silver_Restruct_Merged_SCD'',''U'') IS NULL
 BEGIN
-    IF OBJECT_ID(N''[mis].[Silver_Restruct_Merged_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Restruct_Merged_SCD];
-CREATE TABLE [mis].[Silver_Restruct_Merged_SCD](
+    CREATE TABLE mis.Silver_Restruct_Merged_SCD 
+	(
         CreditID        VARCHAR(36)   NOT NULL,
         ValidFrom       DATE          NOT NULL,
         ValidTo         DATE          NOT NULL,
@@ -274,8 +274,8 @@ END;';
     -- Start of: mis.Silver_Client_UnhealedFlag.sql
     SET @sql = N'IF OBJECT_ID(''mis.Silver_Client_UnhealedFlag'', ''U'') IS NULL
 BEGIN
-    IF OBJECT_ID(N''[mis].[Silver_Client_UnhealedFlag]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Client_UnhealedFlag];
-CREATE TABLE [mis].[Silver_Client_UnhealedFlag](
+    CREATE TABLE mis.Silver_Client_UnhealedFlag 
+	(
         ClientID    VARCHAR(64) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
@@ -316,7 +316,8 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Dates ON #Dates(SoldDate);
 
 
 
-INSERT INTO mis.Silver_Client_UnhealedFlag (ClientID, SoldDate, HasUnhealed)
+INSERT INTO mis.Silver_Client_UnhealedFlag 
+           (ClientID, SoldDate, HasUnhealed)
 SELECT m.ClientID, d.SoldDate, CAST(1 AS bit)
 FROM #Dates d
 JOIN (
@@ -355,8 +356,8 @@ VALUES
 IF OBJECT_ID(''mis.Silver_Resp_SCD'', ''U'') IS NOT NULL
     DROP TABLE mis.Silver_Resp_SCD;
 
-IF OBJECT_ID(N''[mis].[Silver_Resp_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Resp_SCD];
-CREATE TABLE [mis].[Silver_Resp_SCD](
+CREATE TABLE mis.Silver_Resp_SCD 
+(
     CreditID        VARCHAR(36) NOT NULL,
     ValidFrom       DATE        NOT NULL,
     ValidTo         DATE        NOT NULL,
@@ -417,7 +418,8 @@ DROP TABLE #RespBaseRaw;
 				 ) OVER (PARTITION BY CreditID ORDER BY PeriodDate ROWS UNBOUNDED PRECEDING), 0) AS grp
     FROM #RespBase
 )
-INSERT INTO mis.Silver_Resp_SCD (
+INSERT INTO mis.Silver_Resp_SCD 
+(
     CreditID, ValidFrom, ValidTo,
     BranchID, ExpertID,
     IsSpecialBranch, FinalBranchID, FinalExpertID
@@ -471,8 +473,8 @@ DROP TABLE #RespBase;';
     -- Start of: mis.Silver_Stages_SCD.sql
     SET @sql = N'IF OBJECT_ID(''mis.Silver_Stages_SCD'',''U'') IS NULL
 BEGIN
-    IF OBJECT_ID(N''[mis].[Silver_Stages_SCD]'',''U'') IS NOT NULL DROP TABLE [mis].[Silver_Stages_SCD];
-CREATE TABLE [mis].[Silver_Stages_SCD](
+    CREATE TABLE mis.Silver_Stages_SCD 
+	(
         CreditID   VARCHAR(36)   NOT NULL,
         ValidFrom  DATE          NOT NULL,
         ValidTo    DATE          NOT NULL,
@@ -539,7 +541,8 @@ slices AS (
         COALESCE(DATEADD(day,-1,NextFrom), CONVERT(DATE,''9999-12-31'')) AS ValidTo
     FROM grid
 )
-INSERT INTO mis.Silver_Stages_SCD (CreditID, ValidFrom, ValidTo, StageName)
+INSERT INTO mis.Silver_Stages_SCD 
+           (CreditID, ValidFrom, ValidTo, StageName)
 SELECT CreditID, ValidFrom, ValidTo, StageName
 FROM slices;
 

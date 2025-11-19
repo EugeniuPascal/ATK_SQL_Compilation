@@ -5,7 +5,8 @@ IF OBJECT_ID(N'mis.[Gold_Dim_Credits]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Credits];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Credits] (
+CREATE TABLE mis.[Gold_Dim_Credits] 
+(
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,

@@ -1,6 +1,7 @@
 ﻿IF OBJECT_ID('mis.Silver_Restruct_Merged_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_Restruct_Merged_SCD (
+    CREATE TABLE mis.Silver_Restruct_Merged_SCD 
+	(
         CreditID        VARCHAR(36)   NOT NULL,
         ValidFrom       DATE          NOT NULL,
         ValidTo         DATE          NOT NULL,

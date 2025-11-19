@@ -25,7 +25,8 @@ BEGIN
     PRINT N'Старая таблица удалена.';
 END;
 
-CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min] (
+CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min] 
+(
     SoldDate               date          NOT NULL,
     CreditID               varchar(64)   NOT NULL,
     ClientID               varchar(64)   NOT NULL,

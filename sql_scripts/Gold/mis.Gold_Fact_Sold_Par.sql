@@ -8,7 +8,8 @@ DECLARE @DateFrom DATE = '2023-09-01';
 -----------------------------------------------------
 DROP TABLE IF EXISTS mis.[Gold_Fact_Sold_Par];
 
-CREATE TABLE mis.[Gold_Fact_Sold_Par] (
+CREATE TABLE mis.[Gold_Fact_Sold_Par] 
+(
     SoldDate                DATE         NOT NULL,	
 	ClientID                VARCHAR(36)  NULL,
     CreditID                VARCHAR(36)  NOT NULL,

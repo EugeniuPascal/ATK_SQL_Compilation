@@ -7,7 +7,8 @@ IF OBJECT_ID('mis.[Gold_Dim_EmployeesHistory]', 'U') IS NOT NULL
 GO
 
 
-CREATE TABLE mis.[Gold_Dim_EmployeesHistory] (
+CREATE TABLE mis.[Gold_Dim_EmployeesHistory] 
+(
     Period       DATETIME      NULL,
     ID           VARCHAR(36)   NOT NULL,
     RowNumber    INT           NULL,
@@ -22,7 +23,8 @@ CREATE TABLE mis.[Gold_Dim_EmployeesHistory] (
 );
 GO
 
-INSERT INTO mis.[Gold_Dim_EmployeesHistory] (
+INSERT INTO mis.[Gold_Dim_EmployeesHistory] 
+(
     Period,
     ID,
     RowNumber,

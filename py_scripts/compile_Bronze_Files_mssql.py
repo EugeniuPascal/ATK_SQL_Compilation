@@ -38,41 +38,33 @@ CREATE_TABLE_RE  = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(
 # --------------------------------------------------------------------
 def strip_sql_comments(sql: str) -> str:
     """Remove block and line comments safely (preserving newlines)."""
-    def _block_repl(m): return re.sub(r"[^\r\n]", " ", m.group(0))
+    def _block_repl(m): 
+        return re.sub(r"[^\r\n]", " ", m.group(0))
     sql = BLOCK_COMMENT_RE.sub(_block_repl, sql)
     sql = LINE_COMMENT_RE.sub("", sql)
     return sql
 
 def normalize_object_name(name: str, default_schema: str) -> str:
     """
-    Normalize table/view names to include schema and brackets.
-    Avoids double-wrapping brackets and keeps maximum of [schema].[object].
+    Normalize to [schema].[object] format without adding extra brackets.
+    Multi-part names like Bronze_РегистрыСведений.КредитыВТеневыхФилиалах
+    become: [mis].[Bronze_РегистрыСведений.КредитыВТеневыхФилиалах]
+    Temp tables (#temp) are returned untouched.
     """
-    n = name.strip()
-    n = n.strip('"')  # remove quotes
+    n = name.strip().strip('"')
 
-    parts = n.split('.')
-    
-    if len(parts) == 1:
-        # No schema given, prepend default schema
-        part = parts[0]
-        if not (part.startswith('[') and part.endswith(']')):
-            part = f'[{part}]'
-        return f'[{default_schema}].{part}'
-    
-    elif len(parts) == 2:
-        # Already schema.object
-        schema, obj = parts
-        schema = schema if (schema.startswith('[') and schema.endswith(']')) else f'[{schema}]'
-        obj = obj if (obj.startswith('[') and obj.endswith(']')) else f'[{obj}]'
-        return f'{schema}.{obj}'
-    
-    else:
-        # More than 2 parts, join all but last as schema
-        *schemas, obj = parts
-        schemas = [s if s.startswith('[') and s.endswith(']') else f'[{s}]' for s in schemas]
-        obj = obj if obj.startswith('[') and obj.endswith(']') else f'[{obj}]'
-        return '.'.join(schemas + [obj])
+    if n.startswith('#'):
+        return n  # temp table
+
+    # Remove any outer brackets from input
+    n = n.strip('[]')
+
+    # Only last part is treated as object, everything else stays in object name
+    obj_name = n.split('.', 1)[-1] if '.' in n else n
+
+    # Wrap schema and object in single brackets
+    return f'[{default_schema}].[{obj_name}]'
+
 
 def make_idempotent(sql: str) -> str:
     """Clean SQL and make CREATE statements idempotent for tables/views/functions."""
@@ -84,7 +76,6 @@ def make_idempotent(sql: str) -> str:
 
     def table_repl(m):
         raw = m.group(1).strip()
-        # Keep temp tables (#temp) untouched
         if raw.startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
@@ -96,13 +87,11 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
-    # ---- 1) Collect all SQL files alphabetically ----
     sql_files = sorted([f for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
     logging.info(f"Found {len(sql_files)} SQL files to compile.")
     if not sql_files:
         raise FileNotFoundError(f"No .sql files found in {SOURCE_FOLDER}")
 
-    # ---- 2) Generate stored procedure ----
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
         # Header
@@ -124,7 +113,7 @@ try:
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 
-        # ---- 3) Process each file ----
+        # Process each file
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf.name}")
@@ -132,9 +121,9 @@ try:
                     content = f_in.read()
                     transformed = make_idempotent(content)
                     safe = transformed.replace("'", "''")
-                    if safe.strip():  # skip empty files
+                    if safe.strip():  # skip empty
                         f_out.write(f"    -- Start of: {sf.name}\n")
-                        f_out.write("    SET @sql = N'" + safe + "';\n")
+                        f_out.write(f"    SET @sql = N'{safe}';\n")
                         f_out.write("    BEGIN TRY\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("    END TRY\n")
@@ -146,7 +135,6 @@ try:
                 logging.error(f"Error processing {sf.name}: {e}")
                 raise
 
-        # Procedure end
         f_out.write("END\nGO\n")
 
     logging.info(f"✅ Stored procedure script generated successfully: {OUTPUT_FILE}")

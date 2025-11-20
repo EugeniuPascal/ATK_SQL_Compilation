@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID(N'mis.[Gold_Dim_Credits]', 'U') IS NOT NULL
-    DROP TABLE mis.[Gold_Dim_Credits];
+IF OBJECT_ID(N'mis.[Gold_Dim_Credits1]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Credits1];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Credits] (
+CREATE TABLE mis.[Gold_Dim_Credits1] (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -315,7 +315,7 @@ FinalData AS (
     ) rf ON cr.OIA_ID = rf.[ОбъединеннаяИнтернетЗаявка ID]
 	LEFT JOIN DigitalSignSrc ds ON crd.[Кредиты ID] = ds.CreditID
 )
-INSERT INTO mis.[Gold_Dim_Credits] (
+INSERT INTO mis.[Gold_Dim_Credits1] (
     [CreditID], [Owner], [Code], [Name],
     [IssueDate], [Term], [Amount],
     [EconomicSectorDetailed], [FinancialProductID], [FinancialProduct],

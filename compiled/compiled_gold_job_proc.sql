@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-11-20 11:27:22.783646
+-- Generated: 2025-11-20 16:28:03.247786
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 17
 --   mis.Gold_Dim_AppUsers.sql
@@ -336,8 +336,8 @@ CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[Gold_Dim_Clients](IsGroup
     SET @sql = N'IF OBJECT_ID(N''mis.[Gold_Dim_Credits]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Credits];
 
-CREATE TABLE mis.[Gold_Dim_Credits] 
-(
+IF OBJECT_ID(N''[mis].[Gold_Dim_Credits]'',''U'') IS NOT NULL DROP TABLE [mis].[Gold_Dim_Credits];
+CREATE TABLE [mis].[Gold_Dim_Credits](
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -521,10 +521,9 @@ ClientPartner AS (
 DigitalSignSrc AS (
     SELECT
         [НаправлениеНаВыплату Кредит ID] AS CreditID,
-        MAX(CASE WHEN NULLIF(LTRIM(RTRIM([НаправлениеНаВыплату Источник Заполнения])), '''') IS NOT NULL 
-                 THEN 1 ELSE 0 END) AS HasPaymentDirectionSource
-    FROM [ATK].[mis].[Bronze_Документы.НаправлениеНаВыплату]
-    GROUP BY [НаправлениеНаВыплату Кредит ID]
+        CASE WHEN NULLIF(LTRIM(RTRIM([НаправлениеНаВыплату Источник Заполнения])), '''') IS NOT NULL
+             THEN 1 ELSE 0 END AS HasPaymentDirectionSource
+    FROM mis.[Bronze_Документы.НаправлениеНаВыплату]
 ),
 
 FinalData AS (
@@ -607,8 +606,7 @@ FinalData AS (
             ELSE gc.CommitteeProt_AMLRiskCat
         END AS CommitteeProt_AMLRiskCat,
         CASE
-            WHEN crd.[Кредиты Источник Подписания] IS NOT NULL THEN ''True''
-            WHEN COALESCE(ds.HasPaymentDirectionSource, 0) = 1 THEN ''True''
+            WHEN (ds.HasPaymentDirectionSource) = 1 THEN ''True''
             ELSE ''False''
         END AS DigitalSign,      
 		e.[СекторыЭкономики Сектор Экономики EFSE] AS EconomicSectorEFSE,

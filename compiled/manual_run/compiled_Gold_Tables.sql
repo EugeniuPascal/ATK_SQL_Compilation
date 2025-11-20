@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-19 15:58:10
+-- Generated: 2025-11-20 11:18:07
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (17):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1027,7 +1027,6 @@ CREATE TABLE mis.[Gold_Dim_PartnersBranch]
 );
 GO
 
--- Insert data from silvers
 INSERT INTO mis.[Gold_Dim_PartnersBranch]
 (
     [PartnerBranchID],
@@ -1160,7 +1159,6 @@ CREATE TABLE mis.[Gold_Fact_AdminTasks]
 GO
 
 ;WITH AllTasks AS (
-    -- Your full SELECT
     SELECT
         a.[ЗадачаАдминистратораКредитов ID] AS AdminTask_ID,
         a.[ЗадачаАдминистратораКредитов Пометка Удаления] AS AdminTask_Deleted,
@@ -1405,7 +1403,6 @@ CREATE TABLE mis.[Gold_Fact_ArchiveDocument]
 );
 GO
 
--- Step 2: Insert data from 2024-01-01 onward
 INSERT INTO mis.[Gold_Fact_ArchiveDocument]
 SELECT
     r.[АктыПередачиКредитныхДел Период],
@@ -1552,12 +1549,10 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
--- Drop table if exists
 IF OBJECT_ID('mis.[Gold_Fact_CerereOnline]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_CerereOnline];
 GO
 
--- Create table
 CREATE TABLE mis.[Gold_Fact_CerereOnline] 
 (
     [ID]                    VARCHAR(36)    NULL,
@@ -1701,8 +1696,8 @@ GO
     WHERE z.[ЗаявкаНаКредит ID] IS NULL
        OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = '00000000000000000000000000000000'
 )
--- Insert into GOLD
-INSERT INTO mis.[Gold_Fact_CerereOnline] (
+INSERT INTO mis.[Gold_Fact_CerereOnline] 
+(
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
     [CreditAmount],[CurrencyType], [CreditAmountInMDL],[NewExisting_Client],
@@ -1808,7 +1803,8 @@ calc AS (
           ) AS DateTo
     FROM src
 )
-INSERT INTO mis.[Gold_CreditsInShadowBranches] (
+INSERT INTO mis.[Gold_CreditsInShadowBranches] 
+(
       Period,
       ID,
       RowNumber,
@@ -1834,7 +1830,6 @@ SELECT
       CreditEmployee,
       DateTo
 FROM calc;
-
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Gold_Fact_CreditsInShadowBranches.sql

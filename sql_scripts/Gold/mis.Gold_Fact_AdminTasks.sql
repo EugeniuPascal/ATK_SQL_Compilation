@@ -89,7 +89,6 @@ CREATE TABLE mis.[Gold_Fact_AdminTasks]
 GO
 
 ;WITH AllTasks AS (
-    -- Your full SELECT
     SELECT
         a.[ЗадачаАдминистратораКредитов ID] AS AdminTask_ID,
         a.[ЗадачаАдминистратораКредитов Пометка Удаления] AS AdminTask_Deleted,

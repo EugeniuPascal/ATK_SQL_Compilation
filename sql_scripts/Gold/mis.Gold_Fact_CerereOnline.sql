@@ -2,12 +2,10 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
--- Drop table if exists
 IF OBJECT_ID('mis.[Gold_Fact_CerereOnline]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_CerereOnline];
 GO
 
--- Create table
 CREATE TABLE mis.[Gold_Fact_CerereOnline] 
 (
     [ID]                    VARCHAR(36)    NULL,
@@ -151,8 +149,8 @@ GO
     WHERE z.[ЗаявкаНаКредит ID] IS NULL
        OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = '00000000000000000000000000000000'
 )
--- Insert into GOLD
-INSERT INTO mis.[Gold_Fact_CerereOnline] (
+INSERT INTO mis.[Gold_Fact_CerereOnline] 
+(
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
     [CreditAmount],[CurrencyType], [CreditAmountInMDL],[NewExisting_Client],

@@ -60,7 +60,6 @@ CREATE TABLE mis.[Gold_Fact_ArchiveDocument]
 );
 GO
 
--- Step 2: Insert data from 2024-01-01 onward
 INSERT INTO mis.[Gold_Fact_ArchiveDocument]
 SELECT
     r.[АктыПередачиКредитныхДел Период],

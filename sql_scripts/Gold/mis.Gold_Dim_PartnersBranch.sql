@@ -23,7 +23,6 @@ CREATE TABLE mis.[Gold_Dim_PartnersBranch]
 );
 GO
 
--- Insert data from silvers
 INSERT INTO mis.[Gold_Dim_PartnersBranch]
 (
     [PartnerBranchID],

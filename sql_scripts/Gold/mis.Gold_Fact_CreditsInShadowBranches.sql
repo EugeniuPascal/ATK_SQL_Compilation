@@ -55,7 +55,8 @@ calc AS (
           ) AS DateTo
     FROM src
 )
-INSERT INTO mis.[Gold_CreditsInShadowBranches] (
+INSERT INTO mis.[Gold_CreditsInShadowBranches] 
+(
       Period,
       ID,
       RowNumber,
@@ -81,5 +82,4 @@ SELECT
       CreditEmployee,
       DateTo
 FROM calc;
-
 GO

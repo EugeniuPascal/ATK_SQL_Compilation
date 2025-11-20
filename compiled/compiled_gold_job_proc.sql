@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-11-19 15:58:19.008466
+-- Generated: 2025-11-20 11:20:19.098823
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 17
 --   mis.Gold_Dim_AppUsers.sql
@@ -1108,7 +1108,6 @@ CREATE TABLE mis.[Gold_Fact_AdminTasks]
 );
 
 ;WITH AllTasks AS (
-    
     SELECT
         a.[ЗадачаАдминистратораКредитов ID] AS AdminTask_ID,
         a.[ЗадачаАдминистратораКредитов Пометка Удаления] AS AdminTask_Deleted,
@@ -1484,7 +1483,6 @@ WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';';
     -- Start of: mis.Gold_Fact_CerereOnline.sql
     SET @sql = N'SET NOCOUNT ON;
 
-
 IF OBJECT_ID(''mis.[Gold_Fact_CerereOnline]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_CerereOnline];
 
@@ -1629,8 +1627,8 @@ CREATE TABLE mis.[Gold_Fact_CerereOnline]
     WHERE z.[ЗаявкаНаКредит ID] IS NULL
        OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = ''00000000000000000000000000000000''
 )
-
-INSERT INTO mis.[Gold_Fact_CerereOnline] (
+INSERT INTO mis.[Gold_Fact_CerereOnline] 
+(
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
     [CreditAmount],[CurrencyType], [CreditAmountInMDL],[NewExisting_Client],
@@ -1728,7 +1726,8 @@ calc AS (
           ) AS DateTo
     FROM src
 )
-INSERT INTO mis.[Gold_CreditsInShadowBranches] (
+INSERT INTO mis.[Gold_CreditsInShadowBranches] 
+(
       Period,
       ID,
       RowNumber,

@@ -1,4 +1,9 @@
-﻿IF OBJECT_ID('mis.Silver_RestructState_SCD','U') IS NULL
+﻿USE ATK;
+GO
+
+SET NOCOUNT ON;
+
+IF OBJECT_ID('mis.Silver_RestructState_SCD','U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_RestructState_SCD 
 	(

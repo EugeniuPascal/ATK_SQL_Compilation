@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-20 16:27:47
+-- Generated: 2025-11-21 09:56:41
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (6):
 --   mis.Silver_Restruct_SCD.sql
@@ -15,6 +15,11 @@ SET NOCOUNT ON;
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Restruct_SCD.sql
 ----------------------------------------------------------------------------------------------------
+USE ATK;
+GO
+
+SET NOCOUNT ON;
+
 IF OBJECT_ID('mis.Silver_Restruct_SCD','U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Restruct_SCD 
@@ -83,6 +88,11 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_RestructState_SCD.sql
 ----------------------------------------------------------------------------------------------------
+USE ATK;
+GO
+
+SET NOCOUNT ON;
+
 IF OBJECT_ID('mis.Silver_RestructState_SCD','U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_RestructState_SCD 
@@ -142,6 +152,11 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Restruct_Merged_SCD.sql
 ----------------------------------------------------------------------------------------------------
+USE ATK;
+GO
+
+SET NOCOUNT ON;
+
 IF OBJECT_ID('mis.Silver_Restruct_Merged_SCD','U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Restruct_Merged_SCD 
@@ -264,6 +279,11 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Client_UnhealedFlag.sql
 ----------------------------------------------------------------------------------------------------
+USE ATK;
+GO
+
+SET NOCOUNT ON;
+
 IF OBJECT_ID('mis.Silver_Client_UnhealedFlag', 'U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Client_UnhealedFlag 
@@ -333,6 +353,11 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Resp_SCD.sql
 ----------------------------------------------------------------------------------------------------
+USE ATK;
+GO
+
+SET NOCOUNT ON;
+
 ------------------------------------------------------------
 -- 0) Набор спец-филиалов (которые нужно ИСКЛЮЧИТЬ и протягивать поверх)
 ------------------------------------------------------------
@@ -468,6 +493,11 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Stages_SCD.sql
 ----------------------------------------------------------------------------------------------------
+USE ATK;
+GO
+
+SET NOCOUNT ON;
+
 ------------------------------------------------------------
 -- 1) Ensure target table exists
 ------------------------------------------------------------

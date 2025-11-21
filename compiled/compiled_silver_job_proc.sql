@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2025-11-20 16:28:00.085885
+-- Generated: 2025-11-21 09:56:52.327929
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 6
 --   mis.Silver_Restruct_SCD.sql
@@ -26,7 +26,9 @@ BEGIN
     DECLARE @sql NVARCHAR(MAX);
 
     -- Start of: mis.Silver_Restruct_SCD.sql
-    SET @sql = N'IF OBJECT_ID(''mis.Silver_Restruct_SCD'',''U'') IS NULL
+    SET @sql = N'SET NOCOUNT ON;
+
+IF OBJECT_ID(''mis.Silver_Restruct_SCD'',''U'') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Restruct_SCD 
 	(
@@ -93,7 +95,9 @@ FROM rng;';
     END CATCH;
 
     -- Start of: mis.Silver_RestructState_SCD.sql
-    SET @sql = N'IF OBJECT_ID(''mis.Silver_RestructState_SCD'',''U'') IS NULL
+    SET @sql = N'SET NOCOUNT ON;
+
+IF OBJECT_ID(''mis.Silver_RestructState_SCD'',''U'') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_RestructState_SCD 
 	(
@@ -151,7 +155,9 @@ FROM rng;';
     END CATCH;
 
     -- Start of: mis.Silver_Restruct_Merged_SCD.sql
-    SET @sql = N'IF OBJECT_ID(''mis.Silver_Restruct_Merged_SCD'',''U'') IS NULL
+    SET @sql = N'SET NOCOUNT ON;
+
+IF OBJECT_ID(''mis.Silver_Restruct_Merged_SCD'',''U'') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Restruct_Merged_SCD 
 	(
@@ -272,7 +278,9 @@ END;';
     END CATCH;
 
     -- Start of: mis.Silver_Client_UnhealedFlag.sql
-    SET @sql = N'IF OBJECT_ID(''mis.Silver_Client_UnhealedFlag'', ''U'') IS NULL
+    SET @sql = N'SET NOCOUNT ON;
+
+IF OBJECT_ID(''mis.Silver_Client_UnhealedFlag'', ''U'') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Client_UnhealedFlag 
 	(
@@ -340,7 +348,12 @@ GROUP BY m.ClientID, d.SoldDate;';
     END CATCH;
 
     -- Start of: mis.Silver_Resp_SCD.sql
-    SET @sql = N'DECLARE @SpecialBranches TABLE (BranchID VARCHAR(36) PRIMARY KEY);
+    SET @sql = N'SET NOCOUNT ON;
+
+
+
+
+DECLARE @SpecialBranches TABLE (BranchID VARCHAR(36) PRIMARY KEY);
 
 INSERT INTO @SpecialBranches (BranchID)
 VALUES
@@ -471,7 +484,12 @@ DROP TABLE #RespBase;';
     END CATCH;
 
     -- Start of: mis.Silver_Stages_SCD.sql
-    SET @sql = N'IF OBJECT_ID(''mis.Silver_Stages_SCD'',''U'') IS NULL
+    SET @sql = N'SET NOCOUNT ON;
+
+
+
+
+IF OBJECT_ID(''mis.Silver_Stages_SCD'',''U'') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Stages_SCD 
 	(

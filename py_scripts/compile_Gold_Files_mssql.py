@@ -84,6 +84,7 @@ try:
         "mis.Gold_Dim_EmployeePayrollData.sql",
         "mis.Gold_Dim_Employees.sql",
         "mis.Gold_Dim_EmployeesHistory.sql",
+        "mis.Gold_Dim_GroupMembershipPeriods.sql",
         "mis.Gold_Dim_PartnersBranch.sql",
         "mis.Gold_Fact_AdminTasks.sql",
         "mis.Gold_Fact_ArchiveDocument.sql",

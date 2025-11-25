@@ -1,7 +1,7 @@
 -- Compiled SQL bundle
--- Generated: 2025-11-25 10:37:44
+-- Generated: 2025-11-25 16:58:09
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files (17):
+-- Files (19):
 --   mis.Gold_Dim_AppUsers.sql
 --   mis.Gold_Dim_Branch.sql
 --   mis.Gold_Dim_Clients.sql
@@ -9,11 +9,13 @@
 --   mis.Gold_Dim_EmployeePayrollData.sql
 --   mis.Gold_Dim_Employees.sql
 --   mis.Gold_Dim_EmployeesHistory.sql
+--   mis.Gold_Dim_GroupMembershipPeriods.sql
 --   mis.Gold_Dim_PartnersBranch.sql
 --   mis.Gold_Fact_AdminTasks.sql
 --   mis.Gold_Fact_ArchiveDocument.sql
 --   mis.Gold_Fact_BudgetEmployees.sql
 --   mis.Gold_Fact_CerereOnline.sql
+--   mis.Gold_Fact_CPD.sql
 --   mis.Gold_Fact_CreditsInShadowBranches.sql
 --   mis.Gold_Fact_WriteOffCredits.sql
 --   mis.Gold_Fact_Restruct_Daily_Min.sql
@@ -997,6 +999,102 @@ GO
 GO
 
 ----------------------------------------------------------------------------------------------------
+-- Start of: mis.Gold_Dim_GroupMembershipPeriods.sql
+----------------------------------------------------------------------------------------------------
+USE [ATK];
+GO
+
+IF OBJECT_ID('mis.[Gold_Dim_GroupMembershipPeriods]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_GroupMembershipPeriods];
+GO
+
+CREATE TABLE mis.[Gold_Dim_GroupMembershipPeriods]
+(
+    GroupID        VARCHAR(36) NOT NULL,
+    PersonID       VARCHAR(36) NULL,
+    PersonName     NVARCHAR(255) NOT NULL,
+    PeriodOriginal DATETIME2(0) NOT NULL,
+    RowNumber      INT NULL,
+    ActiveFlag     VARCHAR(36) NULL,
+    ExcludedFlag   VARCHAR(36) NULL,
+    GroupName      NVARCHAR(255) NULL,
+    GroupOwner     VARCHAR(36) NULL,
+    GroupCode      NVARCHAR(50) NULL,
+    GroupNameFull  NVARCHAR(255) NULL,
+    GroupOwnerTax  NVARCHAR(50) NULL,
+    PeriodStart    DATETIME2(0) NOT NULL,
+    PeriodEnd      DATETIME2(0) NOT NULL
+);
+GO
+WITH Events AS (
+    SELECT
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID] AS GroupID,
+        sg.[СоставГруппАффилированныхЛиц Контрагент ID] AS PersonID,
+        sg.[СоставГруппАффилированныхЛиц Контрагент] AS PersonName,
+        sg.[СоставГруппАффилированныхЛиц Период] AS PeriodOriginal,
+        sg.[СоставГруппАффилированныхЛиц Номер Строки] AS RowNumber,
+        sg.[СоставГруппАффилированныхЛиц Активность] AS ActiveFlag,
+        sg.[СоставГруппАффилированныхЛиц Исключен] AS ExcludedFlag,
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц] AS GroupName,
+
+        g.[ГруппыАффилированныхЛиц Владелец] AS GroupOwner,
+        g.[ГруппыАффилированныхЛиц Код] AS GroupCode,
+        g.[ГруппыАффилированныхЛиц Наименование] AS GroupNameFull,
+        g.[ГруппыАффилированныхЛиц Владелец Фиск Код] AS GroupOwnerTax,
+
+        CASE WHEN sg.[СоставГруппАффилированныхЛиц Исключен] = '00'
+             THEN 'Included'
+             ELSE 'Excluded'
+        END AS EventType
+    FROM [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+        ON g.[ГруппыАффилированныхЛиц ID] =
+           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+),
+
+Ordered AS (
+    SELECT
+        *,
+        LEAD(PeriodOriginal) OVER (
+            PARTITION BY GroupID, PersonName 
+            ORDER BY PeriodOriginal
+        ) AS NextDate,
+        LEAD(EventType) OVER (
+            PARTITION BY GroupID, PersonName 
+            ORDER BY PeriodOriginal
+        ) AS NextType
+    FROM Events
+)
+
+INSERT INTO mis.[Gold_Dim_GroupMembershipPeriods]
+(
+    GroupID, PersonID, PersonName,
+    PeriodOriginal, RowNumber, ActiveFlag, ExcludedFlag, GroupName,
+    GroupOwner, GroupCode, GroupNameFull, GroupOwnerTax,
+    PeriodStart, PeriodEnd
+)
+SELECT
+    GroupID, PersonID, PersonName,
+    PeriodOriginal, RowNumber, ActiveFlag, ExcludedFlag, GroupName,
+    GroupOwner, GroupCode, GroupNameFull, GroupOwnerTax,
+
+    PeriodOriginal AS PeriodStart,
+    CASE 
+        WHEN NextType = 'Excluded'
+            THEN DATEADD(SECOND, -1, NextDate)
+        ELSE CONVERT(DATETIME2, '2222-01-01 00:00:00')
+    END AS PeriodEnd
+FROM Ordered
+WHERE EventType = 'Included'
+ORDER BY GroupID, PersonName, PeriodOriginal;
+GO
+----------------------------------------------------------------------------------------------------
+-- End of:   mis.Gold_Dim_GroupMembershipPeriods.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_PartnersBranch.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
@@ -1736,6 +1834,138 @@ WHERE c.[Контрагенты Тестовый Контрагент] = 0;
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Gold_Fact_CerereOnline.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.Gold_Fact_CPD.sql
+----------------------------------------------------------------------------------------------------
+USE [ATK];
+GO
+
+IF OBJECT_ID('mis.[Gold_Fact_CPD]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_CPD];
+GO
+
+CREATE TABLE mis.[Gold_Fact_CPD]
+( 
+    [Period]              DATETIME NULL,
+    [ObjectType]          VARCHAR(36) NULL,
+    [ObjectKind]          VARCHAR(36) NULL,
+    [ObjectID]            VARCHAR(36) NULL,
+    [ID]                  VARCHAR(36) NULL,
+    [ConditionType]       NVARCHAR(256) NULL,
+    [ConditionObjectType] VARCHAR(36) NULL,
+    [ConditionObject_S]   NVARCHAR(600) NULL,
+    [ConditionObject]     VARCHAR(36) NULL,
+    [AdditionalInterest]  DECIMAL(4, 2) NULL,
+    [DueDate]             DATETIME NULL,
+    [ResponsibleID]       VARCHAR(36) NULL,
+    [Responsible]         NVARCHAR(50) NULL,
+    [IssueDate]           DATETIME NULL,
+    [Completed]           VARCHAR(36) NULL,
+    [CompletionDate]      DATETIME NULL,
+    [Comment]             NVARCHAR(1000) NULL,
+    [Verified]            VARCHAR(36) NULL,
+    [IsAdditionalCondition]  VARCHAR(36) NULL,
+    [Cancelled]           VARCHAR(36) NULL,
+    [CreditRisk]          NVARCHAR(256) NULL,
+    [LegalRisk]           NVARCHAR(256) NULL,
+    [CommitteeApproved]   VARCHAR(36) NULL,
+    [CollateralID]        VARCHAR(36) NULL,
+    [Collateral]          NVARCHAR(150) NULL,
+    [CancelledByID]       VARCHAR(36) NULL,
+    [CancelledBy]         NVARCHAR(150) NULL,
+    [VerifiedByID]        VARCHAR(36) NULL,
+    [VerifiedBy]          NVARCHAR(150) NULL,
+    [ModifiedDate]        DATETIME NULL,
+    [SourceType]          VARCHAR(36) NULL,
+    [SourceKind]          VARCHAR(36) NULL,
+    [SourceID]            VARCHAR(36) NULL,
+    [OwnerID]             VARCHAR(36) NULL,
+    [Owner]               NVARCHAR(150) NULL
+);
+GO
+
+INSERT INTO mis.[Gold_Fact_CPD]
+(
+    [Period],
+    [ObjectType],
+    [ObjectKind],
+    [ObjectID],
+    [ID],
+    [ConditionType],
+    [ConditionObjectType],
+    [ConditionObject_S],
+    [ConditionObject],
+    [AdditionalInterest],
+    [DueDate],
+    [ResponsibleID],
+    [Responsible],
+    [IssueDate],
+    [Completed],
+    [CompletionDate],
+    [Comment],
+    [Verified],
+    [IsAdditionalCondition],
+    [Cancelled],
+    [CreditRisk],
+    [LegalRisk],
+    [CommitteeApproved],
+    [CollateralID],
+    [Collateral],
+    [CancelledByID],
+    [CancelledBy],
+    [VerifiedByID],
+    [VerifiedBy],
+    [ModifiedDate],
+    [SourceType],
+    [SourceKind],
+    [SourceID],
+    [OwnerID],
+    [Owner]
+)
+SELECT
+    [УсловияПослеВыдачиКредита Период],
+    [УсловияПослеВыдачиКредита Объект Tип],
+    [УсловияПослеВыдачиКредита Объект Вид],
+    [УсловияПослеВыдачиКредита Объект ID],
+    [УсловияПослеВыдачиКредита ИД],
+    [УсловияПослеВыдачиКредита Тип Условия],
+    [УсловияПослеВыдачиКредита Объект Условия Tип],
+    [УсловияПослеВыдачиКредита Объект Условия _S],
+    [УсловияПослеВыдачиКредита Объект Условия],
+    [УсловияПослеВыдачиКредита Доп Проценты],
+    [УсловияПослеВыдачиКредита Срок Выполнения],
+    [УсловияПослеВыдачиКредита Исполнитель ID],
+    [УсловияПослеВыдачиКредита Исполнитель],
+    [УсловияПослеВыдачиКредита Дата Выдачи],
+    [УсловияПослеВыдачиКредита Выполнено],
+    [УсловияПослеВыдачиКредита Дата Выполнения],
+    [УсловияПослеВыдачиКредита Комментарий],
+    [УсловияПослеВыдачиКредита Проверено],
+    [УсловияПослеВыдачиКредита Это Доп Условия],
+    [УсловияПослеВыдачиКредита Аннулирован],
+    [УсловияПослеВыдачиКредита Кредитный Риск],
+    [УсловияПослеВыдачиКредита Юридический Риск],
+    [УсловияПослеВыдачиКредита Одобренно Комитетом],
+    [УсловияПослеВыдачиКредита Залог ID],
+    [УсловияПослеВыдачиКредита Залог],
+    [УсловияПослеВыдачиКредита Автор Аннулирования ID],
+    [УсловияПослеВыдачиКредита Автор Аннулирования],
+    [УсловияПослеВыдачиКредита Автор Проверки ID],
+    [УсловияПослеВыдачиКредита Автор Проверки],
+    [УсловияПослеВыдачиКредита Дата Изменения],
+    [УсловияПослеВыдачиКредита Источник Tип],
+    [УсловияПослеВыдачиКредита Источник Вид],
+    [УсловияПослеВыдачиКредита Источник ID],
+    [УсловияПослеВыдачиКредита Ответственный ID],
+    [УсловияПослеВыдачиКредита Ответственный]
+	
+FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВыдачиКредита];
+----------------------------------------------------------------------------------------------------
+-- End of:   mis.Gold_Fact_CPD.sql
 ----------------------------------------------------------------------------------------------------
 
 GO

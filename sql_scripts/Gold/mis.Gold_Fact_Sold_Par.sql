@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS mis.[Gold_Fact_Sold_Par];
 
 CREATE TABLE mis.[Gold_Fact_Sold_Par] 
 (
-    SoldDate                DATE         NOT NULL,	
+    SoldDate                DATE         NOT NULL,
 	ClientID                VARCHAR(36)  NULL,
     CreditID                VARCHAR(36)  NOT NULL,
     SoldAmount              DECIMAL(18,2) NULL,

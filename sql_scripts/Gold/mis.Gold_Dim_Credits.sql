@@ -1,10 +1,12 @@
 USE [ATK];
 GO
 
+-- Drop the table if exists
 IF OBJECT_ID(N'mis.[Gold_Dim_Credits]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Credits];
 GO
 
+-- Create Gold_Dim_Credits table
 CREATE TABLE mis.[Gold_Dim_Credits] (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
@@ -42,20 +44,19 @@ CREATE TABLE mis.[Gold_Dim_Credits] (
     [DealerID] VARCHAR(36) NULL,
     [Source] NVARCHAR(50) NULL,
     [LatestOutstandingAmount] DECIMAL(18,2) NULL,
-    [SegmentRevenue] NVARCHAR(50) NULL,
+	[SegmentRevenue] NVARCHAR(50) NULL,
     [GreenCredit] VARCHAR(36) NULL,
     [CommitteeProt_CrPurpose] NVARCHAR(150) NULL,
     [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL,
     [DigitalSign] NVARCHAR(50) NULL,
-    [EconomicSectorEFSE] NVARCHAR(50) NULL,
-    [EconomicSector] NVARCHAR(50) NULL,
+    [EconomicSectorEFSE] NVARCHAR(255) NULL,
+    [EconomicSector] NVARCHAR(255) NULL,
     [Agro] NVARCHAR(50) NULL,
     [IsFormal] NVARCHAR(50) NULL
 );
 GO
 
 WITH
--- Latest credit per CreditID
 Credits AS (
     SELECT *
     FROM (
@@ -65,7 +66,6 @@ Credits AS (
     ) t
     WHERE rn = 1
 ),
--- Latest OIA row per Application
 OIA_LatestPerApp AS (
     SELECT *
     FROM (
@@ -79,7 +79,6 @@ OIA_LatestPerApp AS (
     ) t
     WHERE rn = 1
 ),
--- Latest credit request per CreditID
 CreditRequest AS (
     SELECT *
     FROM (
@@ -90,7 +89,7 @@ CreditRequest AS (
             NULLIF(LTRIM(RTRIM(oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения])), '') AS Source,
             oia.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS FilialID,
             oia.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт ID] AS EmployeeID,
-			oia.[ОбъединеннаяИнтернетЗаявка ID] AS OIA_ID,
+            oia.[ОбъединеннаяИнтернетЗаявка ID] AS OIA_ID,
             ROW_NUMBER() OVER (
                 PARTITION BY znk.[ЗаявкаНаКредит Кредит ID]
                 ORDER BY oia.[ОбъединеннаяИнтернетЗаявка Дата] DESC,
@@ -102,7 +101,6 @@ CreditRequest AS (
     ) t
     WHERE rn = 1
 ),
--- First/Last Responsible
 Resp AS (
     SELECT
         [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
@@ -113,13 +111,11 @@ Resp AS (
     FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным]
     GROUP BY [ОтветственныеПоКредитамВыданным Кредит ID]
 ),
--- Financial products main group
 FinProducts AS (
     SELECT [ФинансовыеПродукты ID] AS FinancialProductID,
            [ФинансовыеПродукты Основная Группа] AS FinancialProductsMainGroup
     FROM [ATK].[mis].[Bronze_Справочники.ФинансовыеПродукты]
 ),
--- Latest credit status
 Statuses AS (
     SELECT *
     FROM (
@@ -133,7 +129,6 @@ Statuses AS (
     ) t
     WHERE rn = 1
 ),
--- Latest outstanding per credit
 LatestOutstanding AS (
     SELECT sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
            sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS LatestOutstandingAmount
@@ -155,7 +150,6 @@ SegmentRevenue AS (
     WHERE [КредитныеПродукты Сегмент Доходов] IS NOT NULL
     GROUP BY [КредитныеПродукты ID]
 ),
--- Committee info / Green Credit
 GreenCredit AS (
     SELECT *
     FROM (
@@ -170,7 +164,6 @@ GreenCredit AS (
     ) t
     WHERE rn = 1
 ),
--- Client/Partner info
 ClientPartner AS (
     SELECT 
         c.[Кредиты ID] AS CreditID,
@@ -194,7 +187,22 @@ DigitalSignSrc AS (
              THEN 1 ELSE 0 END AS HasPaymentDirectionSource
     FROM mis.[Bronze_Документы.НаправлениеНаВыплату]
 ),
-
+FormalCredits AS (
+    SELECT DISTINCT c.[Кредиты ID] AS CreditID
+    FROM Credits c
+    INNER JOIN [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] znk
+        ON znk.[ЗаявкаНаКредит Кредит ID] = c.[Кредиты ID]
+    INNER JOIN [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] oia
+        ON oia.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = znk.[ЗаявкаНаКредит ID]
+    INNER JOIN [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы] rf
+        ON rf.[ОбъединеннаяИнтернетЗаявка ID] = oia.[ОбъединеннаяИнтернетЗаявка ID]
+       AND rf.[ОбъединеннаяИнтернетЗаявка.РискФакторы Риск Фактор ID] IN (
+              'B74000155D65140C11EDEA76A63D59BC',
+              '9DCB83734038510A448E495536F415C8',
+              '810500155D65040111EC119B4AF60D86'
+          )
+    WHERE rf.[ОбъединеннаяИнтернетЗаявка.РискФакторы Выбран] = '01'
+),
 FinalData AS (
     SELECT
         crd.[Кредиты ID] AS CreditID,
@@ -246,7 +254,7 @@ FinalData AS (
             WHEN 'Списан' THEN 'Written off'
             ELSE st.IssuedCreditsStatus
         END AS IssuedCreditsStatus,
-        cr.ApplicationPartnerID,
+        cr.ApplicationPartnerID AS CreditApplicationPartnerID,
         cp.CreditPartnerName,
         COALESCE(resp.FirstFilialID, cr.FilialID) AS FirstFilialID,
         COALESCE(resp.FirstEmployeeID, cr.EmployeeID) AS FirstEmployeeID,
@@ -265,19 +273,19 @@ FinalData AS (
             ELSE cr.Source
         END AS Source,
         lo.LatestOutstandingAmount,
-        seg.SegmentRevenue,
+		seg.SegmentRevenue,
         gc.GreenCredit,
         gc.CommitteeProt_CrPurpose,
-        CASE gc.CommitteeProt_AMLRiskCat
-            WHEN 'Высокий' THEN 'High_Risk'
-            WHEN 'Средний' THEN 'Medium_Risk'
-            WHEN 'Низкий' THEN 'Low_Risk'
+        CASE
+            WHEN gc.CommitteeProt_AMLRiskCat = 'Высокий' THEN 'High_Risk'
+            WHEN gc.CommitteeProt_AMLRiskCat = 'Средний' THEN 'Medium_Risk'
+            WHEN gc.CommitteeProt_AMLRiskCat = 'Низкий' THEN 'Low_Risk'
             ELSE gc.CommitteeProt_AMLRiskCat
         END AS CommitteeProt_AMLRiskCat,
         CASE
-            WHEN (ds.HasPaymentDirectionSource) = 1 THEN 'True'
+            WHEN ds.HasPaymentDirectionSource = 1 THEN 'True'
             ELSE 'False'
-        END AS DigitalSign,      
+        END AS DigitalSign,
 		e.[СекторыЭкономики Сектор Экономики EFSE] AS EconomicSectorEFSE,
         e.[СекторыЭкономики Основной Раздел] AS EconomicSector,
         CASE
@@ -285,69 +293,36 @@ FinalData AS (
             THEN 'Agro'
             ELSE 'NonAgro'
         END AS Agro,
-        CASE 
-           WHEN rf.[Риск Фактор ID] IN (
-                    'B74000155D65140C11EDEA76A63D59BC',
-                    '9DCB83734038510A448E495536F415C8',
-                    '810500155D65040111EC119B4AF60D86'
-                )
-                AND rf.[Выбран] = '01'
-           THEN 'Formal'
-           ELSE 'Non-Formal'
-        END AS IsFormal,
-        cr.rn  -- keep rn here for filtering only
+        CASE WHEN fc.CreditID IS NOT NULL THEN 'Formal'
+             ELSE 'Non-Formal'
+        END AS IsFormal
     FROM Credits crd
     LEFT JOIN CreditRequest cr ON crd.[Кредиты ID] = cr.CreditID
     LEFT JOIN Resp resp ON crd.[Кредиты ID] = resp.CreditID
     LEFT JOIN FinProducts fp ON crd.[Кредиты Финансовый Продукт ID] = fp.FinancialProductID
     LEFT JOIN Statuses st ON crd.[Кредиты ID] = st.CreditID
     LEFT JOIN LatestOutstanding lo ON crd.[Кредиты ID] = lo.CreditID
-    LEFT JOIN SegmentRevenue seg ON crd.[Кредиты Кредитный Продукт ID] = seg.ProductID
+	LEFT JOIN SegmentRevenue seg ON crd.[Кредиты Кредитный Продукт ID] = seg.ProductID
     LEFT JOIN GreenCredit gc ON crd.[Кредиты ID] = gc.CreditID
     LEFT JOIN ClientPartner cp ON crd.[Кредиты ID] = cp.CreditID
-    LEFT JOIN [ATK].[dbo].[Справочники.СекторыЭкономики] e 
+	LEFT JOIN [ATK].[dbo].[Справочники.СекторыЭкономики] e 
         ON crd.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID]
-    LEFT JOIN (
-        SELECT [ОбъединеннаяИнтернетЗаявка ID], MAX([ОбъединеннаяИнтернетЗаявка.РискФакторы Риск Фактор ID]) AS [Риск Фактор ID], 
-               MAX([ОбъединеннаяИнтернетЗаявка.РискФакторы Выбран]) AS [Выбран]
-        FROM mis.[Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы]
-        GROUP BY [ОбъединеннаяИнтернетЗаявка ID]
-    ) rf ON cr.OIA_ID = rf.[ОбъединеннаяИнтернетЗаявка ID]
-	LEFT JOIN DigitalSignSrc ds ON crd.[Кредиты ID] = ds.CreditID
+    LEFT JOIN DigitalSignSrc ds ON crd.[Кредиты ID] = ds.CreditID
+    LEFT JOIN FormalCredits fc ON crd.[Кредиты ID] = fc.CreditID
 )
-INSERT INTO mis.[Gold_Dim_Credits] (
-    [CreditID], [Owner], [Code], [Name],
-    [IssueDate], [Term], [Amount],
-    [EconomicSectorDetailed], [FinancialProductID], [FinancialProduct],
-    [AgroCredit], [LocalityType], [Currency], [ProductID],
-    [Product], [Purpose], [RemoveFundingSource],
-    [ContractType], [ContractDate], [IncomeSegment],
-    [UsagePurpose], [PurposeDescription], [ProductType],
-    [EconomicUsageArea], [SigningSource], [FinancialProductsMainGroup],
-    [IssuedCreditsStatus], [CreditApplicationPartnerID],
-    [CreditPartnerName],
-    [FirstFilialID], [FirstEmployeeID], [LastFilialID], [LastEmployeeID],
-    [DealerID], [Source], [LatestOutstandingAmount],
-    [SegmentRevenue], [GreenCredit], [CommitteeProt_CrPurpose],
-    [CommitteeProt_AMLRiskCat], [DigitalSign],
-    [EconomicSectorEFSE], [EconomicSector], [Agro], [IsFormal]
-)
-SELECT
-    CreditID, Owner, Code, Name,
-    IssueDate, Term, Amount,
-    EconomicSectorDetailed, FinancialProductID, FinancialProduct,
-    AgroCredit, LocalityType, Currency, ProductID,
-    Product, Purpose, RemoveFundingSource,
-    ContractType, ContractDate, IncomeSegment,
-    UsagePurpose, PurposeDescription, ProductType,
-    EconomicUsageArea, SigningSource, FinancialProductsMainGroup,
-    IssuedCreditsStatus, ApplicationPartnerID,
-    CreditPartnerName,
-    FirstFilialID, FirstEmployeeID, LastFilialID, LastEmployeeID,
-    DealerID, Source, LatestOutstandingAmount,
-    SegmentRevenue, GreenCredit, CommitteeProt_CrPurpose,
-    CommitteeProt_AMLRiskCat, DigitalSign,
-    EconomicSectorEFSE, EconomicSector, Agro, IsFormal
-FROM FinalData
-WHERE rn = 1; 
 
+INSERT INTO mis.[Gold_Dim_Credits] (
+    CreditID, Owner, Code, Name, IssueDate, Term, Amount, EconomicSectorDetailed,
+    FinancialProductID, FinancialProduct, AgroCredit, LocalityType, Currency,
+    ProductID, Product, Purpose, RemoveFundingSource, ContractType, ContractDate,
+    IncomeSegment, UsagePurpose, PurposeDescription, ProductType, EconomicUsageArea,
+    SigningSource, FinancialProductsMainGroup, IssuedCreditsStatus,
+    CreditApplicationPartnerID, CreditPartnerName, FirstFilialID, FirstEmployeeID,
+    LastFilialID, LastEmployeeID, DealerID, Source, LatestOutstandingAmount, SegmentRevenue,
+    GreenCredit, CommitteeProt_CrPurpose, CommitteeProt_AMLRiskCat,
+    DigitalSign, EconomicSectorEFSE, EconomicSector, Agro, IsFormal
+)
+SELECT *
+FROM FinalData
+;
+GO

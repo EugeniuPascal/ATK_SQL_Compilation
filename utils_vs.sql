@@ -207,12 +207,13 @@ SELECT TOP (5) *
 
   				
 
-  SELECT *
-  FROM [ATK].[mis].[2tbl_Gold_Fact_AdminTasks]
-  WHERE AdminTask_Number = '000093517'
-  WHERE [AdminTask_Date] BETWEEN '2025-09-01' AND '2025-09-30'
 
-
+SELECT 
+    [УстановкаДанныхКредита Кредит ID],
+    COUNT(DISTINCT [УстановкаДанныхКредита Ставка Процента]) AS CountDistinctRates
+FROM dbo.[Документы.УстановкаДанныхКредита]
+GROUP BY [УстановкаДанныхКредита Кредит ID]
+HAVING COUNT(DISTINCT [УстановкаДанныхКредита Ставка Процента]) > 1
 
 
 pentru soldPar de fixat
@@ -382,3 +383,107 @@ WHERE [РеструктурированныеКредиты Кредит ID] = '
 SELECT *
 FROM [ATK].[mis].[2tbl_Gold_Fact_Sold_Par]
 
+
+
+USE [ATK];
+GO
+
+SELECT
+    s.name AS SchemaName,
+    t.name AS TableName,
+    i.name AS IndexName,
+    CASE 
+        WHEN i.type = 1 THEN 'CLUSTERED'
+        WHEN i.type = 2 THEN 'NONCLUSTERED'
+        WHEN i.type = 3 THEN 'XML'
+        WHEN i.type = 4 THEN 'SPATIAL'
+        ELSE 'OTHER'
+    END AS IndexType,
+    i.is_unique,
+    i.is_primary_key,
+    i.fill_factor,
+    i.allow_page_locks,
+    i.allow_row_locks
+FROM sys.indexes i
+JOIN sys.tables t
+    ON i.object_id = t.object_id
+JOIN sys.schemas s
+    ON t.schema_id = s.schema_id
+WHERE s.name = 'mis'
+  AND i.index_id > 0  -- exclude heaps (index_id = 0)
+ORDER BY t.name, i.index_id;
+
+
+
+
+
+SELECT TOP (1000) [SoldDate]
+      ,[ClientID]
+      ,[CreditID]
+      ,[SoldAmount]
+      ,[NumberOfOverdueDaysIFRS]
+      ,---[IRR_Values] 
+      ,[BranchShadow]
+      ,[EmployeeID] in resp_scd
+      ,[BranchID] in resp_scd
+      ,---[EmployeePositionID] 
+      ,[Par]
+  FROM [ATK].[mis].[Gold_Fact_Sold_Par]
+  
+  
+
+ 
+SELECT * 
+  FROM [ATK].[mis].[Gold_Fact_Restruct_Daily_Min_test]
+  ORDER BY SoldDate DESC;
+
+
+   SELECT t1.*,
+         t2.*
+ FROM [ATK].[mis].[Gold_Fact_Restruct_Daily_Min] t1
+ INNER JOIN [ATK].[mis].[Gold_Fact_Sold_Par] t2
+    ON t1.CreditID = t2.CreditID
+	WHERE t1.CreditID = 'B75C00155D65140C11EE6E5FB1250276'
+   AND t1.ClientID = t2.ClientID
+   AND t1.SoldDate = t2.SoldDate
+  ORDER BY t1.SoldDate DESC;
+  
+  
+  ------------------------------------------------------------------------------------------------------------------------
+  
+  
+  SELECT [ЗаявкаНаКредит ID], [ЗаявкаНаКредит Кредит ID]
+  FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит]
+  WHERE [ЗаявкаНаКредит ID] = 'B7FD00155D65140C11F0B32251E18C26'
+  
+
+SELECT [ОбъединеннаяИнтернетЗаявка ID], [ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
+  FROM [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка]
+  WHERE [ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]='B7FD00155D65140C11F0B32251E18C26'
+  
+
+  SELECT * FROM dbo.[Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы]
+  WHERE [ОбъединеннаяИнтернетЗаявка ID]= 'B7FD00155D65140C11F0B32251E18C23'
+  AND [ОбъединеннаяИнтернетЗаявка.РискФакторы Риск Фактор ID] IN (
+        'B74000155D65140C11EDEA76A63D59BC',
+        '9DCB83734038510A448E495536F415C8',
+        '810500155D65040111EC119B4AF60D86')
+
+
+
+
+  SELECT TOP (1000) [CreditID]
+      ,[Owner],[Code] ,[Name],[IssueDate],[Term] ,[Amount] ,[EconomicSectorDetailed] ,[FinancialProductID],[FinancialProduct],[AgroCredit],[LocalityType]
+      ,[Currency],[ProductID] ,[Product] ,[Purpose],[RemoveFundingSource],[ContractType],[ContractDate],[IncomeSegment]
+      ,[UsagePurpose],[PurposeDescription] ,[ProductType],[EconomicUsageArea]
+      ,[SigningSource],[FinancialProductsMainGroup],[IssuedCreditsStatus],[CreditApplicationPartnerID]
+      ,[CreditPartnerName],[FirstFilialID],[FirstEmployeeID],[LastFilialID]
+      ,[LastEmployeeID],[DealerID],[Source],[LatestOutstandingAmount],[SegmentRevenue]
+      ,[GreenCredit],[CommitteeProt_CrPurpose],[CommitteeProt_AMLRiskCat],[DigitalSign],[EconomicSectorEFSE],[EconomicSector],[Agro],[IsFormal]
+  FROM [ATK].[mis].[Gold_Dim_Credits]
+  WHERE CreditID = 'B7FD00155D65140C11F0B32251E18C25'
+
+
+  SELECT DISTINCT [ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
+FROM [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка]
+WHERE [ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] LIKE 'B7FD00155D65140C11F0B32251E18C%';

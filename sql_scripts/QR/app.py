@@ -13,7 +13,7 @@ from msal import ConfidentialClientApplication
 # Logging setup
 # ----------------------------
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # ----------------------------
 # Flask app
@@ -23,7 +23,9 @@ app = Flask(__name__)
 # ----------------------------
 # Environment variables
 # ----------------------------
-BASE_PLAY_STORE_URL = "https://play.google.com/store/search?q=microinvest&c=apps"
+BASE_PLAY_STORE_URL = os.environ.get(
+    "BASE_PLAY_STORE_URL", "https://play.google.com/store/search?q=microinvest&c=apps"
+)
 SECRET_KEY = os.environ.get("SECRET_KEY", "SuperSecretKey123!").encode()
 TENANT_ID = os.environ["TENANT_ID"]
 CLIENT_ID = os.environ["CLIENT_ID"]
@@ -80,13 +82,16 @@ def create_sharepoint_item(employee_id, employee_name, branch_name, scan_time, c
     }
 
     try:
-        r = requests.post(url, json=data, headers=headers)
-        logger.info(f"SharePoint response ({employee_id}): {r.status_code}")
+        r = requests.post(url, json=data, headers=headers, timeout=10)
+        if r.status_code not in (200, 201):
+            logger.warning(f"SharePoint response ({employee_id}): {r.status_code}, {r.text}")
+        else:
+            logger.info(f"SharePoint logged successfully: {employee_id}")
     except Exception as e:
         logger.warning(f"SharePoint logging failed for {employee_id}: {e}")
 
 # ----------------------------
-# Root endpoint (optional)
+# Root endpoint
 # ----------------------------
 @app.route("/")
 def index():
@@ -118,7 +123,7 @@ def scan():
 
     # Capture client info
     client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-    user_agent = request.headers.get("User-Agent")
+    user_agent = request.headers.get("User-Agent", "unknown")
     scan_time = datetime.utcnow()
 
     # Log scan
@@ -139,8 +144,9 @@ def app_installed():
         return jsonify({"error": "Missing JSON body"}), 400
 
     required_fields = ["employee_id", "employee_name", "branch_name"]
-    if not all(field in data for field in required_fields):
-        return jsonify({"error": f"Missing fields: {required_fields}"}), 400
+    missing_fields = [f for f in required_fields if f not in data]
+    if missing_fields:
+        return jsonify({"error": f"Missing fields: {missing_fields}"}), 400
 
     employee_id = data["employee_id"]
     employee_name = data["employee_name"]
@@ -160,7 +166,6 @@ def app_installed():
 # Run app
 # ----------------------------
 if __name__ == "__main__":
-    # Test MSAL token retrieval
     token = get_access_token()
     if token:
         print("✅ Access token retrieved successfully!")

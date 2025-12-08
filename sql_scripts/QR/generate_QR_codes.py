@@ -4,6 +4,7 @@ import os
 import hmac
 import hashlib
 from urllib.parse import quote_plus
+from datetime import datetime
 
 # ----------------------------
 # SQL Server connection
@@ -36,7 +37,7 @@ os.makedirs(base_output_dir, exist_ok=True)
 # QR generation settings
 # ----------------------------
 AZURE_BASE_SCAN_URL = "https://yourapp.azurewebsites.net/scan?"  # <-- live Azure URL
-SECRET_KEY = b"SuperSecretKey123!"
+SECRET_KEY = b"SuperSecretKey123!"  # Must match app.py SECRET_KEY
 
 # ----------------------------
 # Generate QR codes
@@ -47,7 +48,7 @@ for emp in employees:
     branch_name = quote_plus(emp.BranchName)
 
     # Generate HMAC token
-    data_to_sign = f"{emp_id}|{branch_name}|{emp_name}"
+    data_to_sign = f"{emp_id}|{unquote_plus(branch_name)}|{unquote_plus(emp_name)}"
     token = hmac.new(SECRET_KEY, data_to_sign.encode(), hashlib.sha256).hexdigest()
 
     # Full QR URL
@@ -71,6 +72,6 @@ for emp in employees:
     img_path = os.path.join(branch_folder, f"{safe_name}.png")
     img.save(img_path)
 
-    print(f"Generated QR: {img_path}")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Generated QR: {img_path}")
 
 print(f"\n✅ Secure QR codes generated for {len(employees)} employees in {base_output_dir}")

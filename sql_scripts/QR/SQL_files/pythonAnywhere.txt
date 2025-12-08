@@ -1,2 +1,0 @@
-user: EP01
-pass: Eugeniu!01

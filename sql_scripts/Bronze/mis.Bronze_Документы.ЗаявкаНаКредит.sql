@@ -65,7 +65,7 @@ CREATE TABLE mis.[Bronze_Документы.ЗаявкаНаКредит]
     [ЗаявкаНаКредит Финансовый Продукт]                 NVARCHAR(100)   NULL
 );
 GO
--- test test test test test test test test test test test test test test test test
+
 INSERT INTO mis.[Bronze_Документы.ЗаявкаНаКредит] 
 (
     [ЗаявкаНаКредит Дата],

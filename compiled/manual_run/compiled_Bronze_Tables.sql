@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze)
--- Generated: 2025-12-08 14:13:05
+-- Generated: 2025-12-08 15:03:42
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (27):
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -103,7 +103,7 @@ CREATE TABLE mis.[Bronze_Документы.ЗаявкаНаКредит]
     [ЗаявкаНаКредит Финансовый Продукт]                 NVARCHAR(100)   NULL
 );
 GO
-
+-- test test test test test test test test test test test test test test test test
 INSERT INTO mis.[Bronze_Документы.ЗаявкаНаКредит] 
 (
     [ЗаявкаНаКредит Дата],

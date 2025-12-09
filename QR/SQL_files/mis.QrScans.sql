@@ -14,3 +14,4 @@ BEGIN
         UserAgent NVARCHAR(200)
     );
 END
+GO

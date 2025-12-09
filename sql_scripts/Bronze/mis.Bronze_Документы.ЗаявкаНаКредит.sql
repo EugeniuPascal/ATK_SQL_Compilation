@@ -4,7 +4,7 @@ GO
 IF OBJECT_ID('mis.[Bronze_Документы.ЗаявкаНаКредит]', 'U') IS NOT NULL
     DROP TABLE mis.[Bronze_Документы.ЗаявкаНаКредит];
 GO
---testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
+
 CREATE TABLE mis.[Bronze_Документы.ЗаявкаНаКредит]
 (
     [ЗаявкаНаКредит Дата]                               DATETIME        NULL,

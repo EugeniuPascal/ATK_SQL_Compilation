@@ -1,3 +1,7 @@
+
+[ФилиалыКонтрагентов ID] = [Дилеры Владелец]
+[ФилиалыКонтрагентов Владелец] = [Контрагенты ID]
+
 --- IF SOMETHING WRONG AROUND THE DATES always check if Datetime si compaired do Date
 USE ATK
 GO

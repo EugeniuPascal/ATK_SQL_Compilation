@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-12-08 16:54:49
+-- Generated: 2025-12-11 08:57:33
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (19):
 --   mis.Gold_Dim_AppUsers.sql
@@ -348,13 +348,12 @@ GO
 USE [ATK];
 GO
 
--- Drop the table if exists
 IF OBJECT_ID(N'mis.[Gold_Dim_Credits]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Credits];
 GO
 
--- Create Gold_Dim_Credits table
-CREATE TABLE mis.[Gold_Dim_Credits] (
+CREATE TABLE mis.[Gold_Dim_Credits] 
+(
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] NVARCHAR(100) NULL,
     [Code] NVARCHAR(50) NULL,
@@ -504,9 +503,10 @@ GreenCredit AS (
                gc.[ПротоколКомитета Назначение Использования Кредита] AS CommitteeProt_CrPurpose,
                gc.[ПротоколКомитета Категория Риска AML] AS CommitteeProt_AMLRiskCat,
                gc.[ПротоколКомитета Это Зеленый Кредит] AS GreenCredit,
+			   gc.[ПротоколКомитета Партнер] AS CommitteePartner,
                ROW_NUMBER() OVER(PARTITION BY gc.[ПротоколКомитета Кредит ID]
-                                 ORDER BY gc.[ПротоколКомитета Дата] DESC,
-                                          gc.[ПротоколКомитета ID] DESC) AS rn
+                                 ORDER BY gc.[ПротоколКомитета Дата] ASC,
+                                          gc.[ПротоколКомитета ID] ASC) AS rn
         FROM [ATK].[dbo].[Документы.ПротоколКомитета] gc
     ) t
     WHERE rn = 1
@@ -602,7 +602,7 @@ FinalData AS (
             ELSE st.IssuedCreditsStatus
         END AS IssuedCreditsStatus,
         cr.ApplicationPartnerID AS CreditApplicationPartnerID,
-        cp.CreditPartnerName,
+        COALESCE(cp.CreditPartnerName, gc.CommitteePartner) AS CreditPartnerName, 
         COALESCE(resp.FirstFilialID, cr.FilialID) AS FirstFilialID,
         COALESCE(resp.FirstEmployeeID, cr.EmployeeID) AS FirstEmployeeID,
         COALESCE(resp.LastFilialID, cr.FilialID) AS LastFilialID,
@@ -1088,13 +1088,15 @@ CREATE TABLE mis.[Gold_Dim_PartnersBranch]
     [PartnerBranchCode]             NVARCHAR(3)   NOT NULL,
     [PartnerBranchName]             NVARCHAR(150) NULL,
     [PartnerBranchAddress]          NVARCHAR(100) NULL,
+	
+	[PartnerOwnerName]              NVARCHAR(150) NULL,
 
     [DealerID]                      VARCHAR(36) NULL,
     [DealerDefaultEmployeeID]         VARCHAR(36) NULL,
     [DealerDefaultEmployeeName]       NVARCHAR(50) NULL,
     [DealerOrgRepID]                VARCHAR(36) NULL,
-    [DealerOrgRepName]              NVARCHAR(50) NULL
-
+    [DealerOrgRepName]              NVARCHAR(50) NULL,
+    
 );
 GO
 
@@ -1106,6 +1108,8 @@ INSERT INTO mis.[Gold_Dim_PartnersBranch]
     [PartnerBranchCode],
     [PartnerBranchName],
     [PartnerBranchAddress],
+	
+	[PartnerOwnerName],
 
     [DealerID],
     [DealerDefaultEmployeeID],
@@ -1120,15 +1124,20 @@ SELECT
     f.[ФилиалыКонтрагентов Код] AS PartnerBranchCode,
     f.[ФилиалыКонтрагентов Наименование] AS PartnerBranchName,
     f.[ФилиалыКонтрагентов Адрес] AS PartnerBranchAddress,
+	
+	k.[Контрагенты Наименование] AS PartnerOwnerName,
 
     d.[Дилеры ID] AS DealerID,
     d.[Дилеры Эксперт по Умолчанию ID] AS DealerDefaultEmployeeID ,
     d.[Дилеры Эксперт по Умолчанию] AS DealerDefaultEmployeeName,
     d.[Дилеры Представитель Организации ID] AS DealerOrgRepID,
     d.[Дилеры Представитель Организации] AS DealerOrgRepName
+	
 FROM mis.[Bronze_Справочники.ФилиалыКонтрагентов] f
 LEFT JOIN mis.[Bronze_Справочники.Дилеры] d
-  ON d.[Дилеры Владелец] = f.[ФилиалыКонтрагентов ID];
+     ON d.[Дилеры Владелец] = f.[ФилиалыКонтрагентов ID]
+LEFT JOIN mis.[Bronze_Справочники.Контрагенты] k
+     ON k.[Контрагенты ID] = f.[ФилиалыКонтрагентов Владелец];
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Gold_Dim_PartnersBranch.sql

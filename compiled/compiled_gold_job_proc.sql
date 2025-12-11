@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-12-10 16:57:36.986382
+-- Generated: 2025-12-11 08:57:44.339739
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 19
 --   mis.Gold_Dim_AppUsers.sql
@@ -490,8 +490,8 @@ GreenCredit AS (
                gc.[ПротоколКомитета Это Зеленый Кредит] AS GreenCredit,
 			   gc.[ПротоколКомитета Партнер] AS CommitteePartner,
                ROW_NUMBER() OVER(PARTITION BY gc.[ПротоколКомитета Кредит ID]
-                                 ORDER BY gc.[ПротоколКомитета Дата] DESC,
-                                          gc.[ПротоколКомитета ID] DESC) AS rn
+                                 ORDER BY gc.[ПротоколКомитета Дата] ASC,
+                                          gc.[ПротоколКомитета ID] ASC) AS rn
         FROM [ATK].[dbo].[Документы.ПротоколКомитета] gc
     ) t
     WHERE rn = 1

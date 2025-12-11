@@ -24,6 +24,7 @@ SQL_ORDER = [
     "mis.Gold_Fact_ArchiveDocument.sql",
     "mis.Gold_Fact_BudgetEmployees.sql",
     "mis.Gold_Fact_CerereOnline.sql",
+    "mis.Gold_Fact_Comments.sql",
     "mis.Gold_Fact_CPD.sql",
     "mis.Gold_Fact_CreditsInShadowBranches.sql",
     "mis.Gold_Fact_WriteOffCredits.sql",

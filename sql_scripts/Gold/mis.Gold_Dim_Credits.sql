@@ -158,8 +158,8 @@ GreenCredit AS (
                gc.[ПротоколКомитета Это Зеленый Кредит] AS GreenCredit,
 			   gc.[ПротоколКомитета Партнер] AS CommitteePartner,
                ROW_NUMBER() OVER(PARTITION BY gc.[ПротоколКомитета Кредит ID]
-                                 ORDER BY gc.[ПротоколКомитета Дата] DESC,
-                                          gc.[ПротоколКомитета ID] DESC) AS rn
+                                 ORDER BY gc.[ПротоколКомитета Дата] ASC,
+                                          gc.[ПротоколКомитета ID] ASC) AS rn
         FROM [ATK].[dbo].[Документы.ПротоколКомитета] gc
     ) t
     WHERE rn = 1

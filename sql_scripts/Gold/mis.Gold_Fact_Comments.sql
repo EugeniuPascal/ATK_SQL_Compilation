@@ -14,7 +14,7 @@ GO
 
 SELECT 
     [КомментарийКУсловиямПослеВыдачи ИД] AS CommentID,
-    [КомментарийКУсловиямПослеВыдачи Период] AS Period,
+    CONVERT(VARCHAR(10), [КомментарийКУсловиямПослеВыдачи Период], 120) AS Period,
     [КомментарийКУсловиямПослеВыдачи Исполнитель] AS Executor,
     [КомментарийКУсловиямПослеВыдачи Комментарий] AS Comment
 INTO #FilteredComments
@@ -29,7 +29,7 @@ SELECT
     STUFF(
         (
             SELECT CHAR(13) + CHAR(10) +
-                   CONCAT(fc2.Period, ' ', fc2.Executor, ' ', fc2.Comment)
+                   CONCAT(fc2.Period, ' ', fc2.Executor, ': ', fc2.Comment)
             FROM #FilteredComments fc2
             WHERE fc2.CommentID = fc1.CommentID
             ORDER BY fc2.Period

@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-12-12 10:22:53
+-- Generated: 2025-12-15 09:11:14
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (20):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1097,6 +1097,8 @@ CREATE TABLE mis.[Gold_Dim_PartnersBranch]
     [DealerDefaultEmployeeName]       NVARCHAR(50) NULL,
     [DealerOrgRepID]                VARCHAR(36) NULL,
     [DealerOrgRepName]              NVARCHAR(50) NULL,
+    [DealerCabinetID]               VARCHAR(36) NULL,
+	[DealerCabinetType]             NVARCHAR(25) NULL
     
 );
 GO
@@ -1116,7 +1118,9 @@ INSERT INTO mis.[Gold_Dim_PartnersBranch]
     [DealerDefaultEmployeeID],
     [DealerDefaultEmployeeName],
     [DealerOrgRepID],
-    [DealerOrgRepName]
+    [DealerOrgRepName],
+	[DealerCabinetID],
+	[DealerCabinetType]
 )
 SELECT
     f.[ФилиалыКонтрагентов ID] AS PartnerBranchID,
@@ -1132,7 +1136,9 @@ SELECT
     d.[Дилеры Эксперт по Умолчанию ID] AS DealerDefaultEmployeeID ,
     d.[Дилеры Эксперт по Умолчанию] AS DealerDefaultEmployeeName,
     d.[Дилеры Представитель Организации ID] AS DealerOrgRepID,
-    d.[Дилеры Представитель Организации] AS DealerOrgRepName
+    d.[Дилеры Представитель Организации] AS DealerOrgRepName,
+	d.[Дилеры Вид Кабинета ID] AS DealerCabinetID,
+	d.[Дилеры Вид Кабинета] AS DealerCabinetType
 	
 FROM mis.[Bronze_Справочники.ФилиалыКонтрагентов] f
 LEFT JOIN mis.[Bronze_Справочники.Дилеры] d

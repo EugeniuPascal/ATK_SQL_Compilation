@@ -40,17 +40,7 @@ CREATE TABLE mis.[Gold_Dim_Clients]
 	[EconomicSector]        NVARCHAR(200)  NULL,
     [OrganizationType]      NVARCHAR(52)   NULL,
     [IsGroupOwner]          BIT            NULL,
-    [GroupID]               NVARCHAR(20)   NULL,	
-	[CRM_Region_Address]    NVARCHAR(150)  NULL,
-    [CRM_City_Address]      NVARCHAR(150)  NULL,
-
-    [CRM_Status]            NVARCHAR(50)   NULL,
-    [CRM_ClientType]        NVARCHAR(50)   NULL,
-    [CRM_Employee]          NVARCHAR(100)  NULL,
-
-    [ANK_LegalAddress]      NVARCHAR(150)  NULL,
-    [ANK_ActualAddress]     NVARCHAR(150)  NULL,
-	
+    [GroupID]               NVARCHAR(20)    NULL,	
     CONSTRAINT PK_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
@@ -88,38 +78,25 @@ GO
 		s.[Контрагенты Сектор Экономики] AS EconomicSector,
         fp.[ФормыПредприятия Наименование] AS OrganizationType,
         CASE WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID] THEN 1 ELSE 0 END AS IsGroupOwner,
-        g.[ГруппыАффилированныхЛиц Код] AS GroupID,
+        ga.[ГруппыАффилированныхЛиц Код] AS GroupID,
 
-        crm.[СлужебныйДанныеПоКлиентуДляCRM Регион Юр Адрес] AS RegionLegalAddress,
-        crm.[СлужебныйДанныеПоКлиентуДляCRM Регион Факт Адрес] AS RegionActualAddress,
-        crm.[СлужебныйДанныеПоКлиентуДляCRM Населенный Пункт Юр Адрес] AS CityLegalAddress,
-        crm.[СлужебныйДанныеПоКлиентуДляCRM Населенный Пункт Факт Адрес] AS CityActualAddress,
-
-        crm.[СлужебныйДанныеПоКлиентуДляCRM Статус] AS CRMStatus,
-        crm.[СлужебныйДанныеПоКлиентуДляCRM Тип Клиента CRM] AS CRMClientType,
-        crm.[СлужебныйДанныеПоКлиентуДляCRM Сотрудник] AS CRMEmployee,
-
-        ank.[АнкетаПерсональныхДанныхКлиента Юридический Адрес] AS ANK_LegalAddress,
-        ank.[АнкетаПерсональныхДанныхКлиента Фактический Адрес] AS ANK_ActualAddress,
         -- Effective representative DOB: use real DOB if available, else keep 1753-01-01
         CASE 
             WHEN r.[Контрагенты Возраст] <> '1753-01-01 00:00:00' THEN r.[Контрагенты Возраст]
             ELSE s.[Контрагенты Возраст]
         END AS EffectiveRepDOB
 
-    FROM ATK.mis.[Bronze_Справочники.Контрагенты] s
-    LEFT JOIN ATK.mis.[Bronze_Справочники.Контрагенты] r
+    FROM [ATK].[mis].[Bronze_Справочники.Контрагенты] s
+    LEFT JOIN [ATK].[mis].[Bronze_Справочники.Контрагенты] r
         ON r.[Контрагенты ID] = s.[Контрагенты Представитель Контрагента ID]
-    LEFT JOIN ATK.dbo.[Справочники.ФормыПредприятия] fp
+    LEFT JOIN [ATK].[dbo].[Справочники.ФормыПредприятия] fp
         ON fp.[ФормыПредприятия Наименование] = s.[Контрагенты Форма Организации]
-    LEFT JOIN ATK.dbo.[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
-        ON sg.[СоставГруппАффилированныхЛиц Контрагент ID] = s.[Контрагенты ID]
-    LEFT JOIN ATK.dbo.[Справочники.ГруппыАффилированныхЛиц] g
-        ON g.[ГруппыАффилированныхЛиц ID] = sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
-    LEFT JOIN dbo.[РегистрыСведений.СлужебныйДанныеПоКлиентуДляCRM] crm
-        ON crm.[СлужебныйДанныеПоКлиентуДляCRM Клиент ID] = s.[Контрагенты ID]
-    LEFT JOIN dbo.[Документы.АнкетаПерсональныхДанныхКлиента] ank
-        ON ank.[АнкетаПерсональныхДанныхКлиента Клиент ID] = s.[Контрагенты ID]
+    LEFT JOIN [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] gb
+        ON gb.[СоставГруппАффилированныхЛиц Контрагент ID] = s.[Контрагенты ID]
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] ga
+        ON ga.[ГруппыАффилированныхЛиц ID] = gb.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+        ON g.[ГруппыАффилированныхЛиц ID] = ga.[ГруппыАффилированныхЛиц ID]
 ),
 
 AgeCalc AS (
@@ -150,18 +127,10 @@ Final AS (
             ELSE '> 65'
         END AS AgeGroup,
         City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
-        CASE Gender WHEN 'Ж' THEN 'F' WHEN 'М' THEN 'M' ELSE Gender END AS Gender,
-        PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
-        FiscalCode, LegalAddress, RegistrationDate,
-        CASE [Language] WHEN 'Русский' THEN 'Russian' WHEN 'Română' THEN 'Romanian' ELSE [Language] END AS [Language],
+        Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
+        FiscalCode, LegalAddress, RegistrationDate, [Language],
         NoEmailNotifications, NoPromoSMS, EconomicSector, OrganizationType,
-        IsGroupOwner, GroupID,
-
-        COALESCE(RegionLegalAddress, RegionActualAddress, ANK_LegalAddress) AS CRM_Region_Address,
-        COALESCE(CityLegalAddress, CityActualAddress, ANK_ActualAddress) AS CRM_City_Address,
-
-        CRMStatus AS CRM_Status, CRMClientType AS CRM_ClientType, CRMEmployee AS CRM_Employee,
-        ANK_LegalAddress, ANK_ActualAddress
+        IsGroupOwner, GroupID
     FROM AgeCalc
 ),
 
@@ -175,26 +144,34 @@ Dedup AS (
 )
 
 INSERT INTO mis.[Gold_Dim_Clients] (
-    ClientID, ParentID, BranchID,
-    IsDeleted, IsGroup, ClientCode, ClientName, IsBlocked, Visibility,
-    Age, AgeGroup, City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
-    Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
-    FiscalCode, LegalAddress, RegistrationDate, [Language],
-    NoEmailNotifications, NoPromoSMS, EconomicSector, OrganizationType,
-    IsGroupOwner, GroupID, CRM_Region_Address, CRM_City_Address,
-    CRM_Status, CRM_ClientType, CRM_Employee,
-    ANK_LegalAddress, ANK_ActualAddress
+    [ClientID],[ParentID],[BranchID],
+    [IsDeleted],[IsGroup],[ClientCode],[ClientName],[IsBlocked],[Visibility],
+    [Age],[AgeGroup],[City],[CreatedDate],[PartnerCode],[FullName],[IsNonResident],[NoPaymentNotification],
+    [Gender],[PostalAddress],[Country],[MobilePhone1],[MobilePhone2],[Phones],
+    [FiscalCode],[LegalAddress],[RegistrationDate],[Language],
+    [NoEmailNotifications],[NoPromoSMS], [EconomicSector], [OrganizationType],
+    [IsGroupOwner],[GroupID]
 )
 SELECT
     ClientID, ParentID, BranchID,
     IsDeleted, IsGroup, ClientCode, ClientName, IsBlocked, Visibility,
     Age, AgeGroup, City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
-    Gender, PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
-    FiscalCode, LegalAddress, RegistrationDate, [Language],
+
+    CASE Gender
+        WHEN 'Ж' THEN 'F'
+        WHEN N'М' THEN 'M'  -- Cyrillic M
+        ELSE Gender      
+    END AS Gender,
+	
+	PostalAddress, Country, MobilePhone1, MobilePhone2, Phones,
+    FiscalCode, LegalAddress, RegistrationDate, 
+	CASE [Language]
+	     WHEN 'Русский' THEN 'Russian'
+		 WHEN N'Română' THEN 'Romanian'
+		 ELSE [Language]
+    END AS [Language],
     NoEmailNotifications, NoPromoSMS, EconomicSector, OrganizationType,
-    IsGroupOwner, GroupID, CRM_Region_Address, CRM_City_Address,
-    CRM_Status, CRM_ClientType, CRM_Employee,
-    ANK_LegalAddress, ANK_ActualAddress
+    IsGroupOwner, GroupID
 FROM Dedup
 WHERE rn = 1;
 GO

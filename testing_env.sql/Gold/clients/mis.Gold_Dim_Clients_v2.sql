@@ -2,11 +2,11 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
-IF OBJECT_ID(N'mis.[Gold_Dim_Clients]', 'U') IS NOT NULL
-    DROP TABLE mis.[Gold_Dim_Clients];
+IF OBJECT_ID(N'mis.[Gold_Dim_Clients1]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Clients1];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Clients] 
+CREATE TABLE mis.[Gold_Dim_Clients1] 
 (
     [ClientID]              VARCHAR(36)    NOT NULL,
     [ParentID]              VARCHAR(36)    NOT NULL,
@@ -51,7 +51,7 @@ CREATE TABLE mis.[Gold_Dim_Clients]
     [ANK_LegalAddress]      NVARCHAR(150)  NULL,
     [ANK_ActualAddress]     NVARCHAR(150)  NULL,
 	
-    CONSTRAINT PK_Gold_Dim_Clients PRIMARY KEY CLUSTERED (ClientID)
+    CONSTRAINT PK_Gold_Dim_Clients1 PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
 
@@ -174,7 +174,7 @@ Dedup AS (
     FROM Final
 )
 
-INSERT INTO mis.[Gold_Dim_Clients] (
+INSERT INTO mis.[Gold_Dim_Clients1] (
     ClientID, ParentID, BranchID,
     IsDeleted, IsGroup, ClientCode, ClientName, IsBlocked, Visibility,
     Age, AgeGroup, City, CreatedDate, PartnerCode, FullName, IsNonResident, NoPaymentNotification,
@@ -200,8 +200,8 @@ WHERE rn = 1;
 GO
 
 -- Indexes
-CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
-CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
-CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
-CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[Gold_Dim_Clients](IsGroupOwner, GroupID);
+CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[Gold_Dim_Clients1](BranchID)   INCLUDE (ClientName, IsBlocked);
+CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[Gold_Dim_Clients1](AgeGroup)  INCLUDE (City, Country);
+CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[Gold_Dim_Clients1](IsDeleted) INCLUDE (ClientName);
+CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[Gold_Dim_Clients1](IsGroupOwner, GroupID);
 GO

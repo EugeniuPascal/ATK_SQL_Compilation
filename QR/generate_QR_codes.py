@@ -36,7 +36,7 @@ os.makedirs(base_output_dir, exist_ok=True)
 # QR generation settings
 # ----------------------------
 AZURE_BASE_SCAN_URL = "https://yourapp.azurewebsites.net/scan?"  # <-- live Azure URL
-SECRET_KEY = b"SuperSecretKey123!"
+SECRET_KEY = os.environ["SECRET_KEY"].encode("utf-8")
 
 # ----------------------------
 # Generate QR codes

@@ -26,7 +26,7 @@ app = Flask(__name__)
 BASE_PLAY_STORE_URL = os.environ.get(
     "BASE_PLAY_STORE_URL", "https://play.google.com/store/search?q=microinvest&c=apps"
 )
-SECRET_KEY = os.environ.get("SECRET_KEY", "SuperSecretKey123!").encode()
+SECRET_KEY = os.environ.get("SECRET_KEY", "11cca544-17c1-4095-9645-9422d816fa60").encode()
 TENANT_ID = os.environ["TENANT_ID"]
 CLIENT_ID = os.environ["CLIENT_ID"]
 CLIENT_SECRET = os.environ["CLIENT_SECRET"]

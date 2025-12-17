@@ -26,12 +26,21 @@ app = Flask(__name__)
 BASE_PLAY_STORE_URL = os.environ.get(
     "BASE_PLAY_STORE_URL", "https://play.google.com/store/search?q=microinvest&c=apps"
 )
-SECRET_KEY = os.environ.get("SECRET_KEY", "11cca544-17c1-4095-9645-9422d816fa60").encode()
-TENANT_ID = os.environ["TENANT_ID"]
-CLIENT_ID = os.environ["CLIENT_ID"]
-CLIENT_SECRET = os.environ["CLIENT_SECRET"]
-SITE_ID = os.environ["SITE_ID"]
-LIST_ID = os.environ["LIST_ID"]
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is missing")
+SECRET_KEY = SECRET_KEY.encode()
+
+TENANT_ID = os.environ.get("TENANT_ID")
+CLIENT_ID = os.environ.get("CLIENT_ID")
+CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+SITE_ID = os.environ.get("SITE_ID")
+LIST_ID = os.environ.get("LIST_ID")
+
+if not all([TENANT_ID, CLIENT_ID, CLIENT_SECRET, SITE_ID, LIST_ID]):
+    raise RuntimeError("❌ One or more required environment variables are missing")
+
 SCOPE = ["https://graph.microsoft.com/.default"]
 
 # ----------------------------
@@ -122,7 +131,7 @@ def scan():
         return "Invalid QR code", 403
 
     # Capture client info
-    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+    client_ip = request.headers.get("X-Forwarded-For", "").split(",")[0] or request.remote_addr
     user_agent = request.headers.get("User-Agent", "unknown")
     scan_time = datetime.utcnow()
 
@@ -132,7 +141,7 @@ def scan():
 
     # Redirect to Play Store
     play_url = f"{BASE_PLAY_STORE_URL}&referrer=employee_id_{employee_id}"
-    return redirect(play_url)
+    return redirect(play_url, code=302)
 
 # ----------------------------
 # App installed callback
@@ -153,7 +162,7 @@ def app_installed():
     branch_name = data["branch_name"]
 
     # Capture IP & User-Agent from request if not sent in JSON
-    client_ip = data.get("client_ip") or request.headers.get("X-Forwarded-For", request.remote_addr)
+    client_ip = data.get("client_ip") or request.headers.get("X-Forwarded-For", "").split(",")[0] or request.remote_addr
     user_agent = data.get("user_agent") or request.headers.get("User-Agent", "unknown")
     install_time = datetime.utcnow()
 
@@ -163,16 +172,5 @@ def app_installed():
     return jsonify({"status": "success"}), 200
 
 # ----------------------------
-# Run app
+# ✅ NO app.run() - Azure will use gunicorn
 # ----------------------------
-if __name__ == "__main__":
-    token = get_access_token()
-    if token:
-        print("✅ Access token retrieved successfully!")
-    else:
-        print("❌ Failed to get access token")
-
-    # Start Flask app
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port)

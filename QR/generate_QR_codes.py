@@ -3,7 +3,21 @@ import qrcode
 import os
 import hmac
 import hashlib
-from urllib.parse import quote_plus, unquote_plus
+from urllib.parse import quote_plus
+import re
+
+# ----------------------------
+# Environment variables
+# ----------------------------
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is missing")
+SECRET_KEY = SECRET_KEY.encode("utf-8")
+
+AZURE_BASE_SCAN_URL = os.environ.get(
+    "AZURE_BASE_SCAN_URL",
+    "https://e2e-qr-euayd0gnf6c3edas.germanywestcentral-01.azurewebsites.net/scan?"
+)
 
 # ----------------------------
 # SQL Server connection
@@ -33,10 +47,10 @@ base_output_dir = r"C:\ATK_Project\QR\QR_Codes"
 os.makedirs(base_output_dir, exist_ok=True)
 
 # ----------------------------
-# QR generation settings
+# Helper: sanitize filenames
 # ----------------------------
-AZURE_BASE_SCAN_URL = "https://e2e-qr-euayd0gnf6c3edas.germanywestcentral-01.azurewebsites.net/scan?"
-SECRET_KEY = os.environ["SECRET_KEY"].encode("utf-8")
+def sanitize_filename(name: str) -> str:
+    return re.sub(r'[^\w\-]', '_', name)
 
 # ----------------------------
 # Generate QR codes
@@ -46,7 +60,7 @@ for emp in employees:
     emp_name = emp.EmployeeName
     branch_name = emp.BranchName
 
-    # Generate HMAC token using raw values
+    # Generate HMAC token
     data_to_sign = f"{emp_id}|{branch_name}|{emp_name}"
     token = hmac.new(SECRET_KEY, data_to_sign.encode(), hashlib.sha256).hexdigest()
 
@@ -71,12 +85,21 @@ for emp in employees:
     img = qr.make_image(fill_color="black", back_color="white")
 
     # Save QR code in branch folder
-    branch_folder = os.path.join(base_output_dir, branch_name.replace(" ", "_"))
+    safe_branch = sanitize_filename(branch_name)
+    branch_folder = os.path.join(base_output_dir, safe_branch)
     os.makedirs(branch_folder, exist_ok=True)
-    safe_name = f"{emp_id}_{emp_name}_{branch_name}".replace(" ", "_")
-    img_path = os.path.join(branch_folder, f"{safe_name}.png")
-    img.save(img_path)
 
+    safe_file = sanitize_filename(f"{emp_id}_{emp_name}_{branch_name}")
+    img_path = os.path.join(branch_folder, f"{safe_file}.png")
+
+    # Avoid overwriting existing files
+    counter = 1
+    original_path = img_path
+    while os.path.exists(img_path):
+        img_path = original_path.replace(".png", f"_{counter}.png")
+        counter += 1
+
+    img.save(img_path)
     print(f"Generated QR: {img_path}")
 
 print(f"\n✅ Secure QR codes generated for {len(employees)} employees in {base_output_dir}")

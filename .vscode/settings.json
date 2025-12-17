@@ -29,5 +29,8 @@
         "env.bak{,/**}",
         "venv.bak{,/**}",
         ".vscode{,/**}"
-    ]
+    ],
+    "appService.showBuildDuringDeployPrompt": false,
+    "appService.defaultWebAppToDeploy": "/subscriptions/911b35c6-a72e-4b79-a078-af55c198098c/resourceGroups/e2e_qr_container/providers/Microsoft.Web/sites/e2e-qr",
+    "appService.deploySubpath": "QR\\App.zip"
 }

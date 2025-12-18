@@ -41,7 +41,7 @@ CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min]
     ParIFRS nvarchar(20) NULL,
     StageName nvarchar(200) NULL,
     EmployeePositionID varchar(36) NULL,
-    CONSTRAINT PK_Gold_Fact_RestructDailyMin_test
+    CONSTRAINT PK_Gold_Fact_RestructDailyMin
         PRIMARY KEY (ClientID, CreditID, SoldDate)
 );
 

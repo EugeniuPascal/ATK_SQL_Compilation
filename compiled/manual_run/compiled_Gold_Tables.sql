@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-12-17 15:11:57
+-- Generated: 2025-12-18 10:14:33
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (20):
 --   mis.Gold_Dim_AppUsers.sql
@@ -2305,7 +2305,7 @@ SET NOCOUNT ON;
 DECLARE @DateFrom date = '2023-09-01';
 DECLARE @DateTo   date = '2025-12-31';
 
-PRINT N'=== Compiled [mis].[Gold_Fact_Restruct_Daily_Min_test] for Period '
+PRINT N'=== Compiled [mis].[Gold_Fact_Restruct_Daily_Min] for Period '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';
 
 BEGIN TRAN;
@@ -2319,10 +2319,10 @@ IF OBJECT_ID('tempdb..#Joined')       IS NOT NULL DROP TABLE #Joined;
 IF OBJECT_ID('tempdb..#IRR')          IS NOT NULL DROP TABLE #IRR;
 IF OBJECT_ID('tempdb..#EmployeePos')  IS NOT NULL DROP TABLE #EmployeePos;
 
-IF OBJECT_ID('[mis].[Gold_Fact_Restruct_Daily_Min_test]', 'U') IS NOT NULL
-    DROP TABLE [mis].[Gold_Fact_Restruct_Daily_Min_test];
+IF OBJECT_ID('[mis].[Gold_Fact_Restruct_Daily_Min]', 'U') IS NOT NULL
+    DROP TABLE [mis].[Gold_Fact_Restruct_Daily_Min];
 
-CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min_test] 
+CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min] 
 (
     SoldDate date NOT NULL,
     CreditID varchar(64) NOT NULL,
@@ -2508,7 +2508,7 @@ CREATE CLUSTERED INDEX CIX_Joined_ClientDate ON #Joined (ClientID, SoldDate, Cre
 )
 
 
-INSERT INTO [mis].[Gold_Fact_Restruct_Daily_Min_test]
+INSERT INTO [mis].[Gold_Fact_Restruct_Daily_Min]
 (SoldDate,CreditID,ClientID,Balance_Total,DaysBucket_Credit,DaysFact_Total,DaysIFRS,IRR_Values,
  StateName_Final,TypeName_Sticky_Final,CreditStatus_Base,LastBranchID,LastEmployeeID,IsSpecialBranch,
  SegmentIFRS,ParIFRS,StageName,EmployeePositionID)
@@ -2567,7 +2567,7 @@ DROP TABLE #EmployeePos;
 
 -- Summary
 DECLARE @cnt bigint;
-SELECT @cnt = COUNT_BIG(*) FROM [mis].[Gold_Fact_Restruct_Daily_Min_test];
+SELECT @cnt = COUNT_BIG(*) FROM [mis].[Gold_Fact_Restruct_Daily_Min];
 PRINT N'🏁 Successfully Inserted. Rows: ' + CONVERT(varchar(30), @cnt);
 
 COMMIT TRAN;

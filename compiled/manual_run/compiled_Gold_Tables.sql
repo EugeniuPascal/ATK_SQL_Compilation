@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-12-18 10:14:33
+-- Generated: 2025-12-18 10:39:44
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (20):
 --   mis.Gold_Dim_AppUsers.sql
@@ -2342,7 +2342,7 @@ CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min]
     ParIFRS nvarchar(20) NULL,
     StageName nvarchar(200) NULL,
     EmployeePositionID varchar(36) NULL,
-    CONSTRAINT PK_Gold_Fact_RestructDailyMin_test
+    CONSTRAINT PK_Gold_Fact_RestructDailyMin
         PRIMARY KEY (ClientID, CreditID, SoldDate)
 );
 

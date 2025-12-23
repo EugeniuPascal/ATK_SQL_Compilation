@@ -1,7 +1,12 @@
-﻿------------------------------------------------------------
+﻿USE ATK;
+GO
+
+SET NOCOUNT ON;
+
+------------------------------------------------------------
 -- 0) Набор спец-филиалов (которые нужно ИСКЛЮЧИТЬ и протягивать поверх)
 ------------------------------------------------------------
-DECLARE @SpecialBranches TABLE (BranchID varchar(64) PRIMARY KEY);
+DECLARE @SpecialBranches TABLE (BranchID VARCHAR(36) PRIMARY KEY);
 
 INSERT INTO @SpecialBranches (BranchID)
 VALUES
@@ -17,38 +22,39 @@ VALUES
 IF OBJECT_ID('mis.Silver_Resp_SCD', 'U') IS NOT NULL
     DROP TABLE mis.Silver_Resp_SCD;
 
-CREATE TABLE mis.Silver_Resp_SCD (
-    CreditID        varchar(64) NOT NULL,
-    ValidFrom       date        NOT NULL,
-    ValidTo         date        NOT NULL,
-    BranchID        varchar(64) NULL,
-    ExpertID        varchar(64) NULL,
-    IsSpecialBranch bit         NOT NULL,
-    FinalBranchID   varchar(64) NULL,
-    FinalExpertID   varchar(64) NULL,
+CREATE TABLE mis.Silver_Resp_SCD 
+(
+    CreditID        VARCHAR(36) NOT NULL,
+    ValidFrom       DATE        NOT NULL,
+    ValidTo         DATE        NOT NULL,
+    BranchID        VARCHAR(36) NULL,
+    ExpertID        VARCHAR(36) NULL,
+    IsSpecialBranch BIT         NOT NULL,
+    FinalBranchID   VARCHAR(36) NULL,
+    FinalExpertID   VARCHAR(36) NULL,
     CONSTRAINT PK_Resp_SCD PRIMARY KEY (CreditID, ValidFrom)
 );
 
 ------------------------------------------------------------
 -- 2) База по регистру: одна запись на дату (снимаем дубли)
 ------------------------------------------------------------
-DECLARE @DateFrom date = '2010-01-01';
+DECLARE @DateFrom DATE = '2023-09-01';
 
 SELECT
     r.[ОтветственныеПоКредитамВыданным Кредит ID]            AS CreditID,
-    CAST(r.[ОтветственныеПоКредитамВыданным Период] AS date) AS PeriodDate,
+    CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) AS PeriodDate,
     r.[ОтветственныеПоКредитамВыданным Филиал ID]            AS BranchID,
     r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS ExpertID,
     ROW_NUMBER() OVER (
         PARTITION BY r.[ОтветственныеПоКредитамВыданным Кредит ID],
-                     CAST(r.[ОтветственныеПоКредитамВыданным Период] AS date)
+                     CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE)
         ORDER BY r.[ОтветственныеПоКредитамВыданным Номер Строки] DESC,
                  r.[ОтветственныеПоКредитамВыданным ID] DESC
     ) AS rn
 INTO #RespBaseRaw
 FROM mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] r
 WHERE r.[ОтветственныеПоКредитамВыданным Активность] = 1
-  AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS date) >= @DateFrom;
+  AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) >= @DateFrom;
 
 SELECT CreditID, PeriodDate, BranchID, ExpertID
 INTO #RespBase
@@ -78,7 +84,8 @@ DROP TABLE #RespBaseRaw;
 				 ) OVER (PARTITION BY CreditID ORDER BY PeriodDate ROWS UNBOUNDED PRECEDING), 0) AS grp
     FROM #RespBase
 )
-INSERT INTO mis.Silver_Resp_SCD (
+INSERT INTO mis.Silver_Resp_SCD 
+(
     CreditID, ValidFrom, ValidTo,
     BranchID, ExpertID,
     IsSpecialBranch, FinalBranchID, FinalExpertID
@@ -86,7 +93,7 @@ INSERT INTO mis.Silver_Resp_SCD (
 SELECT
     s.CreditID,
     s.ValidFrom,
-    COALESCE(DATEADD(DAY,-1,s.NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo,
+    COALESCE(DATEADD(DAY,-1,s.NextFrom), CONVERT(DATE,'9999-12-31')) AS ValidTo,
     s.BranchID,
     s.ExpertID,
     s.IsSpecialBranch,

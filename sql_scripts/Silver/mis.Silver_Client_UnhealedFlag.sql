@@ -18,7 +18,7 @@ END;
 -- 1) Prepare parameters
 ------------------------------------------------------------
 DECLARE @DateFrom date = '2023-09-01';
-DECLARE @DateTo   date = '2025-12-31';
+DECLARE @DateTo   date = '2026-12-31';
 DECLARE @Today    date = CAST(GETDATE() AS date);
 IF (@DateTo > @Today) SET @DateTo = @Today;
 

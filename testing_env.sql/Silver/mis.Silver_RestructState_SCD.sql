@@ -1,10 +1,16 @@
-﻿IF OBJECT_ID('mis.Silver_RestructState_SCD','U') IS NULL
+﻿USE ATK;
+GO
+
+SET NOCOUNT ON;
+
+IF OBJECT_ID('mis.Silver_RestructState_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_RestructState_SCD (
-        CreditID   varchar(64)   NOT NULL,
-        ValidFrom  date          NOT NULL,
-        ValidTo    date          NOT NULL,
-        StateName  nvarchar(200) NULL,
+    CREATE TABLE mis.Silver_RestructState_SCD 
+	(
+        CreditID   VARCHAR(36)   NOT NULL,
+        ValidFrom  DATE          NOT NULL,
+        ValidTo    DATE          NOT NULL,
+        StateName  NVARCHAR(50)  NULL,
         CONSTRAINT PK_Silver_RestructState_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END
@@ -16,12 +22,12 @@ END
 ;WITH src AS (
     SELECT
         s.[СостоянияРеструктурированныхКредитов Кредит ID] AS CreditID,
-        CAST(s.[СостоянияРеструктурированныхКредитов Период] AS date) AS PeriodDate,
+        CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE) AS PeriodDate,
         s.[СостоянияРеструктурированныхКредитов Состояние Реструктурированного Кредита] AS StateName,
         ROW_NUMBER() OVER (
             PARTITION BY
                 s.[СостоянияРеструктурированныхКредитов Кредит ID],
-                CAST(s.[СостоянияРеструктурированныхКредитов Период] AS date)
+                CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE)
             ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
         ) AS rn
     FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
@@ -44,6 +50,6 @@ INSERT INTO mis.Silver_RestructState_SCD
 SELECT
     CreditID,
     ValidFrom,
-    COALESCE(DATEADD(day,-1, NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo,
+    COALESCE(DATEADD(day,-1, NextFrom), CONVERT(DATE,'9999-12-31')) AS ValidTo,
     StateName
 FROM rng;

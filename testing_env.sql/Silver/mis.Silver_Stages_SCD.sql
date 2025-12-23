@@ -1,13 +1,19 @@
-﻿------------------------------------------------------------
+﻿USE ATK;
+GO
+
+SET NOCOUNT ON;
+
+------------------------------------------------------------
 -- 1) Ensure target table exists
 ------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_Stages_SCD','U') IS NULL
 BEGIN
-    CREATE TABLE mis.Silver_Stages_SCD (
-        CreditID   varchar(64)   NOT NULL,
-        ValidFrom  date          NOT NULL,
-        ValidTo    date          NOT NULL,
-        StageName  nvarchar(200) NULL,
+    CREATE TABLE mis.Silver_Stages_SCD 
+	(
+        CreditID   VARCHAR(36)   NOT NULL,
+        ValidFrom  DATE          NOT NULL,
+        ValidTo    DATE          NOT NULL,
+        StageName  NVARCHAR(50)  NULL,
         CONSTRAINT PK_Silver_Stages_SCD PRIMARY KEY (CreditID, ValidFrom)
     );
 END
@@ -21,7 +27,7 @@ END;
 ------------------------------------------------------------
 ;WITH src AS (
     SELECT
-        CAST([СтадииКредитов Период] AS date) AS PeriodDate,
+        CAST([СтадииКредитов Период] AS DATE) AS PeriodDate,
         [СтадииКредитов Кредит ID]           AS CreditID,
         [СтадииКредитов Стадия]              AS StageName,
         [СтадииКредитов ID]                  AS RowId
@@ -67,10 +73,11 @@ slices AS (
         CreditID,
         StageName,
         ValidFrom,
-        COALESCE(DATEADD(day,-1,NextFrom), CONVERT(date,'9999-12-31')) AS ValidTo
+        COALESCE(DATEADD(day,-1,NextFrom), CONVERT(DATE,'9999-12-31')) AS ValidTo
     FROM grid
 )
-INSERT INTO mis.Silver_Stages_SCD (CreditID, ValidFrom, ValidTo, StageName)
+INSERT INTO mis.Silver_Stages_SCD 
+           (CreditID, ValidFrom, ValidTo, StageName)
 SELECT CreditID, ValidFrom, ValidTo, StageName
 FROM slices;
 
@@ -87,7 +94,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM sys.stats  WHERE object_id=@obj_id AND name=@stat)
        AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=@obj_id AND name=@stat)
     BEGIN
-        DECLARE @sql nvarchar(4000)=
+        DECLARE @sql NVARCHAR(4000)=
             N'DROP STATISTICS '+QUOTENAME(@schema)+N'.'+QUOTENAME(@table)+N'.'+QUOTENAME(@stat)+N';';
         EXEC (@sql);
     END;

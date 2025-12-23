@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-12-22 17:18:15
+-- Generated: 2025-12-23 13:02:19
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (21):
 --   mis.Gold_Dim_AppUsers.sql
@@ -2371,7 +2371,7 @@ USE [ATK];
 SET NOCOUNT ON;
 
 DECLARE @DateFrom date = '2023-09-01';
-DECLARE @DateTo   date = '2025-12-31';
+DECLARE @DateTo   date = '2026-12-31';
 
 PRINT N'=== Compiled [mis].[Gold_Fact_Restruct_Daily_Min] for Period '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';

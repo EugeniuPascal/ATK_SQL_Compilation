@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2025-12-23 13:02:19
+-- Generated: 2025-12-24 10:04:48
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (21):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1724,7 +1724,7 @@ GO
 
 INSERT INTO mis.[Gold_Fact_BudgetEmployees]
 SELECT
-    s.[БюджетПоСотрудникам ID] AS EmployeeID,
+    s.[БюджетПоСотрудникам.Сотрудники Сотрудник ID] AS EmployeeID,
     s.[БюджетПоСотрудникам.Сотрудники Сотрудник] AS Employee,
     s.[БюджетПоСотрудникам.Сотрудники Сумма Выдано] AS AmountIssued,
     s.[БюджетПоСотрудникам.Сотрудники Сумма Портфель] AS PortfolioAmount,

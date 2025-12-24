@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2025-12-23 13:02:29.581089
+-- Generated: 2025-12-24 10:05:00.748431
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 21
 --   mis.Gold_Dim_AppUsers.sql
@@ -1647,7 +1647,7 @@ CREATE TABLE mis.[Gold_Fact_BudgetEmployees]
 
 INSERT INTO mis.[Gold_Fact_BudgetEmployees]
 SELECT
-    s.[БюджетПоСотрудникам ID] AS EmployeeID,
+    s.[БюджетПоСотрудникам.Сотрудники Сотрудник ID] AS EmployeeID,
     s.[БюджетПоСотрудникам.Сотрудники Сотрудник] AS Employee,
     s.[БюджетПоСотрудникам.Сотрудники Сумма Выдано] AS AmountIssued,
     s.[БюджетПоСотрудникам.Сотрудники Сумма Портфель] AS PortfolioAmount,

@@ -491,3 +491,400 @@ SELECT [ОбъединеннаяИнтернетЗаявка ID], [Объеди�
   SELECT DISTINCT [ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
 FROM [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка]
 WHERE [ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] LIKE 'B7FD00155D65140C11F0B32251E18C%';
+
+---------------------------------------------------------------------------------------------------------------
+SELECT TABLE_SCHEMA, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'dbo'
+AND TABLE_NAME LIKE 'РегистрыБухгалтерии.РегистрПланСчетовОсновной'
+
+  FROM dbo.[РегистрыБухгалтерии.РегистрПланСчетовОсновной]
+ -- WHERE [РегистрПланСчетовОсновной ПериодДата] BETWEEN '2025-03-01' AND '2025-03-31' 
+ -- AND [РегистрПланСчетовОсновной Содержание] LIKE '%24070004842'
+
+  --AND [РегистрПланСчетовОсновной Счет Дт ID] = 'b77f00155d65140c11eef7e7ec1e7a70'
+  --AND [РегистрПланСчетовОсновной Счет Дт ID] = 'b77f00155d65140c11eef7e7ec1e7a70'
+  WHERE [РегистрПланСчетовОсновной ID] = '80490018FEFB2E3711DC9DC660C6E26D'
+  --WHERE [РегистрПланСчетовОсновной Счет Кт ID] = 'b77f00155d65140c11eef7e7ec1e7a70'
+  
+  
+  
+  	SELECT TOP (1000) [_Period]
+      ,[_RecorderTRef]
+      ,[_RecorderRRef]
+      ,[_LineNo]
+      ,[_Active]
+      ,[_AccountDtRRef]
+      ,[_AccountCtRRef]
+      ,[_Fld11918DtRRef]
+      ,[_Fld11918CtRRef]
+      ,[_Fld11919RRef]
+      ,[_Fld11920]
+      ,[_Fld11921Dt]
+      ,[_Fld11921Ct]
+      ,[_Fld11922Dt]
+      ,[_Fld11922Ct]
+      ,[_Fld11923]
+      ,[_Fld11924Dt]
+      ,[_Fld11924Ct]
+      ,[_Fld11925]
+      ,[_Fld11926RRef]
+      ,[_ValueDt1_TYPE]
+      ,[_ValueDt1_RTRef]
+      ,[_ValueDt1_RRRef]
+      ,[_KindDt1RRef]
+      ,[_ValueCt1_TYPE]
+      ,[_ValueCt1_RTRef]
+      ,[_ValueCt1_RRRef]
+      ,[_KindCt1RRef]
+      ,[_ValueDt2_TYPE]
+      ,[_ValueDt2_RTRef]
+      ,[_ValueDt2_RRRef]
+      ,[_KindDt2RRef]
+      ,[_ValueCt2_TYPE]
+      ,[_ValueCt2_RTRef]
+      ,[_ValueCt2_RRRef]
+      ,[_KindCt2RRef]
+      ,[_ValueDt3_TYPE]
+      ,[_ValueDt3_RTRef]
+      ,[_ValueDt3_RRRef]
+      ,[_KindDt3RRef]
+      ,[_ValueCt3_TYPE]
+      ,[_ValueCt3_RTRef]
+      ,[_ValueCt3_RRRef]
+      ,[_KindCt3RRef]
+  FROM [Microinvest_Copy_Full].[dbo].[_AccRg11917]
+--- where [_Fld11925] = N'Sporirea com. de adm. Vasilatii Iurie Cr.: 2234036'
+  --where [_ValueDt2_RRRef] =0x812800155D65040111ECED6655ECF45A
+  --AND [_RecorderRRef] = 0xB72100155D65140C11ED54711641D562
+  where [_ValueDt2_RRRef] = 0x812500155d65040111ece1892bc9762d
+  AND _Period >= '2022-09-07T00:00:00'
+  AND _Period < '2022-09-08T00:00:00'
+  
+  
+  [_ValueDt2_RRRef] = 0x812500155d65040111ece1892bc9762d = CreditID
+  
+  
+  
+  
+  /* ============================================================
+   Fact_PenaltiesDaily (single-credit build, optimized)
+   + Stornare из Fact_PenaltiesNegAdj
+   + Penalitate_Achitat считается по счёту …E3F (как Penalitate_SprePlata)
+   + Rezerva_suma считается только если Penalitate<>0 И Stornare<>1
+   + Penalitate_Adj: CASE WHEN Stornare=1 THEN NegAdj.Penalitate_Adj ELSE Penalitate
+   ============================================================ */
+USE [ATK];
+SET NOCOUNT ON;
+
+DECLARE @DateFrom     date = '2022-05-29';
+DECLARE @DateTo       date = '2025-11-01'; -- exclusive
+DECLARE @CreditID_bin varbinary(32) = 0x813F00155D65040111ED4559CCFF74D7; -- тест-кредит
+
+/* Целевая таблица: пересоздаём */
+DROP TABLE IF EXISTS ATK.dbo.Fact_PenaltiesDaily;
+
+/* 1) GOLD по одному кредиту в окне дат -> #dc_one */
+DROP TABLE IF EXISTS #dc_one;
+
+SELECT
+    COALESCE(
+        TRY_CONVERT(varbinary(32), gdcw.CreditID, 2),
+        TRY_CONVERT(varbinary(32), gdcw.CreditID)
+    )                                   AS CreditID_bin,
+    gdcw.Amount,
+    CAST(gdcw.DisbursedDate AS date)    AS DisbursedDate,
+    CASE WHEN UPPER(LTRIM(RTRIM(gdcw.Currency))) = 'EUR' THEN 1 ELSE 0 END AS IsEUR
+INTO #dc_one
+FROM [ATK].[mis].[Gold_Dim_Credits_WithCounterparty_tbl] AS gdcw
+WHERE gdcw.DisbursedDate IS NOT NULL
+  AND gdcw.DisbursedDate >= @DateFrom
+  AND gdcw.DisbursedDate <  @DateTo
+  AND COALESCE(
+        TRY_CONVERT(varbinary(32), gdcw.CreditID, 2),
+        TRY_CONVERT(varbinary(32), gdcw.CreditID)
+      ) = @CreditID_bin;
+
+CREATE UNIQUE NONCLUSTERED INDEX IX_dc_one ON #dc_one(CreditID_bin);
+
+/* 2) Подготовим место под свод день × кредит */
+DROP TABLE IF EXISTS #FactRaw;
+
+/* 3) Dt/Ct только по этому кредиту → свод в #FactRaw */
+;WITH dt AS (
+    SELECT
+        CAST(src.[_Period] AS date) AS [Date],
+        src.[_ValueDt2_RRRef]       AS CreditID_bin,
+        CONVERT(char(32), src.[_ValueDt2_RRRef], 2) AS CreditID_hex,
+
+        /* Penalitate = FC2 + AA2 */
+        SUM(CASE WHEN src.[_AccountDtRRef] IN (0xB8A9001CC441144C11E5FDB834628FC2,
+                                               0x80D600155D010F0111E6F2229F3A5AA2)
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Penalitate,
+
+        /* Comision_admin (…AA5) */
+        SUM(CASE WHEN src.[_AccountDtRRef] = 0x80D600155D010F0111E6F2229F3A5AA5
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Comision_admin,
+
+        /* Comision_debursare (…E2C) */
+        SUM(CASE WHEN src.[_AccountDtRRef] = 0xB8A9001CC441144C11E5FDB834628E2C
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Comision_debursare,
+
+        /* Dobinda (…E26) */
+        SUM(CASE WHEN src.[_AccountDtRRef] = 0xB8A9001CC441144C11E5FDB834628E26
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Dobinda,
+
+        /* Acordare_imprumut = DBF + E5D */
+        SUM(CASE WHEN src.[_AccountDtRRef] IN (0xB8A9001CC441144C11E5FDB834628DBF,
+                                               0xB8A9001CC441144C11E5FDB834628E5D)
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Acordare_imprumut,
+
+        /* SprePlata (Dt) */
+        SUM(CASE WHEN src.[_AccountDtRRef] = 0xB8A9001CC441144C11E5FDB834628E2C
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Comision_debursare_SprePlata,
+        SUM(CASE WHEN src.[_AccountDtRRef] = 0xB8A9001CC441144C11E5FDB834628E2E
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Comision_administrare_SprePlata,
+
+        /* Penalitate_SprePlata (Dt) = …E3F */
+        SUM(CASE WHEN src.[_AccountDtRRef] = 0xB8A9001CC441144C11E5FDB834628E3F
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Penalitate_SprePlata,
+
+        /* Achitat = 0 (в Ct) */
+        CAST(0 AS decimal(38,10)) AS Comision_debursare_Achitat,
+        CAST(0 AS decimal(38,10)) AS Comision_administrare_Achitat,
+        CAST(0 AS decimal(38,10)) AS Penalitate_Achitat,
+
+        /* фикс-атрибуты */
+        MAX(dc.Amount)                                 AS Amount,
+        CAST(MAX(dc.Amount) * 0.0004 AS DECIMAL(19,4)) AS Max_Plafon,
+        MAX(dc.DisbursedDate)                          AS DisbursedDate
+    FROM [Microinvest_Copy_Full].[dbo].[_AccRg11917] AS src
+    JOIN #dc_one dc
+      ON dc.CreditID_bin = src.[_ValueDt2_RRRef]
+    WHERE src.[_Period] >= @DateFrom
+      AND src.[_Period] <  @DateTo
+      AND src.[_ValueDt2_RRRef] = @CreditID_bin
+    GROUP BY CAST(src.[_Period] AS date), src.[_ValueDt2_RRRef]
+),
+ct AS (
+    SELECT
+        CAST(src.[_Period] AS date) AS [Date],
+        src.[_ValueCt2_RRRef]       AS CreditID_bin,
+        CONVERT(char(32), src.[_ValueCt2_RRRef], 2) AS CreditID_hex,
+
+        /* базовые метрики = 0 */
+        CAST(0 AS decimal(38,10)) AS Penalitate,
+        CAST(0 AS decimal(38,10)) AS Comision_admin,
+        CAST(0 AS decimal(38,10)) AS Comision_debursare,
+        CAST(0 AS decimal(38,10)) AS Dobinda,
+        CAST(0 AS decimal(38,10)) AS Acordare_imprumut,
+
+        /* SprePlata (Ct) = 0 */
+        CAST(0 AS decimal(38,10)) AS Comision_debursare_SprePlata,
+        CAST(0 AS decimal(38,10)) AS Comision_administrare_SprePlata,
+        CAST(0 AS decimal(38,10)) AS Penalitate_SprePlata,
+
+        /* Achitat (…E2C, …E2E, …E3F) */
+        SUM(CASE WHEN src.[_AccountDtRRef] = 0xB8A9001CC441144C11E5FDB834628E2C
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Comision_debursare_Achitat,
+        SUM(CASE WHEN src.[_AccountDtRRef] = 0xB8A9001CC441144C11E5FDB834628E2E
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Comision_administrare_Achitat,
+        SUM(CASE WHEN src.[_AccountCtRRef] = 0xB8A9001CC441144C11E5FDB834628E3F
+                 THEN CASE WHEN dc.IsEUR = 1 THEN src.[_Fld11922Dt] ELSE src.[_Fld11920] END ELSE 0 END) AS Penalitate_Achitat,
+
+        /* фикс-атрибуты */
+        MAX(dc.Amount)                                 AS Amount,
+        CAST(MAX(dc.Amount) * 0.0004 AS DECIMAL(19,4)) AS Max_Plafon,
+        MAX(dc.DisbursedDate)                          AS DisbursedDate
+    FROM [Microinvest_Copy_Full].[dbo].[_AccRg11917] AS src
+    JOIN #dc_one dc
+      ON dc.CreditID_bin = src.[_ValueCt2_RRRef]
+    WHERE src.[_Period] >= @DateFrom
+      AND src.[_Period] <  @DateTo
+      AND src.[_ValueCt2_RRRef] = @CreditID_bin
+    GROUP BY CAST(src.[_Period] AS date), src.[_ValueCt2_RRRef]
+)
+SELECT
+    X.[Date],
+    X.CreditID_bin,
+    CONVERT(char(32), X.CreditID_bin, 2) AS CreditID_hex,
+
+    SUM(X.Penalitate)              AS Penalitate,
+    SUM(X.Comision_admin)          AS Comision_admin,
+    SUM(X.Comision_debursare)      AS Comision_debursare,
+    SUM(X.Dobinda)                 AS Dobinda,
+    SUM(X.Acordare_imprumut)       AS Acordare_imprumut,
+
+    SUM(X.Comision_debursare_SprePlata)     AS Comision_debursare_SprePlata,
+    SUM(X.Comision_administrare_SprePlata)  AS Comision_administrare_SprePlata,
+    SUM(X.Penalitate_SprePlata)             AS Penalitate_SprePlata,
+
+    SUM(X.Comision_debursare_Achitat)       AS Comision_debursare_Achitat,
+    SUM(X.Comision_administrare_Achitat)    AS Comision_administrare_Achitat,
+    SUM(X.Penalitate_Achitat)               AS Penalitate_Achitat,
+
+    MAX(X.Amount)                            AS Amount,
+    CAST(MAX(X.Amount) * 0.0004 AS DECIMAL(19,4)) AS Max_Plafon,
+    MAX(X.DisbursedDate)                     AS DisbursedDate
+INTO #FactRaw
+FROM (SELECT * FROM dt UNION ALL SELECT * FROM ct) AS X
+GROUP BY X.[Date], X.CreditID_bin;
+
+CREATE NONCLUSTERED INDEX IX_FactRaw_Date ON #FactRaw([Date]);
+
+/* 4) Финал ... */
+WITH PenalOnly AS (
+    SELECT
+        fr.CreditID_bin,
+        fr.[Date],
+        DATEDIFF(day, CONVERT(date,'2000-01-01'), fr.[Date])
+      - ROW_NUMBER() OVER (PARTITION BY fr.CreditID_bin ORDER BY fr.[Date]) AS grp_key
+    FROM #FactRaw fr
+    WHERE ISNULL(fr.Penalitate,0) <> 0
+)
+SELECT
+    fr.[Date],
+    fr.CreditID_bin,
+    CONVERT(char(32), fr.CreditID_bin, 2) AS CreditID_hex,
+
+    fr.Penalitate,
+    fr.Comision_admin,
+    fr.Comision_debursare,
+    fr.Dobinda,
+    fr.Acordare_imprumut,
+
+    fr.Comision_debursare_SprePlata,
+    fr.Comision_administrare_SprePlata,
+    fr.Penalitate_SprePlata,
+
+    fr.Comision_debursare_Achitat,
+    fr.Comision_administrare_Achitat,
+    fr.Penalitate_Achitat,
+
+    fr.Amount,
+    vals.Max_Plafon,
+    fr.DisbursedDate,
+
+    /* Zile_Restanta: подряд дни Penalitate <> 0 */
+    CASE WHEN po.grp_key IS NULL THEN 0
+         ELSE ROW_NUMBER() OVER (PARTITION BY fr.CreditID_bin, po.grp_key ORDER BY fr.[Date])
+    END AS Zile_Restanta,
+
+    /* Depasire_Plafon и Rezerva_suma — из calc2, чтобы совпадала логика с кумулятивами */
+    calc2.Depasire_Plafon_Calc AS Depasire_Plafon,
+    calc2.Rezerva_suma_Calc   AS Rezerva_suma,
+
+    /* Penalitate_Adj по правилу Stornare */
+    calc.Penalitate_Adj_Calc  AS Penalitate_Adj,
+
+    /* корректировки + Stornare (остальные — как в источнике) */
+    adj.Comision_admin_Adj,
+    adj.Comision_debursare_Adj,
+    ISNULL(adj.Stornare, 0)   AS Stornare,
+
+    /* Кумулятивы (старые) */
+    SUM(fr.Comision_admin) OVER (
+        PARTITION BY fr.CreditID_bin ORDER BY fr.[Date]
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS Comision_admin_Cum,
+
+    SUM(fr.Penalitate) OVER (
+        PARTITION BY fr.CreditID_bin ORDER BY fr.[Date]
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS Penalitate_Cum,
+
+    SUM(fr.Comision_administrare_Achitat) OVER (
+        PARTITION BY fr.CreditID_bin ORDER BY fr.[Date]
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS Comision_administrare_Achitat_Cum,
+
+    SUM(fr.Penalitate_Achitat) OVER (
+        PARTITION BY fr.CreditID_bin ORDER BY fr.[Date]
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS Penalitate_Achitat_Cum,
+
+    /* НОВЫЕ кумулятивы */
+    SUM(calc.Penalitate_Adj_Calc) OVER (
+        PARTITION BY fr.CreditID_bin ORDER BY fr.[Date]
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS Penalitate_Adj_Cum,
+
+    SUM(calc2.Depasire_Plafon_Calc) OVER (
+        PARTITION BY fr.CreditID_bin ORDER BY fr.[Date]
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS Depasire_Plafon_Cum,
+
+    SUM(calc2.Rezerva_suma_Calc) OVER (
+        PARTITION BY fr.CreditID_bin ORDER BY fr.[Date]
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS Rezerva_suma_Cum
+
+INTO ATK.dbo.Fact_PenaltiesDaily
+FROM #FactRaw AS fr
+CROSS APPLY (
+    SELECT
+        CAST(fr.Amount * 0.0004 AS DECIMAL(19,4)) AS Max_Plafon,
+        ISNULL(fr.Comision_admin,0) + ISNULL(fr.Penalitate,0) AS Charges
+) AS vals
+LEFT JOIN PenalOnly AS po
+  ON po.CreditID_bin = fr.CreditID_bin
+ AND po.[Date]       = fr.[Date]
+LEFT JOIN ATK.dbo.Fact_PenaltiesNegAdj AS adj
+  ON adj.CreditID_bin = fr.CreditID_bin
+ AND adj.[Date]       = fr.[Date]
+/* 4.1) Унифицированные расчёты */
+OUTER APPLY (
+    SELECT CASE
+             WHEN ISNULL(adj.Stornare,0) > 0
+               THEN ISNULL(adj.Penalitate_Adj, 0)
+             ELSE ISNULL(fr.Penalitate, 0)
+           END AS Penalitate_Adj_Calc
+) AS calc
+OUTER APPLY (
+    SELECT
+        /* Depasire_Plafon = MAX(0, Charges - Max_Plafon) */
+        CASE WHEN (vals.Charges - vals.Max_Plafon) > 0
+               THEN (vals.Charges - vals.Max_Plafon)
+             ELSE 0
+        END AS Depasire_Plafon_Calc,
+
+        /* Rezerva_suma: только при Stornare<>1 и в серии просрочки; только если результат < 0 */
+        CASE
+          WHEN ISNULL(adj.Stornare,0) <> 1 AND po.grp_key IS NOT NULL THEN
+              CASE
+                WHEN (ISNULL(fr.Comision_admin,0) + calc.Penalitate_Adj_Calc - vals.Max_Plafon) < 0
+                  THEN (ISNULL(fr.Comision_admin,0) + calc.Penalitate_Adj_Calc - vals.Max_Plafon)
+                ELSE 0
+              END
+          ELSE 0
+        END AS Rezerva_suma_Calc
+) AS calc2;
+
+
+
+
+SELECT TOP (1000) [ПланыСчетов.Основной ID]
+      ,[ПланыСчетов.Основной Версия Данных]
+      ,[ПланыСчетов.Основной Пометка Удаления]
+      ,[ПланыСчетов.Основной Родитель ID]
+      ,[ПланыСчетов.Основной Код]
+      ,[ПланыСчетов.Основной Наименование]
+      ,[ПланыСчетов.Основной Порядок]
+      ,[ПланыСчетов.Основной Вид]
+      ,[ПланыСчетов.Основной Забалансовый]
+      ,[ПланыСчетов.Основной Наименование Осн Язык]
+      ,[ПланыСчетов.Основной Порядок в Карточке Долга]
+      ,[ПланыСчетов.Основной Пор Инк]
+      ,[ПланыСчетов.Основной Количественный]
+      ,[ПланыСчетов.Основной Валютный]
+  FROM [ATK].[dbo].[ПланыСчетов.Основной]
+  
+  
+  
+SELECT *
+FROM [ATK].[dbo].[ПланыСчетов.Основной] a
+INNER JOIN [Microinvest_Copy_Full].[dbo].[_AccRg11917] b
+    ON a.[ПланыСчетов.Основной ID] =
+       SUBSTRING(CONVERT(varchar(34), b.[_AccountCtRRef], 2), 3, 32)
+WHERE a.[ПланыСчетов.Основной ID] = 'B8A9001CC441144C11E5FDB834628F23';
+  

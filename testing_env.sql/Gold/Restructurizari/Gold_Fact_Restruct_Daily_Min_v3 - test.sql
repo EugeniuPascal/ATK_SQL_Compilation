@@ -256,6 +256,7 @@ FROM #Joined j
 LEFT JOIN #Flag f
   ON f.ClientID = j.ClientID
  AND f.SoldDate = j.SoldDate
+ WHERE j.CreditID = '813c00155d65040111ed283cc958b111'
 OPTION (RECOMPILE);
 
 PRINT N'✅ Вставка завершена.';

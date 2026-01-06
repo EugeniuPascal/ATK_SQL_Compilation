@@ -35,7 +35,8 @@ WITH LastSvedeniya AS (
         ) AS rn
     FROM [ATK].[dbo].[РегистрыСведений.СведенияОФилиалах]
 )
-INSERT INTO mis.[Gold_Dim_Branch] (
+INSERT INTO mis.[Gold_Dim_Branch] 
+(
     BranchID,
     BranchCode,
     BranchName,

@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-01-05 14:09:19
+-- Generated: 2026-01-06 10:31:34
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (6):
 --   mis.Silver_Restruct_SCD.sql
@@ -288,7 +288,7 @@ IF OBJECT_ID('mis.Silver_Client_UnhealedFlag', 'U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Client_UnhealedFlag 
 	(
-        ClientID    VARCHAR(64) NOT NULL,
+        ClientID    VARCHAR(36) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
         CONSTRAINT PK_Silver_Client_UnhealedFlag1 PRIMARY KEY (ClientID, SoldDate)

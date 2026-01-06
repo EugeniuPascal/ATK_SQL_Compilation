@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-01-05 14:08:40.512091
+-- Generated: 2026-01-06 10:31:45.639654
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 6
 --   mis.Silver_Restruct_SCD.sql
@@ -284,7 +284,7 @@ IF OBJECT_ID(''mis.Silver_Client_UnhealedFlag'', ''U'') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Client_UnhealedFlag 
 	(
-        ClientID    VARCHAR(64) NOT NULL,
+        ClientID    VARCHAR(36) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
         CONSTRAINT PK_Silver_Client_UnhealedFlag1 PRIMARY KEY (ClientID, SoldDate)

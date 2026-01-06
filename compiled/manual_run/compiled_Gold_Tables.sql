@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-01-05 14:09:22
+-- Generated: 2026-01-06 10:31:37
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (21):
 --   mis.Gold_Dim_AppUsers.sql
@@ -394,7 +394,7 @@ GO
 CREATE TABLE mis.[Gold_Dim_Credits] 
 (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
-    [Owner] NVARCHAR(100) NULL,
+    [Owner] VARCHAR(36) NULL,
     [Code] NVARCHAR(50) NULL,
     [Name] NVARCHAR(255) NULL,
     [IssueDate] DATE NULL,
@@ -2372,7 +2372,7 @@ SET NOCOUNT ON;
 
 /* ================== ПАРАМЕТРЫ ================== */
 DECLARE @DateFrom date = '2023-09-01';
-DECLARE @DateTo   date = '2025-12-31';
+DECLARE @DateTo   date = '2026-12-31';
 
 PRINT N'=== Пересборка [mis].[Gold_Fact_Restruct_Daily_Min] за период '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';
@@ -2397,8 +2397,8 @@ END;
 CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Min] 
 (
     SoldDate               date          NOT NULL,
-    CreditID               varchar(64)   NOT NULL,
-    ClientID               varchar(64)   NOT NULL,
+    CreditID               varchar(36)   NOT NULL,
+    ClientID               varchar(36)   NOT NULL,
     Balance_Total          money         NULL,
     DaysBucket_Credit      int           NULL,
     DaysFact_Total         int           NULL,
@@ -2594,8 +2594,10 @@ SELECT
     j.DaysIFRS,
     CASE
         WHEN f.ClientID IS NOT NULL
-         AND ISNULL(j.StateName_Final, N'') <> N'НеИзлеченный'
+        AND ISNULL(j.StateName_Final, N'') <> N'НеИзлеченный'
         THEN N'Nevindecat contaminat'
+		WHEN j.StateName_Final = N'Излеченный' THEN N'Vindecat'
+        WHEN j.StateName_Final = N'НеИзлеченный' THEN N'Nevindecat'
         ELSE j.StateName_Final
     END AS StateName_Final,
     CASE

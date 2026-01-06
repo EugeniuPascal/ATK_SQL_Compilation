@@ -860,7 +860,7 @@ OUTER APPLY (
         END AS Rezerva_suma_Calc
 ) AS calc2;
 
-
+satul todiresti 
 
 
 SELECT TOP (1000) [ПланыСчетов.Основной ID]
@@ -887,4 +887,6 @@ INNER JOIN [Microinvest_Copy_Full].[dbo].[_AccRg11917] b
     ON a.[ПланыСчетов.Основной ID] =
        SUBSTRING(CONVERT(varchar(34), b.[_AccountCtRRef], 2), 3, 32)
 WHERE a.[ПланыСчетов.Основной ID] = 'B8A9001CC441144C11E5FDB834628F23';
+  
+  
   

@@ -74,6 +74,7 @@ PRINT N'Шаг 1 — подготовка базы...';
           AND s.[СуммыЗадолженностиПоПериодамПросрочки Дата] >= r.ValidFrom
           AND s.[СуммыЗадолженностиПоПериодамПросрочки Дата] <= r.ValidTo
     WHERE s.[СуммыЗадолженностиПоПериодамПросрочки Дата] BETWEEN @DateFrom AND @DateTo
+	--AND s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = '813c00155d65040111ed283cc958b111'
 )
 SELECT
     SoldDate, CreditID, ClientID,
@@ -259,6 +260,7 @@ FROM #Joined j
 LEFT JOIN #Flag f
   ON f.ClientID = j.ClientID
  AND f.SoldDate = j.SoldDate
+--WHERE j.CreditID = '813c00155d65040111ed283cc958b111'
 OPTION (RECOMPILE);
 
 PRINT N'✅ Вставка завершена.';

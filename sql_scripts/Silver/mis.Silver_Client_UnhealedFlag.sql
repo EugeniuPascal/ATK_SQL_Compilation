@@ -7,7 +7,7 @@ IF OBJECT_ID('mis.Silver_Client_UnhealedFlag', 'U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Client_UnhealedFlag 
 	(
-        ClientID    VARCHAR(64) NOT NULL,
+        ClientID    VARCHAR(36) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
         CONSTRAINT PK_Silver_Client_UnhealedFlag1 PRIMARY KEY (ClientID, SoldDate)

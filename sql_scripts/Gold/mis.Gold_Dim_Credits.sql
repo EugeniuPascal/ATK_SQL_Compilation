@@ -8,7 +8,7 @@ GO
 CREATE TABLE mis.[Gold_Dim_Credits] 
 (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
-    [Owner] NVARCHAR(100) NULL,
+    [Owner] VARCHAR(36) NULL,
     [Code] NVARCHAR(50) NULL,
     [Name] NVARCHAR(255) NULL,
     [IssueDate] DATE NULL,

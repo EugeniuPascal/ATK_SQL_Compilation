@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-01-06 10:31:37
+-- Generated: 2026-01-06 14:50:05
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (21):
 --   mis.Gold_Dim_AppUsers.sql
@@ -109,7 +109,8 @@ WITH LastSvedeniya AS (
         ) AS rn
     FROM [ATK].[dbo].[РегистрыСведений.СведенияОФилиалах]
 )
-INSERT INTO mis.[Gold_Dim_Branch] (
+INSERT INTO mis.[Gold_Dim_Branch] 
+(
     BranchID,
     BranchCode,
     BranchName,

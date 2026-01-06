@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-01-06 10:31:47.920559
+-- Generated: 2026-01-06 14:49:49.802616
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 21
 --   mis.Gold_Dim_AppUsers.sql
@@ -109,7 +109,8 @@ WITH LastSvedeniya AS (
         ) AS rn
     FROM [ATK].[dbo].[РегистрыСведений.СведенияОФилиалах]
 )
-INSERT INTO mis.[Gold_Dim_Branch] (
+INSERT INTO mis.[Gold_Dim_Branch] 
+(
     BranchID,
     BranchCode,
     BranchName,

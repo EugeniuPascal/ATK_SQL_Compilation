@@ -65,7 +65,7 @@ EXEC msdb.dbo.sp_help_jobhistory
     @mode = 'FULL';
 	
 SELECT *
-FROM [ATK].[mis].[2tbl_Gold_Dim_Employees]
+FROM [ATK].[mis].[Gold_Dim_Employees]
 WHERE HireDate IS NOT NULL
 AND EmployeeID IS NOT NULL
 AND BirthDate IS NOT NULL

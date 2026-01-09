@@ -5,6 +5,11 @@ from decimal import Decimal, InvalidOperation
 from tabulate import tabulate
 
 # ============================================================
+# DISPLAY SETTINGS (MATCH SQL DECIMAL)
+# ============================================================
+pd.set_option('display.float_format', '{:.2f}'.format)
+
+# ============================================================
 # CONFIG
 # ============================================================
 EXCEL_PATH = r"C:\ATK_Project\data\Gold_Fact_BudgetBranch\Branch Plan 2025.xlsx"
@@ -38,7 +43,7 @@ def to_decimal_safe(x):
     try:
         if isinstance(x, str):
             x = x.replace(',', '').strip()
-        return round(Decimal(x), 2)
+        return Decimal(x).quantize(Decimal("0.00"))
     except (InvalidOperation, ValueError, TypeError):
         return None
 
@@ -68,13 +73,13 @@ def read_excel(path: str) -> pd.DataFrame:
 # TRANSFORM
 # ============================================================
 def transform(df: pd.DataFrame) -> pd.DataFrame:
-    # Validate columns
     missing = [c for c in COLUMNS if c not in df.columns]
     if missing:
         raise KeyError(f"Missing columns: {missing}")
 
     for col in ['Disbursed', 'Repayments', 'LP']:
         df[col] = df[col].apply(to_decimal_safe)
+        df[col] = df[col].astype(object)  # keep Decimal, avoid float display
 
     df['Month'] = df['Month'].apply(to_datetime_safe)
 
@@ -97,7 +102,6 @@ def load_to_sql(df: pd.DataFrame):
     try:
         cursor.execute("BEGIN TRAN")
 
-        # 🔥 Empty table first
         cursor.execute(f"TRUNCATE TABLE {SQL_TABLE}")
 
         cursor.executemany(f"""
@@ -134,7 +138,7 @@ def main():
     df = read_excel(EXCEL_PATH)
     df = transform(df)
 
-    print(tabulate(df.head(10), headers='keys', tablefmt='psql'))
+    print(tabulate(df.head(21), headers='keys', tablefmt='psql'))
 
     load_to_sql(df)
     print("✅ ETL completed successfully")

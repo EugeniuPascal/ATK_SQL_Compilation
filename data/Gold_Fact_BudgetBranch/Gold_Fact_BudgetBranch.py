@@ -5,11 +5,6 @@ from decimal import Decimal, InvalidOperation
 from tabulate import tabulate
 
 # ============================================================
-# DISPLAY SETTINGS (MATCH SQL DECIMAL)
-# ============================================================
-pd.set_option('display.float_format', '{:.2f}'.format)
-
-# ============================================================
 # CONFIG
 # ============================================================
 EXCEL_PATH = r"C:\ATK_Project\data\Gold_Fact_BudgetBranch\Branch Plan 2025.xlsx"
@@ -79,7 +74,7 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
 
     for col in ['Disbursed', 'Repayments', 'LP']:
         df[col] = df[col].apply(to_decimal_safe)
-        df[col] = df[col].astype(object)  # keep Decimal, avoid float display
+        df[col] = df[col].astype(object)  # keep Decimal for SQL insert
 
     df['Month'] = df['Month'].apply(to_datetime_safe)
 
@@ -102,6 +97,7 @@ def load_to_sql(df: pd.DataFrame):
     try:
         cursor.execute("BEGIN TRAN")
 
+        # Empty the table first
         cursor.execute(f"TRUNCATE TABLE {SQL_TABLE}")
 
         cursor.executemany(f"""
@@ -138,8 +134,18 @@ def main():
     df = read_excel(EXCEL_PATH)
     df = transform(df)
 
-    print(tabulate(df.head(21), headers='keys', tablefmt='psql'))
+    # ----------------------------
+    # DISPLAY FIX: show Decimals exactly like SQL
+    # ----------------------------
+    df_display = df.copy()
+    for col in ['Disbursed', 'Repayments', 'LP']:
+        df_display[col] = df_display[col].apply(lambda x: float(x) if x is not None else None)
 
+    print(tabulate(df_display.head(21), headers='keys', tablefmt='psql', floatfmt=".2f"))
+
+    # ----------------------------
+    # LOAD TO SQL
+    # ----------------------------
     load_to_sql(df)
     print("✅ ETL completed successfully")
 

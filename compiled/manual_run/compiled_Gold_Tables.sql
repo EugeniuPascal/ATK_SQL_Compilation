@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-01-06 14:50:05
+-- Generated: 2026-01-12 11:01:58
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (21):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1128,11 +1128,12 @@ WITH Events AS (
         CASE WHEN sg.[СоставГруппАффилированныхЛиц Исключен] = '00'
              THEN 'Included'
              ELSE 'Excluded'
-        END AS EventType
+        END AS EventType,
+		g.[ГруппыАффилированныхЛиц Пометка Удаления] AS DeletionFlag
     FROM [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
     LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
         ON g.[ГруппыАффилированныхЛиц ID] =
-           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]		   
 ),
 
 Ordered AS (
@@ -1169,6 +1170,7 @@ SELECT
     END AS PeriodEnd
 FROM Ordered
 WHERE EventType = 'Included'
+AND DeletionFlag = '00'
 ORDER BY GroupID, PersonName, PeriodOriginal;
 GO
 ----------------------------------------------------------------------------------------------------

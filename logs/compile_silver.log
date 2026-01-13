@@ -328,3 +328,18 @@
 2026-01-12 11:01:41,794 [INFO] Processing file: mis.Silver_Stages_SCD.sql
 2026-01-12 11:01:41,795 [INFO] Finished file: mis.Silver_Stages_SCD.sql
 2026-01-12 11:01:41,796 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql
+2026-01-13 11:37:08,495 [INFO] === Starting Silver SQL Compilation Job ===
+2026-01-13 11:37:08,496 [INFO] Total SQL files to process: 6
+2026-01-13 11:37:08,496 [INFO] Processing file: mis.Silver_Restruct_SCD.sql
+2026-01-13 11:37:08,497 [INFO] Finished file: mis.Silver_Restruct_SCD.sql
+2026-01-13 11:37:08,497 [INFO] Processing file: mis.Silver_RestructState_SCD.sql
+2026-01-13 11:37:08,498 [INFO] Finished file: mis.Silver_RestructState_SCD.sql
+2026-01-13 11:37:08,498 [INFO] Processing file: mis.Silver_Restruct_Merged_SCD.sql
+2026-01-13 11:37:08,499 [INFO] Finished file: mis.Silver_Restruct_Merged_SCD.sql
+2026-01-13 11:37:08,499 [INFO] Processing file: mis.Silver_Client_UnhealedFlag.sql
+2026-01-13 11:37:08,499 [INFO] Finished file: mis.Silver_Client_UnhealedFlag.sql
+2026-01-13 11:37:08,500 [INFO] Processing file: mis.Silver_Resp_SCD.sql
+2026-01-13 11:37:08,500 [INFO] Finished file: mis.Silver_Resp_SCD.sql
+2026-01-13 11:37:08,500 [INFO] Processing file: mis.Silver_Stages_SCD.sql
+2026-01-13 11:37:08,501 [INFO] Finished file: mis.Silver_Stages_SCD.sql
+2026-01-13 11:37:08,501 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql

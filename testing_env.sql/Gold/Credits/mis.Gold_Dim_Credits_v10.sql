@@ -248,7 +248,7 @@ FinalData AS (
             ELSE crd.[Кредиты Источник Подписания]
         END AS SigningSource,
 		CASE 
-		    WHEN seg.SegmentRevenue = 'Consum non-business'
+		    WHEN crd.[Кредиты Сегмент Доходов] = 'Consum non-business'
 			   AND fp.FinancialProductsMainGroup = 'Business'
 			THEN 'Consumer'
             ELSE fp.FinancialProductsMainGroup
@@ -278,7 +278,7 @@ FinalData AS (
             ELSE cr.Source
         END AS Source,
         lo.LatestOutstandingAmount,
-		seg.SegmentRevenue, 
+		seg.SegmentRevenue,
         gc.GreenCredit,
         gc.CommitteeProt_CrPurpose,
         CASE
@@ -314,6 +314,7 @@ FinalData AS (
         ON crd.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID]
     LEFT JOIN DigitalSignSrc ds ON crd.[Кредиты ID] = ds.CreditID
     LEFT JOIN FormalCredits fc ON crd.[Кредиты ID] = fc.CreditID
+	--WHERE crd.[Кредиты ID] = 'b7ff00155d65140c11f0bf06b5ab56c0'
 )
 
 INSERT INTO mis.[Gold_Dim_Credits] (

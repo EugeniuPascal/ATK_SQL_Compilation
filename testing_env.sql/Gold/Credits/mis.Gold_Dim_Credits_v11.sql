@@ -314,6 +314,7 @@ FinalData AS (
         ON crd.[Кредиты Сектор Экономики ID] = e.[СекторыЭкономики ID]
     LEFT JOIN DigitalSignSrc ds ON crd.[Кредиты ID] = ds.CreditID
     LEFT JOIN FormalCredits fc ON crd.[Кредиты ID] = fc.CreditID
+	--WHERE crd.[Кредиты ID] = 'b7ff00155d65140c11f0bf06b5ab56c0'
 )
 
 INSERT INTO mis.[Gold_Dim_Credits] (

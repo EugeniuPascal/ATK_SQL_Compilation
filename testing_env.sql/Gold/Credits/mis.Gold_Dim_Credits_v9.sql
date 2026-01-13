@@ -247,12 +247,7 @@ FinalData AS (
             WHEN 'Сайт' THEN 'WebSite'
             ELSE crd.[Кредиты Источник Подписания]
         END AS SigningSource,
-		CASE 
-		    WHEN seg.SegmentRevenue = 'Consum non-business'
-			   AND fp.FinancialProductsMainGroup = 'Business'
-			THEN 'Consumer'
-            ELSE fp.FinancialProductsMainGroup
-        END AS FinancialProductsMainGroup,   
+        fp.FinancialProductsMainGroup,
         CASE st.IssuedCreditsStatus
             WHEN 'Закрыт' THEN 'Closed'
             WHEN 'Выдан' THEN 'Disbursed'
@@ -278,7 +273,7 @@ FinalData AS (
             ELSE cr.Source
         END AS Source,
         lo.LatestOutstandingAmount,
-		seg.SegmentRevenue, 
+		seg.SegmentRevenue,
         gc.GreenCredit,
         gc.CommitteeProt_CrPurpose,
         CASE

@@ -343,5 +343,6 @@ INSERT INTO mis.[Gold_Dim_Credits] (
 )
 SELECT *
 FROM FinalData
-;
+--WHERE CreditID = 'BFCA001CC441144C11E2D4E3451398CA';
+
 GO

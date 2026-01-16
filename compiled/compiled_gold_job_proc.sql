@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-01-13 11:37:10.623202
+-- Generated: 2026-01-16 10:01:51.851181
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 21
 --   mis.Gold_Dim_AppUsers.sql
@@ -472,13 +472,27 @@ CreditRequest AS (
 ),
 Resp AS (
     SELECT
-        [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
-        MIN([ОтветственныеПоКредитамВыданным Филиал ID]) AS FirstFilialID,
-        MIN([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS FirstEmployeeID,
-        MAX([ОтветственныеПоКредитамВыданным Филиал ID]) AS LastFilialID,
-        MAX([ОтветственныеПоКредитамВыданным Кредитный Эксперт ID]) AS LastEmployeeID
-    FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным]
-    GROUP BY [ОтветственныеПоКредитамВыданным Кредит ID]
+        CreditID,
+        MAX(CASE WHEN rn_first = 1 THEN FilialID END) AS FirstFilialID,
+        MAX(CASE WHEN rn_first = 1 THEN EmployeeID END) AS FirstEmployeeID,
+        MAX(CASE WHEN rn_last = 1 THEN FilialID END) AS LastFilialID,
+        MAX(CASE WHEN rn_last = 1 THEN EmployeeID END) AS LastEmployeeID
+    FROM (
+        SELECT 
+            [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
+            [ОтветственныеПоКредитамВыданным Филиал ID] AS FilialID,
+            [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS EmployeeID,
+            ROW_NUMBER() OVER(
+                PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
+                ORDER BY [ОтветственныеПоКредитамВыданным Период] ASC
+            ) AS rn_first,
+            ROW_NUMBER() OVER(
+                PARTITION BY [ОтветственныеПоКредитамВыданным Кредит ID]
+                ORDER BY [ОтветственныеПоКредитамВыданным Период] DESC
+            ) AS rn_last
+        FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным]
+    ) t
+    GROUP BY CreditID
 ),
 FinProducts AS (
     SELECT [ФинансовыеПродукты ID] AS FinancialProductID,

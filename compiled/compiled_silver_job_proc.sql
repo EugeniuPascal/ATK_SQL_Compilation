@@ -1,14 +1,15 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-01-13 11:37:08.496908
+-- Generated: 2026-01-16 10:01:49.590037
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
--- Files included: 6
+-- Files included: 7
 --   mis.Silver_Restruct_SCD.sql
 --   mis.Silver_RestructState_SCD.sql
 --   mis.Silver_Restruct_Merged_SCD.sql
 --   mis.Silver_Client_UnhealedFlag.sql
 --   mis.Silver_Resp_SCD.sql
 --   mis.Silver_Stages_SCD.sql
+--   mis.Silver_SCD_GroupMembershipPeriods.sql
 -- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER
 -- =============================================
 
@@ -589,6 +590,76 @@ BEGIN
             INCLUDE (ValidTo, StageName);
     END;
 END;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
+
+    -- Start of: mis.Silver_SCD_GroupMembershipPeriods.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[Silver_SCD_GroupMembershipPeriods]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[Silver_SCD_GroupMembershipPeriods];
+
+CREATE TABLE mis.[Silver_SCD_GroupMembershipPeriods]
+(
+    GroupID        VARCHAR(36) NOT NULL,
+    PersonID       VARCHAR(36) NULL,
+    PersonName     NVARCHAR(255) NOT NULL,
+    GroupName      NVARCHAR(255) NULL,
+    GroupOwner     VARCHAR(36) NULL,
+    PeriodStart    DATETIME2(0) NOT NULL,
+    PeriodEnd      DATETIME2(0) NOT NULL
+);
+
+WITH Events AS (
+    SELECT
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID] AS GroupID,
+        sg.[СоставГруппАффилированныхЛиц Контрагент ID] AS PersonID,
+        sg.[СоставГруппАффилированныхЛиц Контрагент] AS PersonName,
+        sg.[СоставГруппАффилированныхЛиц Период] AS PeriodOriginal,
+        sg.[СоставГруппАффилированныхЛиц Исключен] AS ExcludedFlag,
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц] AS GroupName,
+        g.[ГруппыАффилированныхЛиц Владелец] AS GroupOwner,
+        CASE WHEN sg.[СоставГруппАффилированныхЛиц Исключен] = ''00''
+             THEN ''Included''
+             ELSE ''Excluded''
+        END AS EventType,
+        g.[ГруппыАффилированныхЛиц Пометка Удаления] AS DeletionFlag
+    FROM [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+        ON g.[ГруппыАффилированныхЛиц ID] =
+           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+),
+Ordered AS (
+    SELECT
+        *,
+        LEAD(PeriodOriginal) OVER (
+            PARTITION BY GroupID, PersonName 
+            ORDER BY PeriodOriginal
+        ) AS NextDate,
+        LEAD(EventType) OVER (
+            PARTITION BY GroupID, PersonName 
+            ORDER BY PeriodOriginal
+        ) AS NextType
+    FROM Events
+)
+SELECT
+      GroupID
+    , PersonID
+    , PersonName
+    , GroupName
+    , GroupOwner
+    , PeriodOriginal AS PeriodStart
+    , CASE 
+        WHEN NextType = ''Excluded''
+            THEN DATEADD(SECOND, -1, NextDate)
+        ELSE CONVERT(DATETIME2, ''2222-01-01 00:00:00'')
+      END AS PeriodEnd
+FROM Ordered
+WHERE EventType = ''Included''
+  AND DeletionFlag = ''00''
+ORDER BY GroupID, PersonName, PeriodOriginal;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

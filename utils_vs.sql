@@ -924,4 +924,92 @@ WHERE [_AccountCtRRef] IN
 AND [_ValueDt2_RRRef] = 0x812500155d65040111ece1892bc9762d --credit id
 ORDER BY _Period DESC
   
+ -------------------------------------------
+ SELECT TOP (1000) [CondID] -- Gold_Fact_ConditionsAfterDisb_Last
+      ,[CPDDate] --Gold_Fact_ConditionsAfterDisb_Last( fistdate -closed)
+      ,[CreditID] 
+      ,[ClientID] 
+      ,[GroupOwner]
+      ,[BranchID]
+      ,[SoldCredit]
+      ,[SoldClient]
+      ,[SoldGroup]
+      ,[LoadDttm]
+      ,[BranchID2] BranchLast
+     
+  FROM [ATK].[mis].[2tbl_Gold_Fact_CPD_Sold_v2]
+
+
+
+SELECT TOP (1000) [Period]
+      ,[ObjectType]
+      ,[ObjectID]
+      ,[ID]
+      ,[ConditionType]
+      ,[ConditionObjectType]
+      ,[ConditionObject_S]
+      ,[AdditionalPercent]
+      ,[Deadline]
+      ,[ExecutorID]
+      ,[Executor]
+      ,[IssueDate]
+      ,[Completed]
+      ,[CompletionDate]
+      ,[Comment]
+      ,[Checked]
+      ,[IsAdditionalCondition]
+      ,[Cancelled]
+      ,[CreditRisk]
+      ,[LegalRisk]
+      ,[ApprovedByCommittee]
+      ,[CollateralID]
+      ,[Collateral]
+      ,[CancelledByID]
+      ,[CancelledBy]
+      ,[CheckedByID]
+      ,[CheckedBy]
+      ,[ChangeDate]
+      ,[SourceType]
+      ,[SourceKind]
+      ,[SourceID]
+      ,[ResponsibleID]
+      ,[Responsible]
+      ,[CheckDate]
+      ,[CancelDate]
+      ,[CloseDate]
+      ,[CreditID_Found]
+      ,[ClientID]
+  FROM [ATK].[mis].[Gold_Fact_ConditionsAfterDisb_Last]
+  
+  
+  
+  
+  SELECT TOP (1000) [GroupID]
+      ,[PersonID]
+      ,[PersonName]
+      ,[PeriodOriginal]
+      ,[RowNumber]
+      ,[ActiveFlag]
+      ,[ExcludedFlag]
+      ,[GroupName]
+      ,[GroupOwner]
+      ,[GroupCode]
+      ,[GroupNameFull]
+      ,[GroupOwnerTax]
+      ,[PeriodStart]
+      ,[PeriodEnd]
+  FROM [ATK].[mis].[Gold_Dim_GroupMembershipPeriods]
+  
+  
+  SELECT TOP (1000) [CreditID]
+      ,[ValidFrom]
+      ,[ValidTo]
+      ,[BranchID]
+      ,[ExpertID]
+      ,[IsSpecialBranch]
+      ,[FinalBranchID]
+      ,[FinalExpertID]
+  FROM [ATK].[mis].[Silver_Resp_SCD]
+  
+
   

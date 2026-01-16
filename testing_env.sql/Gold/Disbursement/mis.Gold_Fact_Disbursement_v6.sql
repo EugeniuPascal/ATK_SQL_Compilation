@@ -20,7 +20,6 @@ CREATE TABLE mis.[Gold_Fact_Disbursement]
     CreditCurrency     NVARCHAR(50)   NULL,
     FirstFilialID      NVARCHAR(36)   NULL,
     FirstEmployeeID    NVARCHAR(36)   NULL,
-    EmployeePosition   NVARCHAR(100)  NULL,
     LastFilialID       NVARCHAR(36)   NULL,
     LastEmployeeID     NVARCHAR(36)   NULL,
     IRR                DECIMAL(18,2)  NULL,
@@ -34,14 +33,21 @@ GO
 
 /* ============================
    Build #Base
-============================ */
+   Include last EmployeePositionID based on latest period
+   and proto override for CreditAmount
+   ============================ */
 SELECT
     d.[ДанныеКредитовВыданных Кредит ID]                 AS CreditID,
     k.[Кредиты Владелец]                                 AS ClientID,
     d.[ДанныеКредитовВыданных Дата Выдачи]               AS DisbursementDate,
     d.[ДанныеКредитовВыданных Валюта Кредита ID]         AS CurrencyID,
+
+    -- chosen amount: proto override for specific purpose, else original amount
     finalAmount.ChosenAmount                              AS CreditAmount,
+
+    -- Convert chosen amount to MDL (keeps sign)
     ROUND(finalAmount.ChosenAmount * ISNULL(rate.Rate, 1), 2) AS CreditAmountInMDL,
+
     d.[ДанныеКредитовВыданных Валюта Кредита]            AS CreditCurrency,
     firstR.[ФилиалID]                                     AS FirstFilialID,
     firstR.[ЭкспертID]                                    AS FirstEmployeeID,
@@ -50,8 +56,10 @@ SELECT
     irr.IRR                                               AS IRR,
     irr.IRR_Client                                        AS IRR_Client,
     emp.EmployeePositionID                                 AS EmployeePositionID,
-    emp.EmployeePosition,
+
+    -- Bring proto refinance amount into base (most recent)
     proto_refin.[ПротоколКомитета Сумма Рефинансирования Кредита] AS CreditRefinancingAmount,
+
     rn = ROW_NUMBER() OVER (
             PARTITION BY d.[ДанныеКредитовВыданных Кредит ID]
             ORDER BY d.[ДанныеКредитовВыданных Дата Выдачи]
@@ -61,6 +69,7 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.ДанныеКреди
 INNER JOIN [ATK].[mis].[Bronze_Справочники.Кредиты] k
     ON k.[Кредиты ID] = d.[ДанныеКредитовВыданных Кредит ID]
 
+/* currency rate for period */
 OUTER APPLY (
     SELECT TOP 1 v.[Валюта Курс] AS Rate
     FROM [ATK].[mis].[Bronze_РегистрыСведений.Валюта] v
@@ -69,6 +78,7 @@ OUTER APPLY (
     ORDER BY v.[Валюта Период] DESC
 ) rate
 
+/* earliest responsible (first) */
 OUTER APPLY (
     SELECT TOP 1
            r.[ОтветственныеПоКредитамВыданным Филиал ID]            AS [ФилиалID],
@@ -78,6 +88,7 @@ OUTER APPLY (
     ORDER BY r.[ОтветственныеПоКредитамВыданным Период] ASC
 ) firstR
 
+/* last responsible at month end */
 OUTER APPLY (
     SELECT TOP 1
            r.[ОтветственныеПоКредитамВыданным Филиал ID]            AS [ФилиалID],
@@ -88,6 +99,7 @@ OUTER APPLY (
     ORDER BY r.[ОтветственныеПоКредитамВыданным Период] DESC
 ) lastR_month
 
+/* IRR latest */
 OUTER APPLY (
     SELECT TOP 1
         IRR_Client = ROUND(COALESCE(doc.[УстановкаДанныхКредита Внутренняя Норма Доходности Клиент Годовая], 0), 2),
@@ -103,16 +115,15 @@ OUTER APPLY (
     ORDER BY doc.[УстановкаДанныхКредита Дата] ASC
 ) irr
 
+/* last EmployeePosition based on period */
 OUTER APPLY (
-    SELECT TOP 1 
-           e.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID,
-           e.[СотрудникиДанныеПоЗарплате Должность]    AS EmployeePosition
+    SELECT TOP 1 e.[СотрудникиДанныеПоЗарплате Должность ID] AS EmployeePositionID
     FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] e
     WHERE e.[СотрудникиДанныеПоЗарплате Сотрудник ID] = COALESCE(lastR_month.[ЭкспертID], firstR.[ЭкспертID])
-      AND e.[СотрудникиДанныеПоЗарплате Период] <= d.[ДанныеКредитовВыданных Дата Выдачи]
     ORDER BY e.[СотрудникиДанныеПоЗарплате Период] DESC
 ) emp
 
+/* latest proto committee sum for issuance (used to override amount) */
 OUTER APPLY (
     SELECT TOP 1 p.[ПротоколКомитета Сумма на Выдачу]
     FROM [ATK].[mis].[Bronze_Документы.ПротоколКомитета] p
@@ -120,6 +131,7 @@ OUTER APPLY (
     ORDER BY p.[ПротоколКомитета Дата] DESC, p.[ПротоколКомитета ID] DESC
 ) proto
 
+/* latest proto committee sum for refinancing */
 OUTER APPLY (
     SELECT TOP 1 p2.[ПротоколКомитета Сумма Рефинансирования Кредита]
     FROM [ATK].[mis].[Bronze_Документы.ПротоколКомитета] p2
@@ -127,6 +139,7 @@ OUTER APPLY (
     ORDER BY p2.[ПротоколКомитета Дата] DESC, p2.[ПротоколКомитета ID] DESC
 ) proto_refin
 
+/* final chosen amount logic (keeps negative values as-is) */
 OUTER APPLY (
     SELECT 
         ChosenAmount = CASE
@@ -142,7 +155,7 @@ GO
 
 /* ============================
    Build #Status (cancel/restore)
-============================ */
+   ============================ */
 WITH BaseIDs AS (
     SELECT DISTINCT CreditID FROM #Base
 ),
@@ -173,12 +186,11 @@ GO
 
 /* ============================
    Build #Final
-============================ */
+   ============================ */
 SELECT
     b.CreditID, b.ClientID, b.DisbursementDate, b.CurrencyID,
     b.CreditAmount, b.CreditAmountInMDL, b.CreditCurrency,
-    b.FirstFilialID, b.FirstEmployeeID, b.EmployeePosition,
-    b.LastFilialID, b.LastEmployeeID,
+    b.FirstFilialID, b.FirstEmployeeID, b.LastFilialID, b.LastEmployeeID,
     b.IRR, b.IRR_Client, 1 AS Qty,
     b.EmployeePositionID
 INTO #Final
@@ -190,8 +202,7 @@ INSERT INTO #Final
 SELECT
     b.CreditID, b.ClientID, s.CancelPeriod, b.CurrencyID,
     -b.CreditAmount, -b.CreditAmountInMDL, b.CreditCurrency,
-    b.FirstFilialID, b.FirstEmployeeID, b.EmployeePosition,
-    b.LastFilialID, b.LastEmployeeID,
+    b.FirstFilialID, b.FirstEmployeeID, b.LastFilialID, b.LastEmployeeID,
     b.IRR, b.IRR_Client, -1 AS Qty,
     b.EmployeePositionID
 FROM #Status s
@@ -204,8 +215,7 @@ INSERT INTO #Final
 SELECT
     b.CreditID, b.ClientID, s.RestorePeriod, b.CurrencyID,
     b.CreditAmount, b.CreditAmountInMDL, b.CreditCurrency,
-    b.FirstFilialID, b.FirstEmployeeID, b.EmployeePosition,
-    b.LastFilialID, b.LastEmployeeID,
+    b.FirstFilialID, b.FirstEmployeeID, b.LastFilialID, b.LastEmployeeID,
     b.IRR, b.IRR_Client, 1 AS Qty,
     b.EmployeePositionID
 FROM #Status s
@@ -217,7 +227,8 @@ GO
 
 /* ============================
    Insert into final table
-============================ */
+   Exclude test clients
+   ============================ */
 WITH AllSeq AS (
     SELECT
         f.*,
@@ -231,8 +242,7 @@ INSERT INTO mis.[Gold_Fact_Disbursement]
 (
     CreditID, ClientID, DisbursementDate, CurrencyID, CreditAmount, CreditAmountInMDL,
     CreditCurrency, FirstFilialID, FirstEmployeeID, LastFilialID, LastEmployeeID,
-    IRR, IRR_Client, Qty, NewExisting_Client,
-    EmployeePositionID, EmployeePosition
+    IRR, IRR_Client, Qty, NewExisting_Client, EmployeePositionID
 )
 SELECT
     a.CreditID, a.ClientID, a.DisbursementDate, a.CurrencyID, a.CreditAmount, a.CreditAmountInMDL,
@@ -243,8 +253,7 @@ SELECT
         WHEN a.CreditAmount > 0 THEN N'Existing'
         ELSE N'Cancelled'
     END AS NewExisting_Client,
-    a.EmployeePositionID,
-    a.EmployeePosition
+    a.EmployeePositionID
 FROM AllSeq AS a
 LEFT JOIN dbo.[Справочники.Контрагенты] AS c
     ON a.ClientID = c.[Контрагенты ID]
@@ -253,7 +262,7 @@ GO
 
 /* ============================
    Indexes
-============================ */
+   ============================ */
 CREATE CLUSTERED INDEX CIX_Disbursement_DisbursementDate_ClientID
 ON mis.[Gold_Fact_Disbursement] (DisbursementDate ASC, ClientID ASC);
 
@@ -275,7 +284,7 @@ GO
 
 /* ============================
    Cleanup temp tables
-============================ */
+   ============================ */
 DROP TABLE #Base;
 DROP TABLE #Status;
 DROP TABLE #Final;

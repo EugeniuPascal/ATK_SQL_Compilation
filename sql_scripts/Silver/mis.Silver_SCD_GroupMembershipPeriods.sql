@@ -1,12 +1,10 @@
 ﻿USE [ATK];
 GO
 
--- Drop table if exists
 IF OBJECT_ID('mis.[Silver_SCD_GroupMembershipPeriods]', 'U') IS NOT NULL
     DROP TABLE mis.[Silver_SCD_GroupMembershipPeriods];
 GO
 
--- Create table
 CREATE TABLE mis.[Silver_SCD_GroupMembershipPeriods]
 (
     GroupID        VARCHAR(36) NOT NULL,
@@ -19,7 +17,6 @@ CREATE TABLE mis.[Silver_SCD_GroupMembershipPeriods]
 );
 GO
 
--- CTEs
 WITH Events AS (
     SELECT
         sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID] AS GroupID,
@@ -39,6 +36,20 @@ WITH Events AS (
         ON g.[ГруппыАффилированныхЛиц ID] =
            sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
 ),
+Dedup AS (
+    SELECT *
+    FROM (
+        SELECT *,
+               ROW_NUMBER() OVER (
+                   PARTITION BY
+                       GroupID, PersonID, PersonName, GroupName,
+                       GroupOwner, EventType, DeletionFlag
+                   ORDER BY (SELECT NULL)
+               ) AS rn
+        FROM Events
+    ) d
+    WHERE rn = 1
+),
 Ordered AS (
     SELECT
         *,
@@ -50,9 +61,9 @@ Ordered AS (
             PARTITION BY GroupID, PersonName 
             ORDER BY PeriodOriginal
         ) AS NextType
-    FROM Events
+    FROM Dedup
 )
--- INSERT INTO final table
+
 INSERT INTO mis.[Silver_SCD_GroupMembershipPeriods]
 (
     GroupID,

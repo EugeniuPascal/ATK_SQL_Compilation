@@ -2,9 +2,6 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
---------------------------------------------------------------------------------
--- Idempotent creation of [Gold_Fact_CerereOnline1]
---------------------------------------------------------------------------------
 IF OBJECT_ID('mis.[Gold_Fact_CerereOnline1]', 'U') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_CerereOnline1];
 GO
@@ -56,9 +53,7 @@ CREATE TABLE mis.[Gold_Fact_CerereOnline1]
 );
 GO
 
---------------------------------------------------------------------------------
--- Step 1: Union all applications + online forms
---------------------------------------------------------------------------------
+-- CTE for base data
 ;WITH Base AS (
     SELECT
         z.[ЗаявкаНаКредит ID] AS [ID],
@@ -101,11 +96,19 @@ GO
         o.[ОбъединеннаяИнтернетЗаявка Состояние Заявки] AS [WebStatus],
         o.[ОбъединеннаяИнтернетЗаявка Срок Кредита] AS [WebCreditTerm],
         o.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS [WebBranchID],
-        COALESCE(z.[ЗаявкаНаКредит Клиент ID], o.[ОбъединеннаяИнтернетЗаявка Идентификатор], o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный]) AS ClientKey,
+        COALESCE(
+            z.[ЗаявкаНаКредит Клиент ID],
+            o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
+            o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный],
+            o.[ОбъединеннаяИнтернетЗаявка Автор ID],
+            o.[ОбъединеннаяИнтернетЗаявка ID]
+        ) AS ClientKey,
         c.[ПротоколКомитета Дата Решения] AS [CommitteeDecisionDate]
     FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] o
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
+			       AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
+	OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ПротоколКомитета] c
         ON c.[ПротоколКомитета Заявка ID] = z.[ЗаявкаНаКредит ID]
 
@@ -116,7 +119,7 @@ GO
         NULL AS [BusinessSector], NULL AS [Type], NULL AS [HistoryType],
         NULL AS [CreditID], NULL AS [AuthorID], NULL AS [Author], NULL AS [Purpose],
         NULL AS [IsGreen], NULL AS [ClientID], NULL AS [CreditAmount],
-        NULL AS [CurrencyType], NULL AS [CreditAppDate],
+        NULL AS [CurrencyType], NULL AS [CreditAppDate],     
         NULL AS [RefusalReason], NULL AS [CreditProduct], NULL AS [ProductID],
         NULL AS [CreditProductID], NULL AS [InternetID], NULL AS [EmployeeID], NULL AS [BranchID],
         NULL AS [PartnerID], NULL AS [Partner],
@@ -135,43 +138,26 @@ GO
         o.[ОбъединеннаяИнтернетЗаявка Состояние Заявки],
         o.[ОбъединеннаяИнтернетЗаявка Срок Кредита],
         o.[ОбъединеннаяИнтернетЗаявка Филиал ID],
-        COALESCE(o.[ОбъединеннаяИнтернетЗаявка Идентификатор], o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный]) AS ClientKey,
+        COALESCE(
+            o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
+            o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный],
+            o.[ОбъединеннаяИнтернетЗаявка Автор ID],
+            o.[ОбъединеннаяИнтернетЗаявка ID]
+        ) AS ClientKey,
         NULL AS [CommitteeDecisionDate]
     FROM [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] o
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
     WHERE z.[ЗаявкаНаКредит ID] IS NULL
        OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = '00000000000000000000000000000000'
-),
-
---------------------------------------------------------------------------------
--- Step 2: Assign business key and rank latest per credit
---------------------------------------------------------------------------------
-Ranked AS (
-    SELECT
-        b.*,
-        COALESCE(b.[WebIdentifier], b.[InternetID], b.[ID], b.[CreditID], b.[ClientKey]) AS BizKey,
-        ROW_NUMBER() OVER (
-            PARTITION BY COALESCE(b.[WebIdentifier], b.[InternetID], b.[ID], b.[CreditID], b.[ClientKey])
-            ORDER BY
-                CASE WHEN b.WebSubmissionDate IS NOT NULL THEN 0 ELSE 1 END,
-                b.WebSubmissionDate DESC,
-                CASE WHEN b.CommitteeDecisionDate IS NOT NULL THEN 0 ELSE 1 END,
-                b.CommitteeDecisionDate DESC,
-                b.WebDate DESC,
-                b.[Date] DESC
-        ) AS rn
-    FROM Base b
+	       AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
+	OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
 )
-
---------------------------------------------------------------------------------
--- Step 3: Insert only latest per BizKey
---------------------------------------------------------------------------------
 INSERT INTO mis.[Gold_Fact_CerereOnline1] 
 (
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
-    [CreditAmount],[CurrencyType],[CreditAmountInMDL],[NewExisting_Client],
+    [CreditAmount],[CurrencyType], [CreditAmountInMDL],[NewExisting_Client],
     [RefusalReason],[CreditProduct],[ProductID],[CreditProductID],
     [InternetID],[EmployeeID],[BranchID],[PartnerID],[Partner],
     [WebDate],[WebNr],[WebPosted],[WebIncomeTypeOnline],[WebAge],
@@ -180,32 +166,31 @@ INSERT INTO mis.[Gold_Fact_CerereOnline1]
     [WebCreditTerm],[WebBranchID],[CommitteeDecisionDate]
 )
 SELECT
-    r.[ID], r.[Date], r.[Status], r.[Posted],
-    r.[BusinessSector], r.[Type], r.[HistoryType],
-    r.[CreditID], r.[AuthorID], r.[Author], r.[Purpose],
-    r.[IsGreen], r.[ClientID], r.[CreditAmount], r.[CurrencyType],
-    ROUND(r.[CreditAmount] * ISNULL(v.[Валюта Курс], 1), 2) AS [CreditAmountInMDL],
+    b.[ID], b.[Date], b.[Status], b.[Posted],
+    b.[BusinessSector], b.[Type], b.[HistoryType],
+    b.[CreditID], b.[AuthorID], b.[Author], b.[Purpose],
+    b.[IsGreen], b.[ClientID], b.[CreditAmount], b.[CurrencyType],
+    ROUND(b.[CreditAmount] * ISNULL(v.[Валюта Курс], 1), 2) AS [CreditAmountInMDL],
     CASE
-        WHEN r.CreditAmount IS NULL OR r.CreditAmount <= 0 THEN N'Cancelled'
-        WHEN ROW_NUMBER() OVER (PARTITION BY r.ClientKey ORDER BY r.WebDate) = 1 THEN N'New'
+        WHEN b.CreditAmount IS NULL OR b.CreditAmount <= 0 THEN N'Cancelled'
+        WHEN ROW_NUMBER() OVER (PARTITION BY b.ClientKey ORDER BY b.WebDate) = 1 THEN N'New'
         ELSE N'Existing'
     END AS [NewExisting_Client],
-    r.[RefusalReason], r.[CreditProduct], r.[ProductID], r.[CreditProductID],
-    r.[InternetID], r.[EmployeeID], r.[BranchID], r.[PartnerID], r.[Partner],
-    r.[WebDate], r.[WebNr], r.[WebPosted], r.[WebIncomeTypeOnline], r.[WebAge],
-    r.[WebSubmissionDate], r.[WebCredit], r.[WebIdentifier], r.[WebCreditEmployee],
-    r.[WebMobilePhone], r.[WebSentForReview], r.[WebGender], r.[WebStatus],
-    r.[WebCreditTerm], r.[WebBranchID], r.[CommitteeDecisionDate]
-FROM Ranked r
+    b.[RefusalReason], b.[CreditProduct], b.[ProductID], b.[CreditProductID],
+    b.[InternetID], b.[EmployeeID], b.[BranchID], b.[PartnerID], b.[Partner],
+    b.[WebDate], b.[WebNr], b.[WebPosted], b.[WebIncomeTypeOnline], b.[WebAge],
+    b.[WebSubmissionDate], b.[WebCredit], b.[WebIdentifier], b.[WebCreditEmployee],
+    b.[WebMobilePhone], b.[WebSentForReview], b.[WebGender], b.[WebStatus],
+    b.[WebCreditTerm], b.[WebBranchID], b.[CommitteeDecisionDate]
+FROM Base b
 LEFT JOIN [ATK].[mis].[Bronze_Справочники.Контрагенты] AS c
-    ON r.[ClientID] = c.[Контрагенты ID]
+    ON b.[ClientID] = c.[Контрагенты ID]
 OUTER APPLY (
     SELECT TOP 1 v.[Валюта Курс]
     FROM [ATK].[mis].[Bronze_РегистрыСведений.Валюта] v
-    WHERE v.[Валюта Валюта] = r.[CurrencyType]
-      AND v.[Валюта Период] <= r.[CreditAppDate]
+    WHERE v.[Валюта Валюта] = b.[CurrencyType]
+      AND v.[Валюта Период] <= b.[CreditAppDate]
     ORDER BY v.[Валюта Период] DESC
 ) AS v
-WHERE c.[Контрагенты Тестовый Контрагент] = 0
-  AND r.rn = 1; -- only latest row per BizKey
+WHERE c.[Контрагенты Тестовый Контрагент] = 0;
 GO

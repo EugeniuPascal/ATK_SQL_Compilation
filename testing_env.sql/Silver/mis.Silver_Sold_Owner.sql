@@ -46,7 +46,6 @@ OUTER APPLY (
     ORDER BY gm.PeriodStart DESC
 ) gm;
 
--- Indexes
 CREATE CLUSTERED INDEX CIX_Silver_Sold_Owner_SoldDate
 ON [mis].[Silver_Sold_Owner] (SoldDate, ClientID, CreditID);
 

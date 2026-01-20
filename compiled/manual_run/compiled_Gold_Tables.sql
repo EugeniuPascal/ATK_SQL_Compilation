@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-01-16 15:19:07
+-- Generated: 2026-01-20 16:13:49
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (21):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1128,6 +1128,7 @@ CREATE TABLE mis.[Gold_Dim_GroupMembershipPeriods]
     PeriodEnd      DATETIME2(0) NOT NULL
 );
 GO
+
 WITH Events AS (
     SELECT
         sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID] AS GroupID,
@@ -1145,28 +1146,43 @@ WITH Events AS (
         g.[ГруппыАффилированныхЛиц Владелец Фиск Код] AS GroupOwnerTax,
 
         CASE WHEN sg.[СоставГруппАффилированныхЛиц Исключен] = '00'
-             THEN 'Included'
-             ELSE 'Excluded'
-        END AS EventType,
-		g.[ГруппыАффилированныхЛиц Пометка Удаления] AS DeletionFlag
+             THEN 'Included' ELSE 'Excluded' END AS EventType,
+        g.[ГруппыАффилированныхЛиц Пометка Удаления] AS DeletionFlag
     FROM [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
     LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
         ON g.[ГруппыАффилированныхЛиц ID] =
-           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]		   
+           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+),
+
+Dedup AS (
+    SELECT *
+    FROM (
+        SELECT *,
+               ROW_NUMBER() OVER (
+                   PARTITION BY
+                       GroupID, PersonID, PersonName, PeriodOriginal, RowNumber,
+                       ActiveFlag, ExcludedFlag, GroupName,
+                       GroupOwner, GroupCode, GroupNameFull, GroupOwnerTax,
+                       EventType, DeletionFlag
+                   ORDER BY (SELECT NULL)
+               ) AS rn
+        FROM Events
+    ) d
+    WHERE rn = 1
 ),
 
 Ordered AS (
     SELECT
         *,
         LEAD(PeriodOriginal) OVER (
-            PARTITION BY GroupID, PersonName 
+            PARTITION BY GroupID, PersonID
             ORDER BY PeriodOriginal
         ) AS NextDate,
         LEAD(EventType) OVER (
-            PARTITION BY GroupID, PersonName 
+            PARTITION BY GroupID, PersonID
             ORDER BY PeriodOriginal
         ) AS NextType
-    FROM Events
+    FROM Dedup
 )
 
 INSERT INTO mis.[Gold_Dim_GroupMembershipPeriods]
@@ -1180,17 +1196,16 @@ SELECT
     GroupID, PersonID, PersonName,
     PeriodOriginal, RowNumber, ActiveFlag, ExcludedFlag, GroupName,
     GroupOwner, GroupCode, GroupNameFull, GroupOwnerTax,
-
     PeriodOriginal AS PeriodStart,
     CASE 
         WHEN NextType = 'Excluded'
             THEN DATEADD(SECOND, -1, NextDate)
-        ELSE CONVERT(DATETIME2, '2222-01-01 00:00:00')
+        ELSE CONVERT(DATETIME2(0), '2222-01-01 00:00:00')
     END AS PeriodEnd
 FROM Ordered
 WHERE EventType = 'Included'
-AND DeletionFlag = '00'
-ORDER BY GroupID, PersonName, PeriodOriginal;
+  AND DeletionFlag = '00'
+ORDER BY GroupID, PersonID, PeriodOriginal;
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Gold_Dim_GroupMembershipPeriods.sql
@@ -1892,6 +1907,8 @@ GO
     FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] o
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
+		AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
+	    OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ПротоколКомитета] c
         ON c.[ПротоколКомитета Заявка ID] = z.[ЗаявкаНаКредит ID]
 
@@ -1933,6 +1950,8 @@ GO
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
     WHERE z.[ЗаявкаНаКредит ID] IS NULL
        OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = '00000000000000000000000000000000'
+	   AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
+	   OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
 )
 INSERT INTO mis.[Gold_Fact_CerereOnline] 
 (

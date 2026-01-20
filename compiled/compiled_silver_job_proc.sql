@@ -1,13 +1,14 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-01-16 15:19:15.427623
+-- Generated: 2026-01-20 16:13:57.143158
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
--- Files included: 6
+-- Files included: 7
 --   mis.Silver_Restruct_SCD.sql
 --   mis.Silver_RestructState_SCD.sql
 --   mis.Silver_Restruct_Merged_SCD.sql
 --   mis.Silver_Client_UnhealedFlag.sql
 --   mis.Silver_Resp_SCD.sql
+--   mis.Silver_SCD_GroupMembershipPeriods.sql
 --   mis.Silver_Stages_SCD.sql
 -- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER
 -- =============================================
@@ -387,10 +388,13 @@ CREATE TABLE mis.Silver_Resp_SCD
 
 DECLARE @DateFrom DATE = ''2023-09-01'';
 
+IF OBJECT_ID(''tempdb..#RespBaseRaw'') IS NOT NULL DROP TABLE #RespBaseRaw;
+IF OBJECT_ID(''tempdb..#RespBase'') IS NOT NULL DROP TABLE #RespBase;
+
 SELECT
-    r.[ОтветственныеПоКредитамВыданным Кредит ID]            AS CreditID,
+    r.[ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
     CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) AS PeriodDate,
-    r.[ОтветственныеПоКредитамВыданным Филиал ID]            AS BranchID,
+    r.[ОтветственныеПоКредитамВыданным Филиал ID] AS BranchID,
     r.[ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS ExpertID,
     ROW_NUMBER() OVER (
         PARTITION BY r.[ОтветственныеПоКредитамВыданным Кредит ID],
@@ -415,23 +419,16 @@ DROP TABLE #RespBaseRaw;
 
 ;WITH stage AS (
     SELECT
-        CreditID,
-        PeriodDate AS ValidFrom,
-        LEAD(PeriodDate) OVER (PARTITION BY CreditID ORDER BY PeriodDate) AS NextFrom,
-        BranchID,
-        ExpertID,
-        CASE WHEN EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = BranchID)
-             THEN 1 
-			 ELSE 0 
-	    END AS IsSpecialBranch,
-        COALESCE(
-		     SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = BranchID)
-                 THEN 1 ELSE 0 
-			     END
-				 ) OVER (PARTITION BY CreditID ORDER BY PeriodDate ROWS UNBOUNDED PRECEDING), 0) AS grp
-    FROM #RespBase
+        r.CreditID,
+        r.PeriodDate AS ValidFrom,
+        LEAD(r.PeriodDate) OVER (PARTITION BY r.CreditID ORDER BY r.PeriodDate) AS NextFrom,
+        r.BranchID,
+        r.ExpertID,
+        CASE WHEN EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = r.BranchID)
+             THEN 1 ELSE 0 END AS IsSpecialBranch
+    FROM #RespBase r
 )
-INSERT INTO mis.Silver_Resp_SCD 
+INSERT INTO mis.Silver_Resp_SCD
 (
     CreditID, ValidFrom, ValidTo,
     BranchID, ExpertID,
@@ -440,42 +437,120 @@ INSERT INTO mis.Silver_Resp_SCD
 SELECT
     s.CreditID,
     s.ValidFrom,
-    COALESCE(DATEADD(DAY,-1,s.NextFrom), CONVERT(DATE,''9999-12-31'')) AS ValidTo,
+    COALESCE(DATEADD(DAY,-1,s.NextFrom), ''9999-12-31'') AS ValidTo,
     s.BranchID,
     s.ExpertID,
     s.IsSpecialBranch,
-COALESCE(
-    CASE 
-        WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
-             AND s.BranchID IS NOT NULL
-        THEN s.BranchID 
-    END,
-    MAX(ISNULL(
-        CASE 
-            WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
-            THEN s.BranchID 
-        END, '''')
-    ) OVER (PARTITION BY s.CreditID, s.grp),
-    s.BranchID
-) AS FinalBranchID,
-
-COALESCE(
-    CASE 
-        WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
-             AND s.ExpertID IS NOT NULL
-        THEN s.ExpertID 
-    END,
-    MAX(ISNULL(
-        CASE 
-            WHEN NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = s.BranchID)
-            THEN s.ExpertID 
-        END, '''')
-    ) OVER (PARTITION BY s.CreditID, s.grp),
-    s.ExpertID
-) AS FinalExpertID
-FROM stage s;
+    
+    COALESCE(nsb.LastBranchID, s.BranchID) AS FinalBranchID,
+    COALESCE(nsb.LastExpertID, s.ExpertID) AS FinalExpertID
+FROM stage s
+OUTER APPLY
+(
+    SELECT TOP 1 r.BranchID AS LastBranchID, r.ExpertID AS LastExpertID
+    FROM #RespBase r
+    WHERE r.CreditID = s.CreditID
+      AND r.BranchID NOT IN (SELECT BranchID FROM @SpecialBranches)
+      AND r.PeriodDate <= s.ValidFrom
+    ORDER BY r.PeriodDate DESC
+) nsb;
 
 DROP TABLE #RespBase;';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
+
+    -- Start of: mis.Silver_SCD_GroupMembershipPeriods.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[Silver_SCD_GroupMembershipPeriods]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[Silver_SCD_GroupMembershipPeriods];
+
+CREATE TABLE mis.[Silver_SCD_GroupMembershipPeriods]
+(
+    GroupID        VARCHAR(36) NOT NULL,
+    PersonID       VARCHAR(36) NULL,
+    PersonName     NVARCHAR(255) NOT NULL,
+    GroupName      NVARCHAR(255) NULL,
+    GroupOwner     VARCHAR(36) NULL,
+    PeriodStart    DATETIME2(0) NOT NULL,
+    PeriodEnd      DATETIME2(0) NOT NULL
+);
+
+WITH Events AS (
+    SELECT
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID] AS GroupID,
+        sg.[СоставГруппАффилированныхЛиц Контрагент ID] AS PersonID,
+        sg.[СоставГруппАффилированныхЛиц Контрагент] AS PersonName,
+        sg.[СоставГруппАффилированныхЛиц Период] AS PeriodOriginal,
+        sg.[СоставГруппАффилированныхЛиц Исключен] AS ExcludedFlag,
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц] AS GroupName,
+        g.[ГруппыАффилированныхЛиц Владелец] AS GroupOwner,
+        CASE WHEN sg.[СоставГруппАффилированныхЛиц Исключен] = ''00''
+             THEN ''Included''
+             ELSE ''Excluded''
+        END AS EventType,
+        g.[ГруппыАффилированныхЛиц Пометка Удаления] AS DeletionFlag
+    FROM [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+        ON g.[ГруппыАффилированныхЛиц ID] =
+           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+),
+Dedup AS (
+    SELECT *
+    FROM (
+        SELECT *,
+               ROW_NUMBER() OVER (
+                   PARTITION BY
+                       GroupID, PersonID, PersonName, GroupName,
+                       GroupOwner, EventType, DeletionFlag
+                   ORDER BY (SELECT NULL)
+               ) AS rn
+        FROM Events
+    ) d
+    WHERE rn = 1
+),
+Ordered AS (
+    SELECT
+        *,
+        LEAD(PeriodOriginal) OVER (
+            PARTITION BY GroupID, PersonName 
+            ORDER BY PeriodOriginal
+        ) AS NextDate,
+        LEAD(EventType) OVER (
+            PARTITION BY GroupID, PersonName 
+            ORDER BY PeriodOriginal
+        ) AS NextType
+    FROM Dedup
+)
+
+INSERT INTO mis.[Silver_SCD_GroupMembershipPeriods]
+(
+    GroupID,
+    PersonID,
+    PersonName,
+    GroupName,
+    GroupOwner,
+    PeriodStart,
+    PeriodEnd
+)
+SELECT
+      GroupID,
+      PersonID,
+      PersonName,
+      GroupName,
+      GroupOwner,
+      PeriodOriginal AS PeriodStart,
+      CASE 
+        WHEN NextType = ''Excluded''
+            THEN DATEADD(SECOND, -1, NextDate)
+        ELSE CONVERT(DATETIME2, ''2222-01-01 00:00:00'')
+      END AS PeriodEnd
+FROM Ordered
+WHERE EventType = ''Included''
+  AND DeletionFlag = ''00''
+ORDER BY GroupID, PersonName, PeriodOriginal;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

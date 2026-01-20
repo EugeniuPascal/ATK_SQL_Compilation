@@ -7,7 +7,6 @@ from pathlib import Path
 # -----------------------------
 SRC = Path(r"C:\ATK_Project")
 DST = Path(r"H:\mapa lucru\ATK_db\ATK_db_mirror")
-ALLOWED_EXTENSIONS = {'.sql', '.py', '.txt'}
 
 # Set up logging
 logging.basicConfig(
@@ -21,17 +20,19 @@ logging.basicConfig(
 # -----------------------------
 def update_destination(src: Path, dst: Path):
     for src_file in src.rglob("*"):
-        if src_file.is_file() and src_file.suffix.lower() in ALLOWED_EXTENSIONS:
+        if src_file.is_file():
+            # Skip .git folder
+            if ".git" in src_file.parts:
+                continue
+
             relative_path = src_file.relative_to(src)
             dst_file = dst / relative_path
-
-            # Create parent folders only if file will be copied
             dst_file.parent.mkdir(parents=True, exist_ok=True)
 
             # Copy only if destination doesn't exist or source is newer
             if not dst_file.exists() or src_file.stat().st_mtime > dst_file.stat().st_mtime:
                 shutil.copy2(src_file, dst_file)
-                logging.info(f"Copied: {src_file} → {dst_file}")
+                logging.info(f"Updated: {src_file} → {dst_file}")
 
 # -----------------------------
 # Main

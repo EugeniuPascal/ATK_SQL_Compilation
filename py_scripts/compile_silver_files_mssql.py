@@ -80,6 +80,7 @@ try:
         "mis.Silver_Restruct_Merged_SCD.sql",
         "mis.Silver_Client_UnhealedFlag.sql",
         "mis.Silver_Resp_SCD.sql",
+        "mis.Silver_SCD_GroupMembershipPeriods.sql",
         "mis.Silver_Stages_SCD.sql",
         # add more as needed
     ]

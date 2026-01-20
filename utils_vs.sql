@@ -1011,5 +1011,13 @@ SELECT TOP (1000) [Period]
       ,[FinalExpertID]
   FROM [ATK].[mis].[Silver_Resp_SCD]
   
+  Silver_SCD_GroupMembershipPeriods -- treb populat
+  2tbl_Gold_Sold_Owner -- creaze silver(folosim date din silverul de mai sus)
+  Gold_Fact_CPD -- dublam as-is in Bronze
+  Gold_Fact_ConditionsAfterDisb_Last -delete
 
+  2tbl_Silver_ConditionsAfterDisb_Last - add silver
+ 
+  2tbl_Silver_CPD_TaskDays --add
+   2tbl_Gold_Fact_CPD_Sold_v4 --add
   

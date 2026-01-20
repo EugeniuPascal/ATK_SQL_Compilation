@@ -39,20 +39,6 @@ WITH Events AS (
         ON g.[ГруппыАффилированныхЛиц ID] =
            sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
 ),
-Dedup AS (
-    SELECT *
-    FROM (
-        SELECT *,
-               ROW_NUMBER() OVER (
-                   PARTITION BY
-                       GroupID, PersonID, PersonName, GroupName,
-                       GroupOwner, EventType, DeletionFlag
-                   ORDER BY (SELECT NULL)
-               ) AS rn
-        FROM Events
-    ) d
-    WHERE rn = 1
-),
 Ordered AS (
     SELECT
         *,
@@ -64,9 +50,9 @@ Ordered AS (
             PARTITION BY GroupID, PersonName 
             ORDER BY PeriodOriginal
         ) AS NextType
-    FROM Dedup
+    FROM Events
 )
-
+-- INSERT INTO final table
 INSERT INTO mis.[Silver_SCD_GroupMembershipPeriods]
 (
     GroupID,

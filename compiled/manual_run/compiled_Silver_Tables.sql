@@ -1,14 +1,18 @@
 -- Compiled SQL bundle
--- Generated: 2026-01-20 16:40:29
+-- Generated: 2026-01-21 09:18:36
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
--- Files (7):
+-- Files (11):
 --   mis.Silver_Restruct_SCD.sql
 --   mis.Silver_RestructState_SCD.sql
 --   mis.Silver_Restruct_Merged_SCD.sql
 --   mis.Silver_Client_UnhealedFlag.sql
 --   mis.Silver_Resp_SCD.sql
---   mis.Silver_SCD_GroupMembershipPeriods.sql
 --   mis.Silver_Stages_SCD.sql
+--   mis.Silver_SCD_GroupMembershipPeriods.sql
+--   mis.Silver_Sold_Owner.sql
+--   mis.Silver_Limits.sql
+--   mis.Silver_Conditions_After_Disb.sql
+--   mis.Silver_CPD_TaskDays.sql
 ----------------------------------------------------------------------------------------------------
 
 SET NOCOUNT ON;
@@ -471,107 +475,6 @@ DROP TABLE #RespBase;
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.Silver_SCD_GroupMembershipPeriods.sql
-----------------------------------------------------------------------------------------------------
-USE [ATK];
-GO
-
-IF OBJECT_ID('mis.[Silver_SCD_GroupMembershipPeriods]', 'U') IS NOT NULL
-    DROP TABLE mis.[Silver_SCD_GroupMembershipPeriods];
-GO
-
-CREATE TABLE mis.[Silver_SCD_GroupMembershipPeriods]
-(
-    GroupID        VARCHAR(36) NOT NULL,
-    PersonID       VARCHAR(36) NULL,
-    PersonName     NVARCHAR(255) NOT NULL,
-    GroupName      NVARCHAR(255) NULL,
-    GroupOwner     VARCHAR(36) NULL,
-    PeriodStart    DATETIME2(0) NOT NULL,
-    PeriodEnd      DATETIME2(0) NOT NULL
-);
-GO
-
-WITH Events AS (
-    SELECT
-        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID] AS GroupID,
-        sg.[СоставГруппАффилированныхЛиц Контрагент ID] AS PersonID,
-        sg.[СоставГруппАффилированныхЛиц Контрагент] AS PersonName,
-        sg.[СоставГруппАффилированныхЛиц Период] AS PeriodOriginal,
-        sg.[СоставГруппАффилированныхЛиц Исключен] AS ExcludedFlag,
-        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц] AS GroupName,
-        g.[ГруппыАффилированныхЛиц Владелец] AS GroupOwner,
-        CASE WHEN sg.[СоставГруппАффилированныхЛиц Исключен] = '00'
-             THEN 'Included'
-             ELSE 'Excluded'
-        END AS EventType,
-        g.[ГруппыАффилированныхЛиц Пометка Удаления] AS DeletionFlag
-    FROM [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
-    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
-        ON g.[ГруппыАффилированныхЛиц ID] =
-           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
-),
-Dedup AS (
-    SELECT *
-    FROM (
-        SELECT *,
-               ROW_NUMBER() OVER (
-                   PARTITION BY
-                       GroupID, PersonID, PersonName, GroupName,
-                       GroupOwner, EventType, DeletionFlag
-                   ORDER BY (SELECT NULL)
-               ) AS rn
-        FROM Events
-    ) d
-    WHERE rn = 1
-),
-Ordered AS (
-    SELECT
-        *,
-        LEAD(PeriodOriginal) OVER (
-            PARTITION BY GroupID, PersonName 
-            ORDER BY PeriodOriginal
-        ) AS NextDate,
-        LEAD(EventType) OVER (
-            PARTITION BY GroupID, PersonName 
-            ORDER BY PeriodOriginal
-        ) AS NextType
-    FROM Dedup
-)
-
-INSERT INTO mis.[Silver_SCD_GroupMembershipPeriods]
-(
-    GroupID,
-    PersonID,
-    PersonName,
-    GroupName,
-    GroupOwner,
-    PeriodStart,
-    PeriodEnd
-)
-SELECT
-      GroupID,
-      PersonID,
-      PersonName,
-      GroupName,
-      GroupOwner,
-      PeriodOriginal AS PeriodStart,
-      CASE 
-        WHEN NextType = 'Excluded'
-            THEN DATEADD(SECOND, -1, NextDate)
-        ELSE CONVERT(DATETIME2, '2222-01-01 00:00:00')
-      END AS PeriodEnd
-FROM Ordered
-WHERE EventType = 'Included'
-  AND DeletionFlag = '00'
-ORDER BY GroupID, PersonName, PeriodOriginal;
-----------------------------------------------------------------------------------------------------
--- End of:   mis.Silver_SCD_GroupMembershipPeriods.sql
-----------------------------------------------------------------------------------------------------
-
-GO
-
-----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Stages_SCD.sql
 ----------------------------------------------------------------------------------------------------
 USE ATK;
@@ -684,6 +587,727 @@ BEGIN
 END;
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Silver_Stages_SCD.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.Silver_SCD_GroupMembershipPeriods.sql
+----------------------------------------------------------------------------------------------------
+USE [ATK];
+GO
+
+IF OBJECT_ID('mis.[Silver_SCD_GroupMembershipPeriods]', 'U') IS NOT NULL
+    DROP TABLE mis.[Silver_SCD_GroupMembershipPeriods];
+GO
+
+CREATE TABLE mis.[Silver_SCD_GroupMembershipPeriods]
+(
+    GroupID        VARCHAR(36) NOT NULL,
+    PersonID       VARCHAR(36) NULL,
+    PersonName     NVARCHAR(255) NOT NULL,
+    GroupName      NVARCHAR(255) NULL,
+    GroupOwner     VARCHAR(36) NULL,
+    PeriodStart    DATETIME2(0) NOT NULL,
+    PeriodEnd      DATETIME2(0) NOT NULL
+);
+GO
+
+WITH Events AS (
+    SELECT
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID] AS GroupID,
+        sg.[СоставГруппАффилированныхЛиц Контрагент ID] AS PersonID,
+        sg.[СоставГруппАффилированныхЛиц Контрагент] AS PersonName,
+        sg.[СоставГруппАффилированныхЛиц Период] AS PeriodOriginal,
+        sg.[СоставГруппАффилированныхЛиц Исключен] AS ExcludedFlag,
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц] AS GroupName,
+        g.[ГруппыАффилированныхЛиц Владелец] AS GroupOwner,
+        CASE WHEN sg.[СоставГруппАффилированныхЛиц Исключен] = '00'
+             THEN 'Included'
+             ELSE 'Excluded'
+        END AS EventType,
+        g.[ГруппыАффилированныхЛиц Пометка Удаления] AS DeletionFlag
+    FROM [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
+    LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+        ON g.[ГруппыАффилированныхЛиц ID] =
+           sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID]
+),
+Dedup AS (
+    SELECT *
+    FROM (
+        SELECT *,
+               ROW_NUMBER() OVER (
+                   PARTITION BY
+                       GroupID, PersonID, PersonName, GroupName,
+                       GroupOwner, EventType, DeletionFlag
+                   ORDER BY (SELECT NULL)
+               ) AS rn
+        FROM Events
+    ) d
+    WHERE rn = 1
+),
+Ordered AS (
+    SELECT
+        *,
+        LEAD(PeriodOriginal) OVER (
+            PARTITION BY GroupID, PersonName 
+            ORDER BY PeriodOriginal
+        ) AS NextDate,
+        LEAD(EventType) OVER (
+            PARTITION BY GroupID, PersonName 
+            ORDER BY PeriodOriginal
+        ) AS NextType
+    FROM Dedup
+)
+
+INSERT INTO mis.[Silver_SCD_GroupMembershipPeriods]
+(
+    GroupID,
+    PersonID,
+    PersonName,
+    GroupName,
+    GroupOwner,
+    PeriodStart,
+    PeriodEnd
+)
+SELECT
+      GroupID,
+      PersonID,
+      PersonName,
+      GroupName,
+      GroupOwner,
+      PeriodOriginal AS PeriodStart,
+      CASE 
+        WHEN NextType = 'Excluded'
+            THEN DATEADD(SECOND, -1, NextDate)
+        ELSE CONVERT(DATETIME2, '2222-01-01 00:00:00')
+      END AS PeriodEnd
+FROM Ordered
+WHERE EventType = 'Included'
+  AND DeletionFlag = '00'
+ORDER BY GroupID, PersonName, PeriodOriginal;
+----------------------------------------------------------------------------------------------------
+-- End of:   mis.Silver_SCD_GroupMembershipPeriods.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.Silver_Sold_Owner.sql
+----------------------------------------------------------------------------------------------------
+USE [ATK];
+SET NOCOUNT ON;
+
+IF OBJECT_ID('mis.[Silver_Sold_Owner]', 'U') IS NOT NULL
+    DROP TABLE mis.[Silver_Sold_Owner];
+GO
+
+CREATE TABLE mis.[Silver_Sold_Owner]
+(
+      [SoldDate]   DATETIME        NOT NULL,
+      [ClientID]   VARCHAR(36)     NULL,
+      [CreditID]   VARCHAR(36)     NULL,
+      [SoldAmount] DECIMAL(18,2)   NULL,
+      [BranchID]   VARCHAR(36)     NULL,
+      [GroupOwner] VARCHAR(36)     NULL
+);
+GO
+
+WITH SoldCTE AS (
+    SELECT
+        CAST([СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE) AS SoldDate,
+        [СуммыЗадолженностиПоПериодамПросрочки Клиент ID] AS ClientID,
+        [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
+        [СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount
+    FROM mis.[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
+    WHERE [СуммыЗадолженностиПоПериодамПросрочки Дата] >= '2025-01-01'
+)
+INSERT INTO mis.[Silver_Sold_Owner] (SoldDate, ClientID, CreditID, SoldAmount, BranchID, GroupOwner)
+SELECT
+       s.SoldDate,
+       s.ClientID,
+       s.CreditID,
+       s.SoldAmount,
+       b.[ОтветственныеПоКредитамВыданным Филиал ID] AS BranchID,
+       gm.GroupOwner
+FROM SoldCTE s
+LEFT JOIN mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] b
+       ON b.[ОтветственныеПоКредитамВыданным Кредит ID] = s.CreditID
+
+OUTER APPLY (
+    SELECT TOP 1 gm.GroupOwner
+    FROM [ATK].[mis].[Silver_SCD_GroupMembershipPeriods] gm
+    WHERE gm.PersonID = s.ClientID
+      AND s.SoldDate >= gm.PeriodStart
+      AND s.SoldDate <  gm.PeriodEnd
+    ORDER BY gm.PeriodStart DESC
+) gm;
+
+CREATE CLUSTERED INDEX CIX_Silver_Sold_Owner_SoldDate
+ON [mis].[Silver_Sold_Owner] (SoldDate, ClientID, CreditID);
+
+CREATE NONCLUSTERED INDEX IX_Silver_Sold_Owner_ClientID
+ON [mis].[Silver_Sold_Owner] (ClientID, SoldDate)
+INCLUDE (CreditID, SoldAmount, GroupOwner, BranchID);
+
+CREATE NONCLUSTERED INDEX IX_Silver_Sold_Owner_CreditID
+ON [mis].[Silver_Sold_Owner] (CreditID, SoldDate)
+INCLUDE (ClientID, SoldAmount, GroupOwner, BranchID);
+----------------------------------------------------------------------------------------------------
+-- End of:   mis.Silver_Sold_Owner.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.Silver_Limits.sql
+----------------------------------------------------------------------------------------------------
+USE [ATK];
+SET NOCOUNT ON;
+
+IF OBJECT_ID(N'mis.[Silver_Limits]', 'U') IS NOT NULL
+    DROP TABLE mis.[Silver_Limits];
+
+
+CREATE TABLE mis.[Silver_Limits] 
+(
+      [Limit ID]               VARCHAR(36)    NOT NULL,
+      [Limit Code]             NVARCHAR(50)   NULL,
+      [Limit Name]             NVARCHAR(255)  NULL,
+
+      -- First "Set"
+      [FirstSet Operation Type] NVARCHAR(50)  NULL,
+      [FirstSet CreateDate]     DATETIME2(0)  NULL,
+      [FirstSet DecisionDate]   DATETIME2(0)  NULL,
+      [FirstFilial ID]          VARCHAR(36)   NULL,
+      [FirstExpert ID]          VARCHAR(36)   NULL,
+      [FirstClient ID]          VARCHAR(36)   NULL,
+      [FirstSet Amount]         DECIMAL(18,2) NULL,
+
+      -- Last operation
+      [Last Operation Type]     NVARCHAR(50)  NULL,
+      [Last CreateDate]         DATETIME2(0)  NULL,
+      [Last DecisionDate]       DATETIME2(0)  NULL,
+      [LastFilial ID]           VARCHAR(36)   NULL,
+      [LastExpert ID]           VARCHAR(36)   NULL,
+      [LastClient ID]           VARCHAR(36)   NULL,
+      [Last Amount]             DECIMAL(18,2) NULL,
+      [Last State]              NVARCHAR(50)  NULL
+);
+
+WITH lim AS (
+    SELECT
+          l.[Лимиты ID]           AS [Limit ID],
+          l.[Лимиты Код]          AS [Limit Code],
+          l.[Лимиты Наименование] AS [Limit Name]
+    FROM [ATK].[dbo].[Справочники.Лимиты] l
+    WHERE ISNULL(l.[Лимиты Пометка Удаления], 0) <> 1
+),
+reg AS (
+    SELECT
+          d.[РегистрацияЛимита ID]           AS [Reg ID],
+          d.[РегистрацияЛимита Дата]         AS [CreateDate],
+          d.[РегистрацияЛимита Номер]        AS [Reg No],
+          d.[РегистрацияЛимита Проведен]     AS [Posted],
+          d.[РегистрацияЛимита Вид Операции] AS [Operation Type],
+          d.[РегистрацияЛимита Дата Решения] AS [DecisionDate],
+          d.[РегистрацияЛимита Лимит ID]     AS [Limit ID],
+          d.[РегистрацияЛимита Основной Клиент ID] AS [Client ID],
+          d.[РегистрацияЛимита Состояние]    AS [State],
+          d.[РегистрацияЛимита Сумма]        AS [Amount],
+          d.[РегистрацияЛимита Филиал ID]    AS [Filial ID],
+          d.[РегистрацияЛимита Кредитный Эксперт ID] AS [Expert ID]
+    FROM [ATK].[dbo].[Документы.РегистрацияЛимита] d
+    WHERE d.[РегистрацияЛимита Проведен] = 1
+),
+-- First "Set" per limit
+first_set AS (
+    SELECT *
+    FROM (
+        SELECT
+              r.[Limit ID],
+              r.[CreateDate]     AS [FirstSet CreateDate],
+              r.[DecisionDate]   AS [FirstSet DecisionDate],
+              r.[Operation Type] AS [FirstSet Operation Type],
+              r.[Reg No],
+              r.[Reg ID],
+              r.[Filial ID]      AS [FirstFilial ID],
+              r.[Expert ID]      AS [FirstExpert ID],
+              r.[Client ID]      AS [FirstClient ID],
+              r.[Amount]         AS [FirstSet Amount],
+              ROW_NUMBER() OVER (
+                  PARTITION BY r.[Limit ID]
+                  ORDER BY r.[CreateDate] ASC, r.[Reg No] ASC, r.[Reg ID] ASC
+              ) AS rn
+        FROM reg r
+        WHERE r.[Operation Type] = N'Установка'
+    ) x
+    WHERE x.rn = 1
+),
+-- Last operation per limit (any type)
+last_any AS (
+    SELECT *
+    FROM (
+        SELECT
+              r.[Limit ID],
+              r.[CreateDate]     AS [Last CreateDate],
+              r.[DecisionDate]   AS [Last DecisionDate],
+              r.[Operation Type] AS [Last Operation Type],
+              r.[Reg No],
+              r.[Reg ID],
+              r.[Filial ID]      AS [LastFilial ID],
+              r.[Expert ID]      AS [LastExpert ID],
+              r.[Client ID]      AS [LastClient ID],
+              r.[Amount]         AS [Last Amount],
+              r.[State]          AS [Last State],
+              ROW_NUMBER() OVER (
+                  PARTITION BY r.[Limit ID]
+                  ORDER BY r.[CreateDate] DESC, r.[Reg No] DESC, r.[Reg ID] DESC
+              ) AS rn
+        FROM reg r
+    ) x
+    WHERE x.rn = 1
+)
+
+INSERT INTO mis.[Silver_Limits] (
+      [Limit ID], [Limit Code], [Limit Name],
+      [FirstSet Operation Type], [FirstSet CreateDate], [FirstSet DecisionDate],
+      [FirstFilial ID], [FirstExpert ID], [FirstClient ID], [FirstSet Amount],
+      [Last Operation Type], [Last CreateDate], [Last DecisionDate],
+      [LastFilial ID], [LastExpert ID], [LastClient ID], [Last Amount], [Last State]
+)
+SELECT
+      l.[Limit ID], l.[Limit Code], l.[Limit Name],
+      fs.[FirstSet Operation Type], fs.[FirstSet CreateDate], fs.[FirstSet DecisionDate],
+      fs.[FirstFilial ID], fs.[FirstExpert ID], fs.[FirstClient ID], fs.[FirstSet Amount],
+      la.[Last Operation Type], la.[Last CreateDate], la.[Last DecisionDate],
+      la.[LastFilial ID], la.[LastExpert ID], la.[LastClient ID], la.[Last Amount], la.[Last State]
+FROM lim l
+LEFT JOIN first_set fs ON fs.[Limit ID] = l.[Limit ID]
+LEFT JOIN last_any  la ON la.[Limit ID] = l.[Limit ID];
+
+-------------------------------------------------------
+-- Step 4: Create unique clustered index
+-------------------------------------------------------
+CREATE UNIQUE CLUSTERED INDEX CX_Silver_Limits
+ON mis.[Silver_Limits] ([Limit ID]);
+----------------------------------------------------------------------------------------------------
+-- End of:   mis.Silver_Limits.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.Silver_Conditions_After_Disb.sql
+----------------------------------------------------------------------------------------------------
+USE [ATK];
+SET NOCOUNT ON;
+
+IF OBJECT_ID('mis.[Silver_Conditions_After_Disb]', 'U') IS NOT NULL
+    DROP TABLE mis.[Silver_Conditions_After_Disb];
+GO
+
+CREATE TABLE mis.[Silver_Conditions_After_Disb]
+(
+      [Период] DATETIME NOT NULL,
+      [Объект Tип] VARCHAR(36), 
+      [Объект ID] VARCHAR(36),
+      [ИД] VARCHAR(36),
+      [Тип Условия] NVARCHAR(256),
+      [Объект Условия Tип] VARCHAR(36),
+      [Объект Условия _S] NVARCHAR(500),
+      [Доп Проценты] DECIMAL(4,2),
+      [Срок Выполнения] DATETIME NULL,
+      [Исполнитель ID] VARCHAR(36),
+      [Исполнитель] NVARCHAR(56),
+      [Дата Выдачи] DATETIME NULL,
+      [Выполнено] VARCHAR(36),
+      [Дата Выполнения] DATETIME NULL,
+      [Комментарий] NVARCHAR(1000),
+      [Проверено] VARCHAR(36),
+      [Это Доп Условия] VARCHAR(36),
+      [Аннулирован] VARCHAR(36),
+      [Кредитный Риск] NVARCHAR(256),
+      [Юридический Риск] NVARCHAR(256),
+      [Одобренно Комитетом] VARCHAR(36),
+      [Залог ID] VARCHAR(36),
+      [Залог] NVARCHAR(156),
+      [Автор Аннулирования ID] VARCHAR(36),
+      [Автор Аннулирования] NVARCHAR(156),
+      [Автор Проверки ID] VARCHAR(36),
+      [Автор Проверки] NVARCHAR(156),
+      [Дата Изменения] DATETIME NULL,
+      [Источник Tип] VARCHAR(36),
+      [Источник Вид] VARCHAR(36),
+      [Источник ID] VARCHAR(36),
+      [Ответственный ID] VARCHAR(36),
+      [Ответственный] NVARCHAR(156),
+      [Дата Проверки] DATETIME NULL,
+      [Дата аннулирования] DATETIME NULL,
+      [Дата закрытия] DATETIME NULL,
+      [CreditID_Found] VARCHAR(36),
+      [Client ID] VARCHAR(36)
+);
+GO
+
+;WITH src AS
+(
+    SELECT
+          r.[УсловияПослеВыдачиКредита Период]
+        , r.[УсловияПослеВыдачиКредита Объект Tип]
+        , r.[УсловияПослеВыдачиКредита Объект ID]
+        , r.[УсловияПослеВыдачиКредита ИД]
+        , r.[УсловияПослеВыдачиКредита Тип Условия]
+        , r.[УсловияПослеВыдачиКредита Объект Условия Tип]
+        , r.[УсловияПослеВыдачиКредита Объект Условия _S]
+        , r.[УсловияПослеВыдачиКредита Доп Проценты]
+        , r.[УсловияПослеВыдачиКредита Срок Выполнения]
+        , r.[УсловияПослеВыдачиКредита Исполнитель ID]
+        , r.[УсловияПослеВыдачиКредита Исполнитель]
+        , r.[УсловияПослеВыдачиКредита Дата Выдачи]
+        , r.[УсловияПослеВыдачиКредита Выполнено]
+        , r.[УсловияПослеВыдачиКредита Дата Выполнения]
+        , r.[УсловияПослеВыдачиКредита Комментарий]
+        , r.[УсловияПослеВыдачиКредита Проверено]
+        , r.[УсловияПослеВыдачиКредита Это Доп Условия]
+        , r.[УсловияПослеВыдачиКредита Аннулирован]
+        , r.[УсловияПослеВыдачиКредита Кредитный Риск]
+        , r.[УсловияПослеВыдачиКредита Юридический Риск]
+        , r.[УсловияПослеВыдачиКредита Одобренно Комитетом]
+        , r.[УсловияПослеВыдачиКредита Залог ID]
+        , r.[УсловияПослеВыдачиКредита Залог]
+        , r.[УсловияПослеВыдачиКредита Автор Аннулирования ID]
+        , r.[УсловияПослеВыдачиКредита Автор Аннулирования]
+        , r.[УсловияПослеВыдачиКредита Автор Проверки ID]
+        , r.[УсловияПослеВыдачиКредита Автор Проверки]
+        , r.[УсловияПослеВыдачиКредита Дата Изменения]
+        , r.[УсловияПослеВыдачиКредита Источник Tип]
+        , r.[УсловияПослеВыдачиКредита Источник Вид]
+        , r.[УсловияПослеВыдачиКредита Источник ID]
+        , r.[УсловияПослеВыдачиКредита Ответственный ID]
+        , r.[УсловияПослеВыдачиКредита Ответственный]
+        , MIN(r.[УсловияПослеВыдачиКредита Период]) OVER (PARTITION BY r.[УсловияПослеВыдачиКредита ИД]) AS FirstPeriod
+        , ROW_NUMBER() OVER (PARTITION BY r.[УсловияПослеВыдачиКредита ИД]
+                             ORDER BY r.[УсловияПослеВыдачиКредита Период] DESC, 
+							          r.[УсловияПослеВыдачиКредита Дата Изменения] DESC) AS rn_last,
+	      MAX(CASE WHEN ISNULL(r.[УсловияПослеВыдачиКредита Проверено],0) = 0 THEN 1 ELSE 0 END)
+		  OVER(PARTITION BY r.[УсловияПослеВыдачиКредита ИД]
+              ORDER BY r.[УсловияПослеВыдачиКредита Период] ASC,
+                       r.[УсловияПослеВыдачиКредита Дата Изменения] ASC
+              ROWS BETWEEN 1 FOLLOWING AND UNBOUNDED FOLLOWING
+          ) AS HasZeroAfter_Verified,
+
+          MAX(CASE WHEN ISNULL(r.[УсловияПослеВыдачиКредита Аннулирован],0) = 0 THEN 1 ELSE 0 END)
+             		  OVER(PARTITION BY r.[УсловияПослеВыдачиКредита ИД]
+              ORDER BY r.[УсловияПослеВыдачиКредита Период] ASC,
+                       r.[УсловияПослеВыдачиКредита Дата Изменения] ASC
+              ROWS BETWEEN 1 FOLLOWING AND UNBOUNDED FOLLOWING
+          ) AS HasZeroAfter_Cancelled
+		  
+    FROM [ATK].[mis].[Bronze_РегистрыСведений.УсловияПослеВыдачиКредита] r
+    WHERE r.[УсловияПослеВыдачиКредита Объект Tип] = 8
+),
+dates AS
+(
+    -- ✅ старт финальной серии "Проверено=1" (первая дата, после которой уже нет 0)
+    SELECT
+          s.[УсловияПослеВыдачиКредита ИД] AS CondID
+        , MIN(CASE
+                WHEN ISNULL(s.[УсловияПослеВыдачиКредита Проверено],0) = 1
+                 AND ISNULL(s.HasZeroAfter_Verified,0) = 0
+                THEN s.[УсловияПослеВыдачиКредита Период]
+              END) AS VerifyStartPeriod
+
+        -- ✅ старт финальной серии "Аннулирован=1"
+        , MIN(CASE
+                WHEN ISNULL(s.[УсловияПослеВыдачиКредита Аннулирован],0) = 1
+                 AND ISNULL(s.HasZeroAfter_Cancelled,0) = 0
+                THEN s.[УсловияПослеВыдачиКредита Период]
+              END) AS CancelStartPeriod
+    FROM src s
+    GROUP BY s.[УсловияПослеВыдачиКредита ИД]
+),
+lastrow AS
+(
+    -- ✅ последняя запись по ИД + правильные даты статусов
+    SELECT
+          s.*
+        , d.VerifyStartPeriod AS [Дата Проверки]
+        , d.CancelStartPeriod AS [Дата аннулирования]
+        , CASE
+              WHEN d.VerifyStartPeriod IS NOT NULL OR d.CancelStartPeriod IS NOT NULL
+              THEN COALESCE(d.VerifyStartPeriod, d.CancelStartPeriod)
+          END AS [Дата закрытия]
+    FROM src s
+    LEFT JOIN dates d
+      ON d.CondID = s.[УсловияПослеВыдачиКредита ИД]
+    WHERE s.rn_last = 1
+)
+INSERT INTO mis.[Silver_Conditions_After_Disb]
+(
+      [Период], [Объект Tип], [Объект ID], [ИД], [Тип Условия], [Объект Условия Tип], [Объект Условия _S],
+      [Доп Проценты], [Срок Выполнения], [Исполнитель ID], [Исполнитель], [Дата Выдачи], [Выполнено], [Дата Выполнения],
+      [Комментарий], [Проверено], [Это Доп Условия], [Аннулирован], [Кредитный Риск], [Юридический Риск],
+      [Одобренно Комитетом], [Залог ID], [Залог], [Автор Аннулирования ID], [Автор Аннулирования],
+      [Автор Проверки ID], [Автор Проверки], [Дата Изменения], [Источник Tип], [Источник Вид], [Источник ID],
+      [Ответственный ID], [Ответственный], [Дата Проверки], [Дата аннулирования], [Дата закрытия],
+      [CreditID_Found], [Client ID]
+)
+SELECT
+      s.FirstPeriod AS [Период],
+      s.[УсловияПослеВыдачиКредита Объект Tип] AS [Объект Tип],
+      s.[УсловияПослеВыдачиКредита Объект ID] AS [Объект ID],
+      s.[УсловияПослеВыдачиКредита ИД] AS [ИД],
+      s.[УсловияПослеВыдачиКредита Тип Условия] AS [Тип Условия],
+      s.[УсловияПослеВыдачиКредита Объект Условия Tип] AS [Объект Условия Tип],
+      s.[УсловияПослеВыдачиКредита Объект Условия _S] AS [Объект Условия _S],
+      s.[УсловияПослеВыдачиКредита Доп Проценты] AS [Доп Проценты],
+      s.[УсловияПослеВыдачиКредита Срок Выполнения] AS [Срок Выполнения],
+      s.[УсловияПослеВыдачиКредита Исполнитель ID] AS [Исполнитель ID],
+      s.[УсловияПослеВыдачиКредита Исполнитель] AS [Исполнитель],
+      s.[УсловияПослеВыдачиКредита Дата Выдачи] AS [Дата Выдачи],
+      s.[УсловияПослеВыдачиКредита Выполнено] AS [Выполнено],
+      s.[УсловияПослеВыдачиКредита Дата Выполнения] AS [Дата Выполнения],
+      s.[УсловияПослеВыдачиКредита Комментарий] AS [Комментарий],
+      s.[УсловияПослеВыдачиКредита Проверено] AS [Проверено],
+      s.[УсловияПослеВыдачиКредита Это Доп Условия] AS [Это Доп Условия],
+      s.[УсловияПослеВыдачиКредита Аннулирован] AS [Аннулирован],
+      s.[УсловияПослеВыдачиКредита Кредитный Риск] AS [Кредитный Риск],
+      s.[УсловияПослеВыдачиКредита Юридический Риск] AS [Юридический Риск],
+      s.[УсловияПослеВыдачиКредита Одобренно Комитетом] AS [Одобренно Комитетом],
+      s.[УсловияПослеВыдачиКредита Залог ID] AS [Залог ID],
+      s.[УсловияПослеВыдачиКредита Залог] AS [Залог],
+      s.[УсловияПослеВыдачиКредита Автор Аннулирования ID] AS [Автор Аннулирования ID],
+      s.[УсловияПослеВыдачиКредита Автор Аннулирования] AS [Автор Аннулирования],
+      s.[УсловияПослеВыдачиКредита Автор Проверки ID] AS [Автор Проверки ID],
+      s.[УсловияПослеВыдачиКредита Автор Проверки] AS [Автор Проверки],
+      s.[УсловияПослеВыдачиКредита Дата Изменения] AS [Дата Изменения],
+      s.[УсловияПослеВыдачиКредита Источник Tип] AS [Источник Tип],
+      s.[УсловияПослеВыдачиКредита Источник Вид] AS [Источник Вид],
+      s.[УсловияПослеВыдачиКредита Источник ID] AS [Источник ID],
+      s.[УсловияПослеВыдачиКредита Ответственный ID] AS [Ответственный ID],
+      s.[УсловияПослеВыдачиКредита Ответственный] AS [Ответственный],
+      s.[Дата Проверки] AS [Дата Проверки],
+      s.[Дата аннулирования] AS [Дата аннулирования],
+      s.[Дата закрытия] AS [Дата закрытия],
+      c.[Кредиты ID] AS [CreditID_Found],
+      COALESCE(c.[Кредиты Владелец], lim.[LastClient ID], grp.[GroupClient ID]) AS [Client ID]
+FROM lastrow s
+LEFT JOIN [ATK].[mis].[Bronze_Справочники.Кредиты] c
+    ON c.[Кредиты ID] = s.[УсловияПослеВыдачиКредита Объект ID]
+OUTER APPLY
+(
+    SELECT TOP (1) l.[LastClient ID]
+    FROM [ATK].[mis].[Silver_Limits] l
+    WHERE l.[Limit ID] = s.[УсловияПослеВыдачиКредита Объект ID]
+    ORDER BY l.[Last CreateDate] DESC, l.[Last DecisionDate] DESC
+) lim
+OUTER APPLY
+(
+    SELECT TOP (1) g.[ГруппыАффилированныхЛиц Владелец] AS [GroupClient ID]
+    FROM [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+    WHERE g.[ГруппыАффилированныхЛиц ID] = s.[УсловияПослеВыдачиКредита Объект ID]
+      AND g.[ГруппыАффилированныхЛиц Пометка Удаления] = 0
+    ORDER BY g.[ГруппыАффилированныхЛиц Версия Данных] DESC
+)grp
+
+CREATE UNIQUE CLUSTERED INDEX CX_ConditionsAfterDisb_Last
+ON mis.[Silver_Conditions_After_Disb] ([ИД]);
+
+CREATE INDEX IX_ConditionsAfterDisb_Last_ObjectID
+ON mis.[Silver_Conditions_After_Disb] ([Объект ID]);
+
+CREATE INDEX IX_ConditionsAfterDisb_Last_CreditFound
+ON mis.[Silver_Conditions_After_Disb] ([CreditID_Found]);
+
+CREATE INDEX IX_ConditionsAfterDisb_Last_ClientID
+ON mis.[Silver_Conditions_After_Disb] ([Client ID]);
+GO
+----------------------------------------------------------------------------------------------------
+-- End of:   mis.Silver_Conditions_After_Disb.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.Silver_CPD_TaskDays.sql
+----------------------------------------------------------------------------------------------------
+USE [ATK];
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+------------------------------------------------------------
+-- Full rebuild. Фильтр по клиенту:
+-- NULL = все клиенты
+------------------------------------------------------------
+DECLARE @OpenDttm datetime2(0) = '1753-01-01T00:00:00';
+DECLARE @ClientIDFilter varchar(36) = NULL;  -- или '80CD00155D01451511E8DC61B3AE0565'
+
+------------------------------------------------------------
+-- 0) Границы Sold (для развёртки диапазона)
+-- ✅ NEW SOURCE:
+-- [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
+-- Поле даты = [СуммыЗадолженностиПоПериодамПросрочки Дата]
+------------------------------------------------------------
+DECLARE @MinSoldDate date =
+(
+    SELECT MIN(f.[СуммыЗадолженностиПоПериодамПросрочки Дата])
+    FROM [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] f
+);
+
+DECLARE @AsOfDate date =
+(
+    SELECT MAX(f.[СуммыЗадолженностиПоПериодамПросрочки Дата])
+    FROM [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] f
+);
+
+IF @AsOfDate IS NULL OR @MinSoldDate IS NULL
+    THROW 50002,
+          'Sold range is NULL: [ATK].[mis].[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] is empty.',
+          1;
+
+DECLARE @MaxN int = DATEDIFF(day, @MinSoldDate, @AsOfDate) + 1;
+IF @MaxN < 1 SET @MaxN = 1;
+
+------------------------------------------------------------
+-- 1) Создаём таблицы (если нет)
+------------------------------------------------------------
+IF OBJECT_ID('mis.Silver_CPD_TaskHeader','U') IS NULL
+BEGIN
+    CREATE TABLE [mis].[Silver_CPD_TaskHeader]
+    (
+        CondID       varchar(36)   NOT NULL,
+        ClientID     varchar(36)   NOT NULL,
+        TaskCreditID varchar(36)   NULL,
+
+        DateFrom     date          NOT NULL,
+
+        -- ✅ DoneDttm/DoneDate считаем от "Дата закрытия"
+        DoneDttm     datetime2(0)  NOT NULL,
+        DoneDate     date          NULL,
+
+        DateFromAdj  date          NOT NULL,
+        DateToAdj    date          NOT NULL,
+
+        LoadDttm     datetime      NOT NULL,
+
+        CONSTRAINT PK_Silver_CPD_TaskHeader PRIMARY KEY CLUSTERED (CondID)
+    );
+
+    CREATE INDEX IX_TaskHeader_Client_Dates
+        ON [mis].[Silver_CPD_TaskHeader] (ClientID, DateFromAdj, DateToAdj)
+        INCLUDE (TaskCreditID, DateFrom, DoneDate);
+END;
+
+IF OBJECT_ID('mis.Silver_CPD_TaskDays','U') IS NULL
+BEGIN
+    CREATE TABLE [mis].[Silver_CPD_TaskDays]
+    (
+        CondID       varchar(36) NOT NULL,
+        CPDDate      date        NOT NULL,
+        ClientID     varchar(36) NOT NULL,
+        TaskCreditID varchar(36) NULL,
+        LoadDttm     datetime    NOT NULL
+    );
+
+    CREATE CLUSTERED INDEX CX_TaskDays_Client_Date
+        ON [mis].[Silver_CPD_TaskDays] (ClientID, CPDDate, CondID);
+
+    CREATE INDEX IX_TaskDays_Cond_Date
+        ON [mis].[Silver_CPD_TaskDays] (CondID, CPDDate)
+        INCLUDE (ClientID, TaskCreditID);
+END;
+
+------------------------------------------------------------
+-- 2) Full rebuild Header
+------------------------------------------------------------
+TRUNCATE TABLE [mis].[Silver_CPD_TaskHeader];
+
+INSERT INTO [mis].[Silver_CPD_TaskHeader]
+(
+    CondID, ClientID, TaskCreditID,
+    DateFrom, DoneDttm, DoneDate,
+    DateFromAdj, DateToAdj,
+    LoadDttm
+)
+SELECT
+      c.[ИД]                                           AS CondID
+    , LTRIM(RTRIM(c.[Client ID]))                      AS ClientID
+    , NULLIF(LTRIM(RTRIM(c.[CreditID_Found])), '')     AS TaskCreditID
+    , CAST(c.[Период] AS date)                         AS DateFrom
+
+    -- ✅ NEW: Done = "Дата закрытия" (если NULL -> считаем как OpenDttm)
+    , CAST(COALESCE(c.[Дата закрытия], @OpenDttm) AS datetime2(0)) AS DoneDttm
+    , CASE
+          WHEN COALESCE(c.[Дата закрытия], @OpenDttm) <> @OpenDttm
+          THEN CAST(CAST(c.[Дата закрытия] AS datetime2(0)) AS date)
+          ELSE NULL
+      END                                              AS DoneDate
+
+    , CASE
+          WHEN CAST(c.[Период] AS date) < @MinSoldDate THEN @MinSoldDate
+          ELSE CAST(c.[Период] AS date)
+      END                                              AS DateFromAdj
+
+    -- ✅ NEW: DateToAdj считаем от DoneDttm (= дата закрытия), иначе AsOfDate
+    , CASE
+          WHEN CAST(COALESCE(c.[Дата закрытия], @OpenDttm) AS datetime2(0)) <> @OpenDttm
+          THEN
+              CASE
+                  WHEN CAST(CAST(c.[Дата закрытия] AS datetime2(0)) AS date) > @AsOfDate THEN @AsOfDate
+                  ELSE CAST(CAST(c.[Дата закрытия] AS datetime2(0)) AS date)
+              END
+          ELSE @AsOfDate
+      END                                              AS DateToAdj
+
+    , GETDATE()
+FROM [ATK].[mis].[Silver_Conditions_After_Disb] c
+WHERE c.[ИД] IS NOT NULL
+  AND c.[Client ID] IS NOT NULL
+  AND c.[Период] IS NOT NULL
+  AND (@ClientIDFilter IS NULL OR LTRIM(RTRIM(c.[Client ID])) = @ClientIDFilter);
+
+-- защита: DateToAdj >= DateFromAdj
+UPDATE h
+SET h.DateToAdj = CASE WHEN h.DateToAdj < h.DateFromAdj THEN h.DateFromAdj ELSE h.DateToAdj END
+FROM [mis].[Silver_CPD_TaskHeader] h;
+
+------------------------------------------------------------
+-- 3) Full rebuild Days (развёртка по дням)
+------------------------------------------------------------
+TRUNCATE TABLE [mis].[Silver_CPD_TaskDays];
+
+;WITH N AS
+(
+    SELECT TOP (@MaxN)
+           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n
+    FROM sys.all_objects a
+    CROSS JOIN sys.all_objects b
+)
+INSERT INTO [mis].[Silver_CPD_TaskDays]
+(
+    CondID, CPDDate, ClientID, TaskCreditID, LoadDttm
+)
+SELECT
+      h.CondID
+    , DATEADD(day, n.n, h.DateFromAdj)                   AS CPDDate
+    , h.ClientID
+    , NULLIF(LTRIM(RTRIM(h.TaskCreditID)),'')            AS TaskCreditID
+    , GETDATE()
+FROM [mis].[Silver_CPD_TaskHeader] h
+JOIN N
+  ON DATEADD(day, n.n, h.DateFromAdj) <= h.DateToAdj;
+
+------------------------------------------------------------
+-- 4) Контроль
+------------------------------------------------------------
+SELECT ISNULL(@ClientIDFilter,'(ALL)') AS ClientIDFilter, COUNT(*) AS CntTasks
+FROM [mis].[Silver_CPD_TaskHeader];
+
+SELECT ISNULL(@ClientIDFilter,'(ALL)') AS ClientIDFilter, COUNT(*) AS CntTaskDays
+FROM [mis].[Silver_CPD_TaskDays];
+----------------------------------------------------------------------------------------------------
+-- End of:   mis.Silver_CPD_TaskDays.sql
 ----------------------------------------------------------------------------------------------------
 
 GO

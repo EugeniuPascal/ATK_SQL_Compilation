@@ -2,6 +2,32 @@
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
+GO
+
+IF OBJECT_ID('mis.[Gold_Fact_CPD_Sold]', 'U') IS NOT NULL
+DROP TABLE mis.[Gold_Fact_CPD_Sold];
+
+GO
+
+CREATE TABLE mis.[Gold_Fact_CPD_Sold]
+(
+    CondID       VARCHAR(36) NOT NULL,
+    CPDDate      DATE        NOT NULL,
+    CreditID     VARCHAR(36) NULL,
+    ClientID     VARCHAR(36) NOT NULL,
+    GroupOwner   VARCHAR(36) NULL,
+    BranchID     VARCHAR(36) NULL,
+    BranchID1    VARCHAR(36) NULL,
+    BranchID2    VARCHAR(36) NULL,
+    SoldCredit   DECIMAL(18,2) DEFAULT 0,
+    SoldClient   DECIMAL(18,2) DEFAULT 0,
+    SoldGroup    DECIMAL(18,2) DEFAULT 0,
+    CreditRisk   NVARCHAR(64) NULL,
+    LegalRisk    NVARCHAR(64) NULL,
+    LoadDttm     DATETIME NOT NULL,
+    CONSTRAINT PK_Gold_Fact_CPD_Sold PRIMARY KEY CLUSTERED (CondID, CPDDate)
+);
+GO
 ------------------------------------------------------------
 -- 0) Границы Sold (на всякий случай)
 ------------------------------------------------------------

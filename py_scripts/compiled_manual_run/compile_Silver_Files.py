@@ -9,15 +9,22 @@ OUTPUT    = Path(r"C:\ATK_Project\compiled\manual_run\compiled_Silver_Tables.sql
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
-# ---- list your files in the specific order you want first ----
-SQL_ORDER = [
-    "mis.Silver_Restruct_SCD.sql",
+    SQL_ORDER =  [
+    # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
+    "mis.Silver_Restruct_SCD.sql",    
     "mis.Silver_RestructState_SCD.sql",
     "mis.Silver_Restruct_Merged_SCD.sql",
     "mis.Silver_Client_UnhealedFlag.sql",
     "mis.Silver_Resp_SCD.sql",
-    "mis.Silver_SCD_GroupMembershipPeriods.sql",
     "mis.Silver_Stages_SCD.sql",
+    
+    # below table execution order to create mis.Gold_Fact_CPD_Sold 
+    "mis.Silver_SCD_GroupMembershipPeriods.sql", 
+    "mis.Silver_Sold_Owner.sql",
+    "mis.Silver_Limits.sql"
+    "mis.Silver_Conditions_After_Disb.sql",
+    "mis.Silver_CPD_TaskDays.sql"
+    
     # add all your filenames here in the desired order
 ]
 

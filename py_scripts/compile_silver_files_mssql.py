@@ -74,16 +74,24 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
-    SQL_ORDER = [
-        "mis.Silver_Restruct_SCD.sql",
-        "mis.Silver_RestructState_SCD.sql",
-        "mis.Silver_Restruct_Merged_SCD.sql",
-        "mis.Silver_Client_UnhealedFlag.sql",
-        "mis.Silver_Resp_SCD.sql",
-        "mis.Silver_SCD_GroupMembershipPeriods.sql",
-        "mis.Silver_Stages_SCD.sql",
-        # add more as needed
-    ]
+    SQL_ORDER =  [
+    # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
+    "mis.Silver_Restruct_SCD.sql",    
+    "mis.Silver_RestructState_SCD.sql",
+    "mis.Silver_Restruct_Merged_SCD.sql",
+    "mis.Silver_Client_UnhealedFlag.sql",
+    "mis.Silver_Resp_SCD.sql",
+    "mis.Silver_Stages_SCD.sql",
+    
+    # below table execution order to create mis.Gold_Fact_CPD_Sold 
+    "mis.Silver_SCD_GroupMembershipPeriods.sql", 
+    "mis.Silver_Sold_Owner.sql",
+    "mis.Silver_Limits.sql"
+    "mis.Silver_Conditions_After_Disb.sql",
+    "mis.Silver_CPD_TaskDays.sql"
+    
+    # add all your filenames here in the desired order
+]
 
     # 1) List all SQL files
     all_files = sorted([f.name for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])

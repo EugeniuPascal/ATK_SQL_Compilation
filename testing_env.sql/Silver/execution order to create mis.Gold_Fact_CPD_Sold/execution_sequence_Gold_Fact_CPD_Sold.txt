@@ -1,0 +1,8 @@
+    # below table execution order to create mis.Gold_Fact_CPD_Sold 
+    "mis.Silver_SCD_GroupMembershipPeriods.sql", 
+    "mis.Silver_Sold_Owner.sql",
+    "mis.Silver_Limits.sql"
+    "mis.Silver_Conditions_After_Disb.sql",
+    "mis.Silver_CPD_TaskDays.sql"
+	
+	--> mis.Gold_Fact_CPD_Sold 

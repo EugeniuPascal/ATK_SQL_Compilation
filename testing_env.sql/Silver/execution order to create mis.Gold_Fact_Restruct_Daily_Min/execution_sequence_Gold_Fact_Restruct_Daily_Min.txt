@@ -1,0 +1,10 @@
+    SQL_ORDER =  [
+    # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
+    "mis.Silver_Restruct_SCD.sql",    
+    "mis.Silver_RestructState_SCD.sql",
+    "mis.Silver_Restruct_Merged_SCD.sql",
+    "mis.Silver_Client_UnhealedFlag.sql",
+    "mis.Silver_Resp_SCD.sql",
+    "mis.Silver_Stages_SCD.sql"
+	
+	--> mis.Gold_Fact_Restruct_Daily_Min 

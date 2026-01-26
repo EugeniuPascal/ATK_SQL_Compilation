@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-01-23 16:50:03.093590
+-- Generated: 2026-01-26 17:15:06.581344
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 21
 --   mis.Gold_Dim_AppUsers.sql
@@ -1719,195 +1719,536 @@ WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';';
 
     -- Start of: mis.Gold_Fact_CerereOnline.sql
     SET @sql = N'SET NOCOUNT ON;
+SET XACT_ABORT ON;
 
-IF OBJECT_ID(''mis.[Gold_Fact_CerereOnline]'', ''U'') IS NOT NULL
-    DROP TABLE mis.[Gold_Fact_CerereOnline];
 
-CREATE TABLE mis.[Gold_Fact_CerereOnline] 
+
+
+
+
+IF OBJECT_ID(''tempdb..#Dim_WorkCalendar_08_20_19'') IS NOT NULL
+    DROP TABLE #Dim_WorkCalendar_08_20_19;
+
+
+CREATE TABLE #Dim_WorkCalendar_08_20_19
 (
-    [ID]                    VARCHAR(36)    NULL,
-    [Date]                  DATETIME       NULL,
-    [Status]                NVARCHAR(256)  NULL,
-    [Posted]                VARCHAR(36)    NULL,
-    [BusinessSector]        NVARCHAR(150)  NULL,
-    [Type]                  NVARCHAR(100)  NULL,
-    [HistoryType]           NVARCHAR(256)  NULL,
-    [CreditID]              VARCHAR(36)    NULL,
-    [AuthorID]              VARCHAR(36)    NULL,
-    [Author]                NVARCHAR(100)  NULL,
-    [Purpose]               NVARCHAR(150)  NULL,
-    [IsGreen]               NVARCHAR(36)   NULL,
-    [ClientID]              VARCHAR(36)    NULL,
-    [CreditAmount]          DECIMAL(15,2)  NULL,
-    [CurrencyType]          NVARCHAR(36)   NULL,
-    [CreditAmountInMDL]     DECIMAL(18,2)  NULL,
-    [NewExisting_Client]    NVARCHAR(20)   NULL,
-    [RefusalReason]         NVARCHAR(200)  NULL,
-    [CreditProduct]         NVARCHAR(150)  NULL,
-    [ProductID]             VARCHAR(36)    NULL,
-    [CreditProductID]       VARCHAR(36)    NULL,
-    [InternetID]            VARCHAR(36)    NULL,
-    [EmployeeID]            VARCHAR(36)    NULL,
-    [BranchID]              VARCHAR(36)    NULL,
-    [PartnerID]             VARCHAR(36)    NULL,
-    [Partner]               NVARCHAR(150)  NULL,
-    [WebDate]               DATETIME       NULL,
-    [WebNr]                 NVARCHAR(50)   NULL,
-    [WebPosted]             VARCHAR(36)    NULL,
-    [WebIncomeTypeOnline]   NVARCHAR(200)  NULL,
-    [WebAge]                INT            NULL,
-    [WebSubmissionDate]     DATETIME       NULL,
-    [WebCredit]             NVARCHAR(100)  NULL,
-    [WebIdentifier]         NVARCHAR(50)   NULL,
-    [WebCreditEmployee]     NVARCHAR(50)   NULL,
-    [WebMobilePhone]        NVARCHAR(20)   NULL,
-    [WebSentForReview]      NVARCHAR(36)   NULL,
-    [WebGender]             NVARCHAR(256)  NULL,
-    [WebStatus]             NVARCHAR(256)  NULL,
-    [WebCreditTerm]         INT            NULL,
-    [WebBranchID]           VARCHAR(36)    NULL,
-    [CommitteeDecisionDate] DATETIME       NULL
+      [Date]               DATE        NOT NULL
+    , IsWeekend            BIT         NOT NULL
+    , WorkStartDttm        DATETIME2(0) NOT NULL
+    , WorkEndDttm          DATETIME2(0) NOT NULL
+    , WorkMinutesPerDay    INT         NOT NULL
+    , TotalWorkMinutes     BIGINT      NOT NULL
+    
 );
 
-;WITH Base AS (
-    SELECT
-        z.[ЗаявкаНаКредит ID] AS [ID],
-        z.[ЗаявкаНаКредит Дата] AS [Date],
-        z.[ЗаявкаНаКредит Состояние Заявки] AS [Status],
-        z.[ЗаявкаНаКредит Проведен] AS [Posted],
-        z.[ЗаявкаНаКредит Бизнес Сектор Экономики] AS [BusinessSector],
-        z.[ЗаявкаНаКредит Вид Заявки] AS [Type],
-        z.[ЗаявкаНаКредит Вид Кредитной Истории] AS [HistoryType],
-        z.[ЗаявкаНаКредит Кредит ID] AS [CreditID],
-        z.[ЗаявкаНаКредит Автор ID] AS [AuthorID],
-        z.[ЗаявкаНаКредит Автор] AS [Author],
-        z.[ЗаявкаНаКредит Цель Кредита] AS [Purpose],
-        z.[ЗаявкаНаКредит Это Зеленый Кредит] AS [IsGreen],
-        z.[ЗаявкаНаКредит Клиент ID] AS [ClientID],
-        z.[ЗаявкаНаКредит Сумма Кредита] AS [CreditAmount],
-        z.[ЗаявкаНаКредит Валюта] AS [CurrencyType],
-        z.[ЗаявкаНаКредит Дата] AS [CreditAppDate],
-        z.[ЗаявкаНаКредит Причина Отказа] AS [RefusalReason],
-        z.[ЗаявкаНаКредит Кредитный Продукт] AS [CreditProduct],
-        z.[ЗаявкаНаКредит Финансовый Продукт ID] AS [ProductID],
-        z.[ЗаявкаНаКредит Кредитный Продукт ID] AS [CreditProductID],
-        z.[ЗаявкаНаКредит Заявка Клиента Интернет ID] AS [InternetID],
-        z.[ЗаявкаНаКредит Кредитный Эксперт ID] AS [EmployeeID],
-        z.[ЗаявкаНаКредит Филиал ID] AS [BranchID],
-        z.[ЗаявкаНаКредит Партнер ID] AS [PartnerID],
-        z.[ЗаявкаНаКредит Партнер] AS [Partner],
-        o.[ОбъединеннаяИнтернетЗаявка Дата] AS [WebDate],
-        o.[ОбъединеннаяИнтернетЗаявка Номер] AS [WebNr],
-        o.[ОбъединеннаяИнтернетЗаявка Проведен] AS [WebPosted],
-        o.[ОбъединеннаяИнтернетЗаявка Вид Доходов Онлайн] AS [WebIncomeTypeOnline],
-        o.[ОбъединеннаяИнтернетЗаявка Возраст] AS [WebAge],
-        o.[ОбъединеннаяИнтернетЗаявка Дата Отправки на Рассмотрение] AS [WebSubmissionDate],
-        o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит] AS [WebCredit],
-        o.[ОбъединеннаяИнтернетЗаявка Идентификатор] AS [WebIdentifier],
-        o.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт] AS [WebCreditEmployee],
-        o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный] AS [WebMobilePhone],
-        o.[ОбъединеннаяИнтернетЗаявка Отправлена на Рассмотрение] AS [WebSentForReview],
-        o.[ОбъединеннаяИнтернетЗаявка Пол] AS [WebGender],
-        o.[ОбъединеннаяИнтернетЗаявка Состояние Заявки] AS [WebStatus],
-        o.[ОбъединеннаяИнтернетЗаявка Срок Кредита] AS [WebCreditTerm],
-        o.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS [WebBranchID],
-        COALESCE(
-            z.[ЗаявкаНаКредит Клиент ID],
-            o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
-            o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный],
-            o.[ОбъединеннаяИнтернетЗаявка Автор ID],
-            o.[ОбъединеннаяИнтернетЗаявка ID]
-        ) AS ClientKey,
-        c.[ПротоколКомитета Дата Решения] AS [CommitteeDecisionDate]
-    FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
-    LEFT JOIN [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] o
-        ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
-		AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = ''00''
-	    OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
-    LEFT JOIN [ATK].[mis].[Bronze_Документы.ПротоколКомитета] c
-        ON c.[ПротоколКомитета Заявка ID] = z.[ЗаявкаНаКредит ID]
 
-    UNION ALL
 
-    SELECT
-        NULL AS [ID], NULL AS [Date], NULL AS [Status], NULL AS [Posted],
-        NULL AS [BusinessSector], NULL AS [Type], NULL AS [HistoryType],
-        NULL AS [CreditID], NULL AS [AuthorID], NULL AS [Author], NULL AS [Purpose],
-        NULL AS [IsGreen], NULL AS [ClientID], NULL AS [CreditAmount],
-        NULL AS [CurrencyType], NULL AS [CreditAppDate],     
-        NULL AS [RefusalReason], NULL AS [CreditProduct], NULL AS [ProductID],
-        NULL AS [CreditProductID], NULL AS [InternetID], NULL AS [EmployeeID], NULL AS [BranchID],
-        NULL AS [PartnerID], NULL AS [Partner],
-        o.[ОбъединеннаяИнтернетЗаявка Дата],
-        o.[ОбъединеннаяИнтернетЗаявка Номер],
-        o.[ОбъединеннаяИнтернетЗаявка Проведен],
-        o.[ОбъединеннаяИнтернетЗаявка Вид Доходов Онлайн],
-        o.[ОбъединеннаяИнтернетЗаявка Возраст],
-        o.[ОбъединеннаяИнтернетЗаявка Дата Отправки на Рассмотрение],
-        o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит],
-        o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
-        o.[ОбъединеннаяИнтернетЗаявка Кредитный Эксперт],
-        o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный],
-        o.[ОбъединеннаяИнтернетЗаявка Отправлена на Рассмотрение],
-        o.[ОбъединеннаяИнтернетЗаявка Пол],
-        o.[ОбъединеннаяИнтернетЗаявка Состояние Заявки],
-        o.[ОбъединеннаяИнтернетЗаявка Срок Кредита],
-        o.[ОбъединеннаяИнтернетЗаявка Филиал ID],
-        COALESCE(
-            o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
-            o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный],
-            o.[ОбъединеннаяИнтернетЗаявка Автор ID],
-            o.[ОбъединеннаяИнтернетЗаявка ID]
-        ) AS ClientKey,
-        NULL AS [CommitteeDecisionDate]
-    FROM [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] o
-    LEFT JOIN [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
-        ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
-    WHERE z.[ЗаявкаНаКредит ID] IS NULL
-       OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = ''00000000000000000000000000000000''
-	   AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = ''00''
-	   OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
-)
-INSERT INTO mis.[Gold_Fact_CerereOnline] 
+
+
+DECLARE @CalStart DATE = ''2023-01-01'';
+DECLARE @CalEnd   DATE = DATEADD(YEAR, 5, CONVERT(DATE, GETDATE()));  
+
+;WITH N AS
 (
-    [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
-    [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
-    [CreditAmount],[CurrencyType], [CreditAmountInMDL],[NewExisting_Client],
-    [RefusalReason],[CreditProduct],[ProductID],[CreditProductID],
-    [InternetID],[EmployeeID],[BranchID],[PartnerID],[Partner],
-    [WebDate],[WebNr],[WebPosted],[WebIncomeTypeOnline],[WebAge],
-    [WebSubmissionDate],[WebCredit],[WebIdentifier],[WebCreditEmployee],
-    [WebMobilePhone],[WebSentForReview],[WebGender],[WebStatus],
-    [WebCreditTerm],[WebBranchID],[CommitteeDecisionDate]
+    SELECT TOP (DATEDIFF(DAY, @CalStart, @CalEnd) + 1)
+           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n
+    FROM sys.all_objects a
+    CROSS JOIN sys.all_objects b
+),
+d AS
+(
+    SELECT DATEADD(DAY, n, @CalStart) AS [Date]
+    FROM N
+),
+x AS
+(
+    SELECT 
+          [Date]
+        , WDay = (DATEDIFF(DAY, ''19000101'', [Date]) % 7) + 1  
+    FROM d
+),
+y AS
+(
+    SELECT
+          [Date]
+        , IsWeekend = CASE WHEN WDay IN (6,7) THEN 1 ELSE 0 END
+        , WorkStartDttm     = DATEADD(MINUTE, 8*60,  CAST([Date] AS datetime2(0)))  
+        , WorkEndDttm       = DATEADD(MINUTE, 20*60, CAST([Date] AS datetime2(0)))  
+        , WorkMinutesPerDay = 720
+    FROM x
+)
+INSERT INTO #Dim_WorkCalendar_08_20_19
+(
+    [Date], IsWeekend, WorkStartDttm, WorkEndDttm, WorkMinutesPerDay, TotalWorkMinutes
 )
 SELECT
-    b.[ID], b.[Date], b.[Status], b.[Posted],
-    b.[BusinessSector], b.[Type], b.[HistoryType],
-    b.[CreditID], b.[AuthorID], b.[Author], b.[Purpose],
-    b.[IsGreen], b.[ClientID], b.[CreditAmount], b.[CurrencyType],
-    ROUND(b.[CreditAmount] * ISNULL(v.[Валюта Курс], 1), 2) AS [CreditAmountInMDL],
+      [Date]
+    , IsWeekend
+    , WorkStartDttm
+    , WorkEndDttm
+    , WorkMinutesPerDay
+    , SUM(CAST(WorkMinutesPerDay AS BIGINT)) OVER (ORDER BY [Date] ROWS UNBOUNDED PRECEDING) AS TotalWorkMinutes
+FROM y;
+
+
+
+
+
+IF OBJECT_ID(''mis.[Gold_Fact_CerereOnline]'',''U'') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_CerereOnline];
+
+;WITH d_src AS
+(
+    SELECT
+          d.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] AS CerereOnlineID
+        , CAST(d.[ОбъединеннаяИнтернетЗаявка Дата] AS datetime2(0)) AS [Data depunerii cererii]
+        , CAST(d.[ОбъединеннаяИнтернетЗаявка Дата Отправки на Рассмотрение] AS datetime2(0)) AS [Data inaintare la CC]
+        , CAST(d.[ОбъединеннаяИнтернетЗаявка Дата Взятия в Работу] AS datetime2(0)) AS [Data procesarii]
+        , d.[ОбъединеннаяИнтернетЗаявка Тип Рассмотрения Заявки] AS [Tip Рассмотрения Заявки]
+        , ROW_NUMBER() OVER
+          (
+              PARTITION BY d.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
+              ORDER BY
+                    CAST(d.[ОбъединеннаяИнтернетЗаявка Дата] AS datetime2(0)) DESC
+                  , d.[ОбъединеннаяИнтернетЗаявка ID] DESC
+          ) AS rn
+    FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗаявка] d
+    WHERE ISNULL(d.[ОбъединеннаяИнтернетЗаявка Проведен], 0) = 0
+      AND ISNULL(d.[ОбъединеннаяИнтернетЗаявка Пометка Удаления], 0) = 0
+      AND d.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] IS NOT NULL
+),
+d_last AS
+(
+    SELECT
+          CerereOnlineID
+        , [Data depunerii cererii]
+        , [Data inaintare la CC]
+        , [Data procesarii]
+        , [Tip Рассмотрения Заявки]
+    FROM d_src
+    WHERE rn = 1
+),
+proto_pick AS
+(
+    SELECT
+          p.[ПротоколКомитета Заявка ID] AS CerereOnlineID
+        , p.[ПротоколКомитета ID]        AS ProtocolID
+        , ROW_NUMBER() OVER
+          (
+              PARTITION BY p.[ПротоколКомитета Заявка ID]
+              ORDER BY
+                    CAST(p.[ПротоколКомитета Дата] AS datetime2(0)) DESC
+                  , p.[ПротоколКомитета ID] DESC
+          ) AS rn
+    FROM [ATK].[dbo].[Документы.ПротоколКомитета] p
+    WHERE ISNULL(p.[ПротоколКомитета Пометка Удаления], 0) = 0
+    AND p.[ПротоколКомитета Заявка ID] IS NOT NULL
+    AND ISNULL(p.[ПротоколКомитета Вид Комитета], N'''') = N''ПредоставлениеКредита''
+),
+proto_last AS
+(
+    SELECT CerereOnlineID, ProtocolID
+    FROM proto_pick
+    WHERE rn = 1
+),
+votes_ranked AS
+(
+    SELECT
+          pl.CerereOnlineID
+        , VoteDate =
+            NULLIF(
+                CAST(m.[ПротоколКомитета.ЧленыКомитета Дата Голоса] AS datetime2(0)),
+                CAST(''1753-01-01T00:00:00'' AS datetime2(0))
+            )
+        , [Autor Votare] =
+            m.[ПротоколКомитета.ЧленыКомитета Член Комитета]
+        , [AutorVotare ID] =
+            m.[ПротоколКомитета.ЧленыКомитета Член Комитета ID]
+        , rn = ROW_NUMBER() OVER
+            (
+                PARTITION BY pl.CerereOnlineID
+                ORDER BY
+                      CASE
+                          WHEN NULLIF(
+                                   CAST(m.[ПротоколКомитета.ЧленыКомитета Дата Голоса] AS datetime2(0)),
+                                   CAST(''1753-01-01T00:00:00'' AS datetime2(0))
+                               ) IS NULL
+                          THEN 1 ELSE 0
+                      END
+                    , NULLIF(
+                          CAST(m.[ПротоколКомитета.ЧленыКомитета Дата Голоса] AS datetime2(0)),
+                          CAST(''1753-01-01T00:00:00'' AS datetime2(0))
+                      ) ASC
+                    , m.[ПротоколКомитета.ЧленыКомитета Член Комитета ID] ASC
+            )
+    FROM proto_last pl
+    LEFT JOIN [ATK].[dbo].[Документы.ПротоколКомитета.ЧленыКомитета] m
+      ON m.[ПротоколКомитета ID] = pl.ProtocolID
+),
+votes_min AS
+(
+    SELECT
+          CerereOnlineID
+        , VoteDate         AS [Data Votarii]
+        , [Autor Votare]   AS [Autor Votare]
+        , [AutorVotare ID] AS [AutorVotare ID]
+    FROM votes_ranked
+    WHERE rn = 1
+),
+credits_dim AS
+(
+    SELECT
+          c.[Кредиты ID] AS [Кредиты ID]
+        , MAX(c.[Кредиты Сегмент Доходов]) AS [Кредиты Сегмент Доходов]
+    FROM [ATK].[mis].[Bronze_Справочники.Кредиты] c
+    GROUP BY c.[Кредиты ID]
+),
+users_dim AS
+(
+    SELECT
+          u.[Пользователи ID] AS [AuthorID]
+        , MAX(u.[Пользователи Сотрудник ID]) AS [AutorDecizie ID]
+        , MAX(u.[Пользователи Сотрудник])    AS [Autor decizie]
+    FROM [ATK].[dbo].[Справочники.Пользователи] u
+    GROUP BY u.[Пользователи ID]
+)
+SELECT
+      f.*
+    , d.[Data depunerii cererii]
+    , v.[Data Votarii]
+    , v.[Autor Votare]
+    , v.[AutorVotare ID]
+    , u.[Autor decizie]
+    , u.[AutorDecizie ID]
+    , d.[Data inaintare la CC]
+    , d.[Data procesarii]
+    , d.[Tip Рассмотрения Заявки]
+
+    , CASE
+          WHEN v.[AutorVotare ID] = ''813100155D65040111ED171A45F42146'' THEN N''Fara sunet''
+          WHEN d.[Tip Рассмотрения Заявки] = N''БезЗвонка''               THEN N''Fara sunet''
+          WHEN d.[Tip Рассмотрения Заявки] = N''Стандартный''             THEN N''Standart''
+          ELSE NULL
+      END AS [Tip Рассмотрения Заявки RO]
+
+    , cr.[Кредиты Сегмент Доходов]
+
+    , dec_calc.WorkMinutesSigned AS [Viteza de decizie]
+    , vot_calc.WorkMinutesSigned AS [Viteza de votare]
+    , prc_calc.WorkMinutesSigned AS [Viteza de procesare]
+
+    , CASE
+          WHEN vot_calc.WorkMinutesSigned IS NULL THEN NULL
+          WHEN (
+                 cr.[Кредиты Сегмент Доходов] LIKE N''Ipoteca%''
+              OR cr.[Кредиты Сегмент Доходов] LIKE N''HIL%''
+              OR cr.[Кредиты Сегмент Доходов] =    N''Consum non-business''
+               )
+               AND vot_calc.WorkMinutesSigned > 420 THEN 1
+          WHEN vot_calc.WorkMinutesSigned > 120 THEN 1
+          ELSE 0
+      END AS [Depasire norma viteza]
+
+    , GETDATE() AS LoadDttm_Ext
+INTO mis.[Gold_Fact_CerereOnline]
+FROM [ATK].[mis].[Silver_CerereOnline] f
+LEFT JOIN d_last      d  ON d.CerereOnlineID = f.[ID]
+LEFT JOIN votes_min   v  ON v.CerereOnlineID = f.[ID]
+LEFT JOIN credits_dim cr ON cr.[Кредиты ID]   = f.[CreditID]
+LEFT JOIN users_dim   u  ON u.[AuthorID]      = f.[AuthorID]
+
+
+
+
+
+OUTER APPLY (SELECT A = d.[Data depunerii cererii],
+                    B = CAST(f.[CommitteeDecisionDate] AS datetime2(0))) dec_in
+OUTER APPLY
+(
+    SELECT
+          Sign = CASE WHEN dec_in.A IS NULL OR dec_in.B IS NULL THEN NULL
+                      WHEN dec_in.B >= dec_in.A THEN 1 ELSE -1 END
+        , S    = CASE WHEN dec_in.A IS NULL OR dec_in.B IS NULL THEN NULL
+                      WHEN dec_in.B >= dec_in.A THEN dec_in.A ELSE dec_in.B END
+        , E    = CASE WHEN dec_in.A IS NULL OR dec_in.B IS NULL THEN NULL
+                      WHEN dec_in.B >= dec_in.A THEN dec_in.B ELSE dec_in.A END
+) dec_pair
+OUTER APPLY (SELECT SD = CAST(dec_pair.S AS date), ED = CAST(dec_pair.E AS date)) dec_dates
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_sd_dec ON cal_sd_dec.[Date] = dec_dates.SD
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_ed_dec ON cal_ed_dec.[Date] = dec_dates.ED
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_mid_end_dec
+  ON cal_mid_end_dec.[Date] = DATEADD(day,-1, dec_dates.ED)
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_mid_start_dec
+  ON cal_mid_start_dec.[Date] = dec_dates.SD
+OUTER APPLY
+(
+    SELECT WorkMinutes =
     CASE
-        WHEN b.CreditAmount IS NULL OR b.CreditAmount <= 0 THEN N''Cancelled''
-        WHEN ROW_NUMBER() OVER (PARTITION BY b.ClientKey ORDER BY b.WebDate) = 1 THEN N''New''
-        ELSE N''Existing''
-    END AS [NewExisting_Client],
-    b.[RefusalReason], b.[CreditProduct], b.[ProductID], b.[CreditProductID],
-    b.[InternetID], b.[EmployeeID], b.[BranchID], b.[PartnerID], b.[Partner],
-    b.[WebDate], b.[WebNr], b.[WebPosted], b.[WebIncomeTypeOnline], b.[WebAge],
-    b.[WebSubmissionDate], b.[WebCredit], b.[WebIdentifier], b.[WebCreditEmployee],
-    b.[WebMobilePhone], b.[WebSentForReview], b.[WebGender], b.[WebStatus],
-    b.[WebCreditTerm], b.[WebBranchID], b.[CommitteeDecisionDate]
-FROM Base b
-LEFT JOIN [ATK].[mis].[Bronze_Справочники.Контрагенты] AS c
-    ON b.[ClientID] = c.[Контрагенты ID]
-OUTER APPLY (
-    SELECT TOP 1 v.[Валюта Курс]
-    FROM [ATK].[mis].[Bronze_РегистрыСведений.Валюта] v
-    WHERE v.[Валюта Валюта] = b.[CurrencyType]
-      AND v.[Валюта Период] <= b.[CreditAppDate]
-    ORDER BY v.[Валюта Период] DESC
-) AS v
-WHERE c.[Контрагенты Тестовый Контрагент] = 0;';
+        WHEN dec_pair.S IS NULL OR dec_pair.E IS NULL OR dec_pair.E <= dec_pair.S THEN NULL
+
+        WHEN dec_dates.SD = dec_dates.ED THEN
+            CASE
+                WHEN
+                    (CASE WHEN cal_sd_dec.WorkStartDttm > dec_pair.S THEN cal_sd_dec.WorkStartDttm ELSE dec_pair.S END)
+                    <
+                    (CASE WHEN cal_sd_dec.WorkEndDttm   < dec_pair.E THEN cal_sd_dec.WorkEndDttm   ELSE dec_pair.E END)
+                THEN DATEDIFF_BIG(
+                        second,
+                        CASE WHEN cal_sd_dec.WorkStartDttm > dec_pair.S THEN cal_sd_dec.WorkStartDttm ELSE dec_pair.S END,
+                        CASE WHEN cal_sd_dec.WorkEndDttm   < dec_pair.E THEN cal_sd_dec.WorkEndDttm   ELSE dec_pair.E END
+                     ) / 60.0
+                ELSE 0.0
+            END
+
+        ELSE
+            (
+                CASE
+                    WHEN (CASE WHEN cal_sd_dec.WorkStartDttm > dec_pair.S THEN cal_sd_dec.WorkStartDttm ELSE dec_pair.S END)
+                         < cal_sd_dec.WorkEndDttm
+                    THEN DATEDIFF_BIG(
+                            second,
+                            CASE WHEN cal_sd_dec.WorkStartDttm > dec_pair.S THEN cal_sd_dec.WorkStartDttm ELSE dec_pair.S END,
+                            cal_sd_dec.WorkEndDttm
+                         ) / 60.0
+                    ELSE 0.0
+                END
+            )
+            +
+            (
+                CASE
+                    WHEN DATEADD(day,1, dec_dates.SD) <= DATEADD(day,-1, dec_dates.ED)
+                    THEN CAST(
+                            COALESCE(cal_mid_end_dec.TotalWorkMinutes, 0)
+                          - COALESCE(cal_mid_start_dec.TotalWorkMinutes, 0)
+                         AS float)
+                    ELSE 0.0
+                END
+            )
+            +
+            (
+                CASE
+                    WHEN cal_ed_dec.WorkStartDttm
+                         <
+                         (CASE WHEN cal_ed_dec.WorkEndDttm < dec_pair.E THEN cal_ed_dec.WorkEndDttm ELSE dec_pair.E END)
+                    THEN DATEDIFF_BIG(
+                            second,
+                            cal_ed_dec.WorkStartDttm,
+                            CASE WHEN cal_ed_dec.WorkEndDttm < dec_pair.E THEN cal_ed_dec.WorkEndDttm ELSE dec_pair.E END
+                         ) / 60.0
+                    ELSE 0.0
+                END
+            )
+    END
+) dec_wm
+OUTER APPLY
+(
+    SELECT WorkMinutesSigned =
+        CASE
+            WHEN dec_pair.Sign IS NULL OR dec_wm.WorkMinutes IS NULL THEN NULL
+            ELSE CAST(ROUND(dec_wm.WorkMinutes, 2) AS decimal(18,2)) * CAST(dec_pair.Sign AS decimal(18,2))
+        END
+) dec_calc
+
+
+
+
+OUTER APPLY (SELECT A = d.[Data depunerii cererii],
+                    B = v.[Data Votarii]) vot_in
+OUTER APPLY
+(
+    SELECT
+          Sign = CASE WHEN vot_in.A IS NULL OR vot_in.B IS NULL THEN NULL
+                      WHEN vot_in.B >= vot_in.A THEN 1 ELSE -1 END
+        , S    = CASE WHEN vot_in.A IS NULL OR vot_in.B IS NULL THEN NULL
+                      WHEN vot_in.B >= vot_in.A THEN vot_in.A ELSE vot_in.B END
+        , E    = CASE WHEN vot_in.A IS NULL OR vot_in.B IS NULL THEN NULL
+                      WHEN vot_in.B >= vot_in.A THEN vot_in.B ELSE vot_in.A END
+) vot_pair
+OUTER APPLY (SELECT SD = CAST(vot_pair.S AS date), ED = CAST(vot_pair.E AS date)) vot_dates
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_sd_vot ON cal_sd_vot.[Date] = vot_dates.SD
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_ed_vot ON cal_ed_vot.[Date] = vot_dates.ED
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_mid_end_vot
+  ON cal_mid_end_vot.[Date] = DATEADD(day,-1, vot_dates.ED)
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_mid_start_vot
+  ON cal_mid_start_vot.[Date] = vot_dates.SD
+OUTER APPLY
+(
+    SELECT WorkMinutes =
+    CASE
+        WHEN vot_pair.S IS NULL OR vot_pair.E IS NULL OR vot_pair.E <= vot_pair.S THEN NULL
+
+        WHEN vot_dates.SD = vot_dates.ED THEN
+            CASE
+                WHEN
+                    (CASE WHEN cal_sd_vot.WorkStartDttm > vot_pair.S THEN cal_sd_vot.WorkStartDttm ELSE vot_pair.S END)
+                    <
+                    (CASE WHEN cal_sd_vot.WorkEndDttm   < vot_pair.E THEN cal_sd_vot.WorkEndDttm   ELSE vot_pair.E END)
+                THEN DATEDIFF_BIG(
+                        second,
+                        CASE WHEN cal_sd_vot.WorkStartDttm > vot_pair.S THEN cal_sd_vot.WorkStartDttm ELSE vot_pair.S END,
+                        CASE WHEN cal_sd_vot.WorkEndDttm   < vot_pair.E THEN cal_sd_vot.WorkEndDttm   ELSE vot_pair.E END
+                     ) / 60.0
+                ELSE 0.0
+            END
+
+        ELSE
+            (
+                CASE
+                    WHEN (CASE WHEN cal_sd_vot.WorkStartDttm > vot_pair.S THEN cal_sd_vot.WorkStartDttm ELSE vot_pair.S END)
+                         < cal_sd_vot.WorkEndDttm
+                    THEN DATEDIFF_BIG(
+                            second,
+                            CASE WHEN cal_sd_vot.WorkStartDttm > vot_pair.S THEN cal_sd_vot.WorkStartDttm ELSE vot_pair.S END,
+                            cal_sd_vot.WorkEndDttm
+                         ) / 60.0
+                    ELSE 0.0
+                END
+            )
+            +
+            (
+                CASE
+                    WHEN DATEADD(day,1, vot_dates.SD) <= DATEADD(day,-1, vot_dates.ED)
+                    THEN CAST(
+                            COALESCE(cal_mid_end_vot.TotalWorkMinutes, 0)
+                          - COALESCE(cal_mid_start_vot.TotalWorkMinutes, 0)
+                         AS float)
+                    ELSE 0.0
+                END
+            )
+            +
+            (
+                CASE
+                    WHEN cal_ed_vot.WorkStartDttm
+                         <
+                         (CASE WHEN cal_ed_vot.WorkEndDttm < vot_pair.E THEN cal_ed_vot.WorkEndDttm ELSE vot_pair.E END)
+                    THEN DATEDIFF_BIG(
+                            second,
+                            cal_ed_vot.WorkStartDttm,
+                            CASE WHEN cal_ed_vot.WorkEndDttm < vot_pair.E THEN cal_ed_vot.WorkEndDttm ELSE vot_pair.E END
+                         ) / 60.0
+                    ELSE 0.0
+                END
+            )
+    END
+) vot_wm
+OUTER APPLY
+(
+    SELECT WorkMinutesSigned =
+        CASE
+            WHEN vot_pair.Sign IS NULL OR vot_wm.WorkMinutes IS NULL THEN NULL
+            ELSE CAST(ROUND(vot_wm.WorkMinutes, 2) AS decimal(18,2)) * CAST(vot_pair.Sign AS decimal(18,2))
+        END
+) vot_calc
+
+
+
+
+OUTER APPLY (SELECT A = d.[Data procesarii],
+                    B = v.[Data Votarii]) prc_in
+OUTER APPLY
+(
+    SELECT
+          Sign = CASE WHEN prc_in.A IS NULL OR prc_in.B IS NULL THEN NULL
+                      WHEN prc_in.B >= prc_in.A THEN 1 ELSE -1 END
+        , S    = CASE WHEN prc_in.A IS NULL OR prc_in.B IS NULL THEN NULL
+                      WHEN prc_in.B >= prc_in.A THEN prc_in.A ELSE prc_in.B END
+        , E    = CASE WHEN prc_in.A IS NULL OR prc_in.B IS NULL THEN NULL
+                      WHEN prc_in.B >= prc_in.A THEN prc_in.B ELSE prc_in.A END
+) prc_pair
+OUTER APPLY (SELECT SD = CAST(prc_pair.S AS date), ED = CAST(prc_pair.E AS date)) prc_dates
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_sd_prc ON cal_sd_prc.[Date] = prc_dates.SD
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_ed_prc ON cal_ed_prc.[Date] = prc_dates.ED
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_mid_end_prc
+  ON cal_mid_end_prc.[Date] = DATEADD(day,-1, prc_dates.ED)
+LEFT JOIN #Dim_WorkCalendar_08_20_19 cal_mid_start_prc
+  ON cal_mid_start_prc.[Date] = prc_dates.SD
+OUTER APPLY
+(
+    SELECT WorkMinutes =
+    CASE
+        WHEN prc_pair.S IS NULL OR prc_pair.E IS NULL OR prc_pair.E <= prc_pair.S THEN NULL
+
+        WHEN prc_dates.SD = prc_dates.ED THEN
+            CASE
+                WHEN
+                    (CASE WHEN cal_sd_prc.WorkStartDttm > prc_pair.S THEN cal_sd_prc.WorkStartDttm ELSE prc_pair.S END)
+                    <
+                    (CASE WHEN cal_sd_prc.WorkEndDttm   < prc_pair.E THEN cal_sd_prc.WorkEndDttm   ELSE prc_pair.E END)
+                THEN DATEDIFF_BIG(
+                        second,
+                        CASE WHEN cal_sd_prc.WorkStartDttm > prc_pair.S THEN cal_sd_prc.WorkStartDttm ELSE prc_pair.S END,
+                        CASE WHEN cal_sd_prc.WorkEndDttm   < prc_pair.E THEN cal_sd_prc.WorkEndDttm   ELSE prc_pair.E END
+                     ) / 60.0
+                ELSE 0.0
+            END
+
+        ELSE
+            (
+                CASE
+                    WHEN (CASE WHEN cal_sd_prc.WorkStartDttm > prc_pair.S THEN cal_sd_prc.WorkStartDttm ELSE prc_pair.S END)
+                         < cal_sd_prc.WorkEndDttm
+                    THEN DATEDIFF_BIG(
+                            second,
+                            CASE WHEN cal_sd_prc.WorkStartDttm > prc_pair.S THEN cal_sd_prc.WorkStartDttm ELSE prc_pair.S END,
+                            cal_sd_prc.WorkEndDttm
+                         ) / 60.0
+                    ELSE 0.0
+                END
+            )
+            +
+            (
+                CASE
+                    WHEN DATEADD(day,1, prc_dates.SD) <= DATEADD(day,-1, prc_dates.ED)
+                    THEN CAST(
+                            COALESCE(cal_mid_end_prc.TotalWorkMinutes, 0)
+                          - COALESCE(cal_mid_start_prc.TotalWorkMinutes, 0)
+                         AS float)
+                    ELSE 0.0
+                END
+            )
+            +
+            (
+                CASE
+                    WHEN cal_ed_prc.WorkStartDttm
+                         <
+                         (CASE WHEN cal_ed_prc.WorkEndDttm < prc_pair.E THEN cal_ed_prc.WorkEndDttm ELSE prc_pair.E END)
+                    THEN DATEDIFF_BIG(
+                            second,
+                            cal_ed_prc.WorkStartDttm,
+                            CASE WHEN cal_ed_prc.WorkEndDttm < prc_pair.E THEN cal_ed_prc.WorkEndDttm ELSE prc_pair.E END
+                         ) / 60.0
+                    ELSE 0.0
+                END
+            )
+    END
+) prc_wm
+OUTER APPLY
+(
+    SELECT WorkMinutesSigned =
+        CASE
+            WHEN prc_pair.Sign IS NULL OR prc_wm.WorkMinutes IS NULL THEN NULL
+            ELSE CAST(ROUND(prc_wm.WorkMinutes, 2) AS decimal(18,2)) * CAST(prc_pair.Sign AS decimal(18,2))
+        END
+) prc_calc
+;
+
+
+
+
+CREATE INDEX IX_Gold_CerereOnline_ID
+ON mis.Silver_CerereOnline_WithWebDates ([ID]);
+
+CREATE INDEX IX_Gold_CerereOnline_CreditID
+ON mis.Silver_CerereOnline_WithWebDates ([CreditID]);
+
+CREATE INDEX IX_Gold_CerereOnline_DataDepunerii
+ON mis.Silver_CerereOnline_WithWebDates ([Data depunerii cererii]);
+
+CREATE INDEX IX_Gold_CerereOnline_DataVotarii
+ON mis.Silver_CerereOnline_WithWebDates ([Data Votarii]);
+
+CREATE INDEX IX_Gold_CerereOnline_CommitteeDecisionDate
+ON mis.Silver_CerereOnline_WithWebDates ([CommitteeDecisionDate]);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

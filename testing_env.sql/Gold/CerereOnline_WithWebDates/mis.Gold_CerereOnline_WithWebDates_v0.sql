@@ -1,51 +1,47 @@
-USE [ATK];
+﻿USE [ATK];
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
 --------------------------------------------------------------------------------
 -- 0) Рабочий календарь: Пн–Вс 08:00–20:00 (720 мин)
 --------------------------------------------------------------------------------
-
--- Drop temp table if it exists
 IF OBJECT_ID('tempdb..#Dim_WorkCalendar_08_20_19') IS NOT NULL
     DROP TABLE #Dim_WorkCalendar_08_20_19;
 
--- Create temp table with primary key
 CREATE TABLE #Dim_WorkCalendar_08_20_19
 (
       [Date]               DATE        NOT NULL
-    , IsWeekend            BIT         NOT NULL
+    , IsWeekend            BIT        NOT NULL
     , WorkStartDttm        DATETIME2(0) NOT NULL
     , WorkEndDttm          DATETIME2(0) NOT NULL
     , WorkMinutesPerDay    INT         NOT NULL
     , TotalWorkMinutes     BIGINT      NOT NULL
-    
+    , CONSTRAINT PK_Dim_WorkCalendar_08_20_19 PRIMARY KEY CLUSTERED ([Date])
 );
 
---------------------------------------------------------------------------------
--- Fill calendar
---------------------------------------------------------------------------------
+--ALTER TABLE [mis].[Dim_WorkCalendar_08_20_19]
+--DROP CONSTRAINT [PK_Dim_WorkCalendar_08_20_19];
 
-DECLARE @CalStart DATE = '2023-01-01';
-DECLARE @CalEnd   DATE = DATEADD(YEAR, 5, CONVERT(DATE, GETDATE()));  -- 5 years ahead
+DECLARE @CalStart date = '2023-01-01';
+DECLARE @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));  -- запас вперёд
 
 ;WITH N AS
 (
-    SELECT TOP (DATEDIFF(DAY, @CalStart, @CalEnd) + 1)
+    SELECT TOP (DATEDIFF(day, @CalStart, @CalEnd) + 1)
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n
     FROM sys.all_objects a
     CROSS JOIN sys.all_objects b
 ),
 d AS
 (
-    SELECT DATEADD(DAY, n, @CalStart) AS [Date]
+    SELECT [Date] = DATEADD(day, n, @CalStart)
     FROM N
 ),
 x AS
 (
-    SELECT 
+    SELECT
           [Date]
-        , WDay = (DATEDIFF(DAY, '19000101', [Date]) % 7) + 1  -- 1=Mon..7=Sun
+        , WDay = (DATEDIFF(day, CONVERT(date,'19000101'), [Date]) % 7) + 1  -- 1=Mon..7=Sun
     FROM d
 ),
 y AS
@@ -53,8 +49,8 @@ y AS
     SELECT
           [Date]
         , IsWeekend = CASE WHEN WDay IN (6,7) THEN 1 ELSE 0 END
-        , WorkStartDttm     = DATEADD(MINUTE, 8*60,  CAST([Date] AS datetime2(0)))  -- 08:00
-        , WorkEndDttm       = DATEADD(MINUTE, 20*60, CAST([Date] AS datetime2(0)))  -- 20:00
+        , WorkStartDttm     = DATEADD(minute, 8*60,  CAST([Date] AS datetime2(0))) -- 08:00
+        , WorkEndDttm       = DATEADD(minute, 20*60, CAST([Date] AS datetime2(0))) -- 20:00
         , WorkMinutesPerDay = 720
     FROM x
 )
@@ -68,15 +64,14 @@ SELECT
     , WorkStartDttm
     , WorkEndDttm
     , WorkMinutesPerDay
-    , SUM(CAST(WorkMinutesPerDay AS BIGINT)) OVER (ORDER BY [Date] ROWS UNBOUNDED PRECEDING) AS TotalWorkMinutes
+    , SUM(CAST(WorkMinutesPerDay AS bigint)) OVER (ORDER BY [Date] ROWS UNBOUNDED PRECEDING) AS TotalWorkMinutes
 FROM y;
-
 
 --------------------------------------------------------------------------------
 -- 1) Rebuild таблицы
 --------------------------------------------------------------------------------
-IF OBJECT_ID('mis.[Gold_Fact_CerereOnline]','U') IS NOT NULL
-    DROP TABLE mis.[Gold_Fact_CerereOnline];
+IF OBJECT_ID('mis.[Gold_Fact_CerereOnline1]','U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_CerereOnline1];
 
 ;WITH d_src AS
 (
@@ -194,7 +189,7 @@ users_dim AS
     GROUP BY u.[Пользователи ID]
 )
 SELECT
-      f.*
+      z.*
     , d.[Data depunerii cererii]
     , v.[Data Votarii]
     , v.[Autor Votare]
@@ -231,19 +226,21 @@ SELECT
       END AS [Depasire norma viteza]
 
     , GETDATE() AS LoadDttm_Ext
-INTO mis.[Gold_Fact_CerereOnline]
-FROM [ATK].[mis].[Silver_CerereOnline] f
-LEFT JOIN d_last      d  ON d.CerereOnlineID = f.[ID]
-LEFT JOIN votes_min   v  ON v.CerereOnlineID = f.[ID]
-LEFT JOIN credits_dim cr ON cr.[Кредиты ID]   = f.[CreditID]
-LEFT JOIN users_dim   u  ON u.[AuthorID]      = f.[AuthorID]
+INTO mis.[Gold_Fact_CerereOnline1]
+FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
+LEFT JOIN d_last      d  ON d.CerereOnlineID = z.[ЗаявкаНаКредит ID]
+LEFT JOIN votes_min   v  ON v.CerereOnlineID = z.[ЗаявкаНаКредит ID]
+LEFT JOIN credits_dim cr ON cr.[Кредиты ID]   = z.[ЗаявкаНаКредит Кредит ID]
+LEFT JOIN users_dim   u  ON u.[AuthorID]      = z.[ЗаявкаНаКредит Автор ID]
+LEFT JOIN proto_last pl  ON pl.CerereOnlineID = z.[ЗаявкаНаКредит ID]
+LEFT JOIN [ATK].[dbo].[Документы.ПротоколКомитета] p ON p.[ПротоколКомитета ID] = pl.ProtocolID
 
 
 --------------------------------------------------------------------------------
 -- 1A) Viteza de decizie = CommitteeDecisionDate - Data depunerii cererii
 --------------------------------------------------------------------------------
 OUTER APPLY (SELECT A = d.[Data depunerii cererii],
-                    B = CAST(f.[CommitteeDecisionDate] AS datetime2(0))) dec_in
+                    B = CAST(p.[ПротоколКомитета Дата] AS datetime2(0))) dec_in
 OUTER APPLY
 (
     SELECT
@@ -516,17 +513,15 @@ OUTER APPLY
 --------------------------------------------------------------------------------
 -- 2) Индексы (минимальные полезные)
 --------------------------------------------------------------------------------
-CREATE INDEX IX_Gold_CerereOnline_ID
-ON mis.Silver_CerereOnline_WithWebDates ([ID]);
+CREATE INDEX IX_Gold_Fact_CerereOnline1_ID
+ON mis.[Gold_Fact_CerereOnline1] ([ЗаявкаНаКредит ID]);
 
-CREATE INDEX IX_Gold_CerereOnline_CreditID
-ON mis.Silver_CerereOnline_WithWebDates ([CreditID]);
+CREATE INDEX IX_Gold_Fact_CerereOnline1_CreditID
+ON mis.[Gold_Fact_CerereOnline1] ([ЗаявкаНаКредит Кредит ID]);
 
-CREATE INDEX IX_Gold_CerereOnline_DataDepunerii
-ON mis.Silver_CerereOnline_WithWebDates ([Data depunerii cererii]);
+CREATE INDEX IX_Gold_Fact_CerereOnline1_DataDepunerii
+ON mis.[Gold_Fact_CerereOnline1] ([Data depunerii cererii]);
 
-CREATE INDEX IX_Gold_CerereOnline_DataVotarii
-ON mis.Silver_CerereOnline_WithWebDates ([Data Votarii]);
+CREATE INDEX IX_Gold_Fact_CerereOnline1_DataVotarii
+ON mis.[Gold_Fact_CerereOnline1] ([Data Votarii]);
 
-CREATE INDEX IX_Gold_CerereOnline_CommitteeDecisionDate
-ON mis.Silver_CerereOnline_WithWebDates ([CommitteeDecisionDate]);

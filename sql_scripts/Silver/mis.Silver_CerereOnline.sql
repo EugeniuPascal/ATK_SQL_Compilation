@@ -2,11 +2,11 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
-IF OBJECT_ID('mis.[Gold_Fact_CerereOnline1]', 'U') IS NOT NULL
-    DROP TABLE mis.[Gold_Fact_CerereOnline1];
+IF OBJECT_ID('mis.[Silver_CerereOnline]', 'U') IS NOT NULL
+    DROP TABLE mis.[Silver_CerereOnline];
 GO
 
-CREATE TABLE mis.[Gold_Fact_CerereOnline1] 
+CREATE TABLE mis.[Silver_CerereOnline] 
 (
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
@@ -107,8 +107,8 @@ GO
     FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] o
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
-			       AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
-	OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
+		AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
+	    OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ПротоколКомитета] c
         ON c.[ПротоколКомитета Заявка ID] = z.[ЗаявкаНаКредит ID]
 
@@ -150,10 +150,10 @@ GO
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
     WHERE z.[ЗаявкаНаКредит ID] IS NULL
        OR o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] = '00000000000000000000000000000000'
-	       AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
-	OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
+	   AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
+	   OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
 )
-INSERT INTO mis.[Gold_Fact_CerereOnline1] 
+INSERT INTO mis.[Silver_CerereOnline] 
 (
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],

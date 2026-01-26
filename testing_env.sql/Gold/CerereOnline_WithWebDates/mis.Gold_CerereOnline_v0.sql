@@ -1,4 +1,4 @@
-USE [ATK];
+﻿USE [ATK];
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
@@ -516,17 +516,20 @@ OUTER APPLY
 --------------------------------------------------------------------------------
 -- 2) Индексы (минимальные полезные)
 --------------------------------------------------------------------------------
-CREATE INDEX IX_Gold_CerereOnline_ID
+CREATE INDEX IX_Gold_CerereOnline_WithWebDates_ID
 ON mis.Silver_CerereOnline_WithWebDates ([ID]);
 
-CREATE INDEX IX_Gold_CerereOnline_CreditID
+CREATE INDEX IX_Gold_CerereOnline_WithWebDates_CreditID
 ON mis.Silver_CerereOnline_WithWebDates ([CreditID]);
 
-CREATE INDEX IX_Gold_CerereOnline_DataDepunerii
+CREATE INDEX IX_Gold_CerereOnline_WithWebDates_DataDepunerii
 ON mis.Silver_CerereOnline_WithWebDates ([Data depunerii cererii]);
 
-CREATE INDEX IX_Gold_CerereOnline_DataVotarii
+CREATE INDEX IX_Gold_CerereOnline_WithWebDates_DataVotarii
 ON mis.Silver_CerereOnline_WithWebDates ([Data Votarii]);
 
-CREATE INDEX IX_Gold_CerereOnline_CommitteeDecisionDate
+CREATE INDEX IX_Gold_CerereOnline_WithWebDates_CommitteeDecisionDate
 ON mis.Silver_CerereOnline_WithWebDates ([CommitteeDecisionDate]);
+
+--ALTER TABLE mis. #Dim_WorkCalendar_08_20_19
+--DROP CONSTRAINT PK_Dim_WorkCalendar_08_20_19

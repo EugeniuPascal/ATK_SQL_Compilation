@@ -75,6 +75,9 @@ def make_idempotent(sql: str) -> str:
 # --------------------------------------------------------------------
 try:
     SQL_ORDER = [
+    # creates Silver_CerereOnline_WithWebDates
+    "mis.Silver_CerereOnline.sql",
+    
     # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
     "mis.Silver_Restruct_SCD.sql",    
     "mis.Silver_RestructState_SCD.sql",

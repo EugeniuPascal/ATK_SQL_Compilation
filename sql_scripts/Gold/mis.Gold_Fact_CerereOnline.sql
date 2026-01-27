@@ -512,21 +512,3 @@ OUTER APPLY
         END
 ) prc_calc
 ;
-
---------------------------------------------------------------------------------
--- 2) Индексы (минимальные полезные)
---------------------------------------------------------------------------------
-CREATE INDEX IX_Gold_CerereOnline_ID
-ON mis.Silver_CerereOnline_WithWebDates ([ID]);
-
-CREATE INDEX IX_Gold_CerereOnline_CreditID
-ON mis.Silver_CerereOnline_WithWebDates ([CreditID]);
-
-CREATE INDEX IX_Gold_CerereOnline_DataDepunerii
-ON mis.Silver_CerereOnline_WithWebDates ([Data depunerii cererii]);
-
-CREATE INDEX IX_Gold_CerereOnline_DataVotarii
-ON mis.Silver_CerereOnline_WithWebDates ([Data Votarii]);
-
-CREATE INDEX IX_Gold_CerereOnline_CommitteeDecisionDate
-ON mis.Silver_CerereOnline_WithWebDates ([CommitteeDecisionDate]);

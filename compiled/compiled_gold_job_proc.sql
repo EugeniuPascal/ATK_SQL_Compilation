@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-01-26 17:15:06.581344
+-- Generated: 2026-01-27 14:47:31.752585
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 21
 --   mis.Gold_Dim_AppUsers.sql
@@ -2230,25 +2230,7 @@ OUTER APPLY
             ELSE CAST(ROUND(prc_wm.WorkMinutes, 2) AS decimal(18,2)) * CAST(prc_pair.Sign AS decimal(18,2))
         END
 ) prc_calc
-;
-
-
-
-
-CREATE INDEX IX_Gold_CerereOnline_ID
-ON mis.Silver_CerereOnline_WithWebDates ([ID]);
-
-CREATE INDEX IX_Gold_CerereOnline_CreditID
-ON mis.Silver_CerereOnline_WithWebDates ([CreditID]);
-
-CREATE INDEX IX_Gold_CerereOnline_DataDepunerii
-ON mis.Silver_CerereOnline_WithWebDates ([Data depunerii cererii]);
-
-CREATE INDEX IX_Gold_CerereOnline_DataVotarii
-ON mis.Silver_CerereOnline_WithWebDates ([Data Votarii]);
-
-CREATE INDEX IX_Gold_CerereOnline_CommitteeDecisionDate
-ON mis.Silver_CerereOnline_WithWebDates ([CommitteeDecisionDate]);';
+;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

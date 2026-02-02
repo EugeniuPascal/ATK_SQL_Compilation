@@ -1,8 +1,8 @@
 -- Compiled SQL bundle
--- Generated: 2026-01-27 14:47:20
+-- Generated: 2026-02-02 12:01:38
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (12):
---   mis.Silver_CerereOnline.sql
+--   mis.Silver_CerereOnline_base.sql
 --   mis.Silver_Restruct_SCD.sql
 --   mis.Silver_RestructState_SCD.sql
 --   mis.Silver_Restruct_Merged_SCD.sql
@@ -19,17 +19,17 @@
 SET NOCOUNT ON;
 
 ----------------------------------------------------------------------------------------------------
--- Start of: mis.Silver_CerereOnline.sql
+-- Start of: mis.Silver_CerereOnline_base.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
 SET NOCOUNT ON;
 
-IF OBJECT_ID('mis.[Silver_CerereOnline]', 'U') IS NOT NULL
-    DROP TABLE mis.[Silver_CerereOnline];
+IF OBJECT_ID('mis.[Silver_CerereOnline_base]', 'U') IS NOT NULL
+    DROP TABLE mis.[Silver_CerereOnline_base];
 GO
 
-CREATE TABLE mis.[Silver_CerereOnline] 
+CREATE TABLE mis.[Silver_CerereOnline_base] 
 (
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
@@ -176,7 +176,7 @@ GO
 	   AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
 	   OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
 )
-INSERT INTO mis.[Silver_CerereOnline] 
+INSERT INTO mis.[Silver_CerereOnline_base] 
 (
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
@@ -218,7 +218,7 @@ OUTER APPLY (
 WHERE c.[Контрагенты Тестовый Контрагент] = 0;
 GO
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Silver_CerereOnline.sql
+-- End of:   mis.Silver_CerereOnline_base.sql
 ----------------------------------------------------------------------------------------------------
 
 GO

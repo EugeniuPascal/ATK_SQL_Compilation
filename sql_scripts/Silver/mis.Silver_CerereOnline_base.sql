@@ -2,11 +2,11 @@ USE [ATK];
 GO
 SET NOCOUNT ON;
 
-IF OBJECT_ID('mis.[Silver_CerereOnline]', 'U') IS NOT NULL
-    DROP TABLE mis.[Silver_CerereOnline];
+IF OBJECT_ID('mis.[Silver_CerereOnline_base]', 'U') IS NOT NULL
+    DROP TABLE mis.[Silver_CerereOnline_base];
 GO
 
-CREATE TABLE mis.[Silver_CerereOnline] 
+CREATE TABLE mis.[Silver_CerereOnline_base] 
 (
     [ID]                    VARCHAR(36)    NULL,
     [Date]                  DATETIME       NULL,
@@ -153,7 +153,7 @@ GO
 	   AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = '00'
 	   OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
 )
-INSERT INTO mis.[Silver_CerereOnline] 
+INSERT INTO mis.[Silver_CerereOnline_base] 
 (
     [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
     [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],

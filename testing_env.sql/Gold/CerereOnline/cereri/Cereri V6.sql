@@ -1,4 +1,4 @@
-USE [ATK];
+﻿USE [ATK];
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
@@ -301,80 +301,80 @@ FROM src s;
 --------------------------------------------------------------------------------
 -- 1) Rebuild target table from f.* only (убираем дубли колонок!)
 --------------------------------------------------------------------------------
-IF OBJECT_ID('mis.Gold_Fact_CerereOnline','U') IS NOT NULL
-    DROP TABLE mis.Gold_Fact_CerereOnline;
+IF OBJECT_ID('mis.Silver_CerereOnline_WithWebDates','U') IS NOT NULL
+    DROP TABLE mis.Silver_CerereOnline_WithWebDates;
 
 SELECT f.*
-INTO mis.Gold_Fact_CerereOnline
-FROM [ATK].[mis].[Silver_CerereOnline_base] f;
+INTO mis.Silver_CerereOnline_WithWebDates
+FROM [ATK].[mis].[Gold_Fact_CerereOnline] f;
 
 --------------------------------------------------------------------------------
 -- 2) Ensure required columns (add only if missing)
 --------------------------------------------------------------------------------
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Data autorizarii') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Data autorizarii] datetime2(0) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Data autorizarii') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Data autorizarii] datetime2(0) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Autor Votare') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Autor Votare] nvarchar(255) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Autor Votare') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Autor Votare] nvarchar(255) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'AutorVotare ID') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [AutorVotare ID] varchar(36) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'AutorVotare ID') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [AutorVotare ID] varchar(36) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Autor decizie') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Autor decizie] nvarchar(255) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Autor decizie') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Autor decizie] nvarchar(255) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'AutorDecizie ID') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [AutorDecizie ID] varchar(36) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'AutorDecizie ID') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [AutorDecizie ID] varchar(36) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Кредиты Сегмент Доходов') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Кредиты Сегмент Доходов] nvarchar(255) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Кредиты Сегмент Доходов') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Кредиты Сегмент Доходов] nvarchar(255) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Tip Рассмотрения Заявки RO') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Tip Рассмотрения Заявки RO] nvarchar(50) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Tip Рассмотрения Заявки RO') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Tip Рассмотрения Заявки RO] nvarchar(50) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Viteza de decizie') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de decizie] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Viteza de decizie') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Viteza de decizie] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Viteza de votare') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de votare] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Viteza de votare') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Viteza de votare] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Viteza de procesare') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de procesare] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Viteza de procesare') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Viteza de procesare] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Analyse') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Analyse] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Analyse') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Analyse] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Viteza de votare CC') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de votare CC] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Viteza de votare CC') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Viteza de votare CC] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'CC') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [CC] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'CC') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [CC] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Disbusement speed') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Disbusement speed] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Disbusement speed') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Disbusement speed] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Total speed') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Total speed] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Total speed') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Total speed] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Timpul de asteptare') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Timpul de asteptare] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Timpul de asteptare') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Timpul de asteptare] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Viteza de decizie CC') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de decizie CC] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Viteza de decizie CC') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Viteza de decizie CC] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Viteza debursare(dupa procesare)') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza debursare(dupa procesare)] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Viteza debursare(dupa procesare)') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Viteza debursare(dupa procesare)] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Viteza debursare(dupa Decizie)') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza debursare(dupa Decizie)] decimal(18,2) NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Viteza debursare(dupa Decizie)') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Viteza debursare(dupa Decizie)] decimal(18,2) NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Depasire norma viteza') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Depasire norma viteza] bit NULL;
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'Depasire norma viteza') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates ADD [Depasire norma viteza] bit NULL;
 
-IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'LoadDttm_Ext') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline
+IF COL_LENGTH('mis.Silver_CerereOnline_WithWebDates', 'LoadDttm_Ext') IS NULL
+    ALTER TABLE mis.Silver_CerereOnline_WithWebDates
         ADD [LoadDttm_Ext] datetime NOT NULL
-            CONSTRAINT DF_Gold_Fact_CerereOnline_LoadDttm DEFAULT (GETDATE());
+            CONSTRAINT DF_Silver_CerereOnline_WithWebDates_LoadDttm DEFAULT (GETDATE());
 GO
 
 --------------------------------------------------------------------------------
@@ -508,35 +508,35 @@ SET
     , t.[Кредиты Сегмент Доходов] = cr.IncomeSeg
     , t.[Data autorizarii]        = pay.DataAut
 
-, t.[Tip Рассмотрения Заявки RO] =
-    CASE
-        WHEN v.[AutorVotare ID] = '813100155D65040111ED171A45F42146' THEN N'Fara sunet'
-        WHEN d.Tip = N'БезЗвонка'   THEN N'Fara sunet'
-        WHEN d.Tip = N'Стандартный' THEN N'Standart'
-        ELSE NULL
-    END
+    , t.[Tip Рассмотрения Заявки RO] =
+        CASE
+            WHEN v.[AutorVotare ID] = '813100155D65040111ED171A45F42146' THEN N'Fara sunet'
+            WHEN COALESCE(d.Tip, t.[Tip Рассмотрения Заявки]) = N'БезЗвонка'   THEN N'Fara sunet'
+            WHEN COALESCE(d.Tip, t.[Tip Рассмотрения Заявки]) = N'Стандартный' THEN N'Standart'
+            ELSE NULL
+        END
 
     --------------------------------------------------------------------------------
     -- OLD speeds (как было): ALL DAYS 08-20
     --------------------------------------------------------------------------------
     , t.[Viteza de decizie] =
         mis.fn_WorkMinutesSigned(
-            d.Dep,
-            t.[CommitteeDecisionDate],
+            COALESCE(d.Dep, CAST(t.[Data depunerii cererii] AS datetime2(0))),
+            CAST(t.[CommitteeDecisionDate] AS datetime2(0)),
             8*60, 20*60
         )
 
     , t.[Viteza de votare] =
         mis.fn_WorkMinutesSigned(
-            d.Dep,
-            v.VoteDate,
+            COALESCE(d.Dep, CAST(t.[Data depunerii cererii] AS datetime2(0))),
+            CAST(COALESCE(v.VoteDate, t.[Data Votarii]) AS datetime2(0)),
             8*60, 20*60
         )
 
     , t.[Viteza de procesare] =
         mis.fn_WorkMinutesSigned(
-           d.ProcDttm,
-           v.VoteDate,
+            COALESCE(d.ProcDttm, CAST(t.[Data procesarii] AS datetime2(0))),
+            CAST(COALESCE(v.VoteDate, t.[Data Votarii]) AS datetime2(0)),
             8*60, 20*60
         )
 
@@ -545,8 +545,8 @@ SET
     --------------------------------------------------------------------------------
     , t.[Analyse] =
         mis.fn_WorkMinutesSigned_MonFri(
-            d.Dep,
-            d.InCC,
+            COALESCE(d.Dep,  CAST(t.[Data depunerii cererii] AS datetime2(0))),
+            COALESCE(d.InCC, CAST(t.[Data inaintare la CC] AS datetime2(0))),
             8*60, 18*60
         )
 
@@ -561,62 +561,62 @@ SET
                 'B7B700155D65140C11EFB0AFF47A513B'
             )
             THEN mis.fn_WorkMinutesSigned_MonFri(
-                     d.InCC,
-                     v.VoteDate,
+                     COALESCE(d.InCC, CAST(t.[Data inaintare la CC] AS datetime2(0))),
+                     CAST(COALESCE(v.VoteDate, t.[Data Votarii]) AS datetime2(0)),
                      9*60, 18*60
                  )
             ELSE mis.fn_WorkMinutesSigned_MonFri(
-                     d.InCC,
-                     v.VoteDate,
+                     COALESCE(d.InCC, CAST(t.[Data inaintare la CC] AS datetime2(0))),
+                     CAST(COALESCE(v.VoteDate, t.[Data Votarii]) AS datetime2(0)),
                      8*60, 17*60
                  )
         END
 
     , t.[CC] =
         mis.fn_WorkMinutesSigned_MonFri(
-            d.InCC,
-            t.[CommitteeDecisionDate],
+            COALESCE(d.InCC, CAST(t.[Data inaintare la CC] AS datetime2(0))),
+            CAST(t.[CommitteeDecisionDate] AS datetime2(0)),
             8*60, 18*60
         )
 
     , t.[Disbusement speed] =
         mis.fn_WorkMinutesSigned_MonFri(
-            t.[CommitteeDecisionDate],
+            CAST(t.[CommitteeDecisionDate] AS datetime2(0)),
             pay.DataAut,
             8*60, 18*60
         )
 
     , t.[Total speed] =
         mis.fn_WorkMinutesSigned_MonFri(
-           d.Dep, 
+            COALESCE(d.Dep, CAST(t.[Data depunerii cererii] AS datetime2(0))),
             pay.DataAut,
             8*60, 18*60
         )
 
     , t.[Timpul de asteptare] =
         mis.fn_WorkMinutesSigned_MonFri(
-            d.Dep, 
-            d.ProcDttm,
+            COALESCE(d.Dep,      CAST(t.[Data depunerii cererii] AS datetime2(0))),
+            COALESCE(d.ProcDttm, CAST(t.[Data procesarii] AS datetime2(0))),
             9*60, 18*60
         )
 
     , t.[Viteza de decizie CC] =
         mis.fn_WorkMinutesSigned_MonFri(
-            d.Dep,
-            t.[CommitteeDecisionDate],
+            COALESCE(d.Dep, CAST(t.[Data depunerii cererii] AS datetime2(0))),
+            CAST(t.[CommitteeDecisionDate] AS datetime2(0)),
             8*60, 18*60
         )
 
     , t.[Viteza debursare(dupa procesare)] =
         mis.fn_WorkMinutesSigned_MonFri(
-            d.ProcDttm,
+            COALESCE(d.ProcDttm, CAST(t.[Data procesarii] AS datetime2(0))),
             pay.DataAut,
             8*60, 18*60
         )
 
     , t.[Viteza debursare(dupa Decizie)] =
         mis.fn_WorkMinutesSigned_MonFri(
-            t.[CommitteeDecisionDate],
+            CAST(t.[CommitteeDecisionDate] AS datetime2(0)),
             pay.DataAut,
             8*60, 18*60
         )
@@ -627,8 +627,8 @@ SET
     , t.[Depasire norma viteza] =
         CASE
             WHEN mis.fn_WorkMinutesSigned(
-                   d.Dep, 
-                    v.VoteDate,
+                    COALESCE(d.Dep, CAST(t.[Data depunerii cererii] AS datetime2(0))),
+                    CAST(COALESCE(v.VoteDate, t.[Data Votarii]) AS datetime2(0)),
                     8*60, 20*60
                  ) IS NULL THEN NULL
             WHEN (
@@ -637,20 +637,20 @@ SET
                   OR cr.IncomeSeg =  N'Consum non-business'
                  )
                  AND mis.fn_WorkMinutesSigned(
-                        d.Dep,
-                        v.VoteDate,
+                        COALESCE(d.Dep, CAST(t.[Data depunerii cererii] AS datetime2(0))),
+                        CAST(COALESCE(v.VoteDate, t.[Data Votarii]) AS datetime2(0)),
                         8*60, 20*60
                      ) > 420 THEN 1
             WHEN mis.fn_WorkMinutesSigned(
-                    d.Dep,
-                    v.VoteDate,
+                    COALESCE(d.Dep, CAST(t.[Data depunerii cererii] AS datetime2(0))),
+                    CAST(COALESCE(v.VoteDate, t.[Data Votarii]) AS datetime2(0)),
                     8*60, 20*60
                  ) > 120 THEN 1
             ELSE 0
         END
 
     , t.[LoadDttm_Ext] = GETDATE()
-FROM mis.Gold_Fact_CerereOnline t
+FROM mis.Silver_CerereOnline_WithWebDates t
 LEFT JOIN d_last      d   ON d.CerereOnlineID = t.[ID]
 LEFT JOIN votes_min   v   ON v.CerereOnlineID = t.[ID]
 LEFT JOIN credits_dim cr  ON cr.CreditID      = t.[CreditID]
@@ -658,3 +658,14 @@ LEFT JOIN users_dim   u   ON u.AuthorID       = t.[AuthorID]
 LEFT JOIN pay_last    pay ON pay.CreditID     = t.[CreditID];
 GO
 
+--------------------------------------------------------------------------------
+-- 4) Минимальный контроль
+--------------------------------------------------------------------------------
+SELECT
+    COUNT(*) AS TotalRows,
+    SUM(CASE WHEN [Data autorizarii] IS NOT NULL THEN 1 ELSE 0 END) AS HasAutorizarii,
+    SUM(CASE WHEN [Analyse] IS NOT NULL THEN 1 ELSE 0 END) AS HasAnalyse,
+    SUM(CASE WHEN [CC] IS NOT NULL THEN 1 ELSE 0 END) AS HasCC,
+    SUM(CASE WHEN [Viteza de votare CC] IS NOT NULL THEN 1 ELSE 0 END) AS HasVotareCC,
+    SUM(CASE WHEN [Depasire norma viteza] = 1 THEN 1 ELSE 0 END) AS DepasireCnt
+FROM mis.Silver_CerereOnline_WithWebDates;

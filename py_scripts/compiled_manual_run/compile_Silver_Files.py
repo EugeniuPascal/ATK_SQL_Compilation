@@ -10,8 +10,8 @@ FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
 SQL_ORDER = [
-    # creates Silver_CerereOnline_WithWebDates
-    "mis.Silver_CerereOnline.sql",
+    # creates Gold_Fact_CerereOnline
+    "mis.Silver_CerereOnline_base.sql",
     
     # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
     "mis.Silver_Restruct_SCD.sql",    

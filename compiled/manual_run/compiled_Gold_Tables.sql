@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-03 10:19:28
+-- Generated: 2026-02-03 11:06:48
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (21):
 --   mis.Gold_Dim_AppUsers.sql
@@ -773,7 +773,7 @@ SELECT
 	[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
     
 
-FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате];
+FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате];
 GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Gold_Dim_EmployeePayrollData.sql

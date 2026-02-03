@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-03 10:19:37.249525
+-- Generated: 2026-02-03 11:07:08.107909
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 21
 --   mis.Gold_Dim_AppUsers.sql
@@ -749,7 +749,7 @@ SELECT
 	[СотрудникиДанныеПоЗарплате Должность] AS EmployeePosition
     
 
-FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате];';
+FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

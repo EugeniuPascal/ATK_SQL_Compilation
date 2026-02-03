@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-02-03 09:30:12.054754
+-- Generated: 2026-02-03 10:19:35.477409
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 12
 --   mis.Silver_CerereOnline_base.sql

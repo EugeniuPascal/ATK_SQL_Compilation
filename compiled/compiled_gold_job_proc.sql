@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-03 09:30:09.895000
+-- Generated: 2026-02-03 10:19:37.249525
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 21
 --   mis.Gold_Dim_AppUsers.sql
@@ -95,14 +95,18 @@ CREATE TABLE mis.[Gold_Dim_Branch]
     Latitude DECIMAL(12, 8) NULL,
     Longitude DECIMAL(12, 8) NULL,
     BranchDepartment NVARCHAR(150) NULL,
-    BranchRegion NVARCHAR(100) NULL
+	BranchDepartmentID VARCHAR(36) NULL,
+    BranchRegion NVARCHAR(100) NULL,
+	BranchRegionID VARCHAR(36) NULL
 );
 
 WITH LastSvedeniya AS (
     SELECT 
         [СведенияОФилиалах Филиал ID],
         [СведенияОФилиалах Дирекция],
+		[СведенияОФилиалах Дирекция ID],
         [СведенияОФилиалах Регион],
+		[СведенияОФилиалах Регион ID],
         ROW_NUMBER() OVER (
             PARTITION BY [СведенияОФилиалах Филиал ID] 
             ORDER BY [СведенияОФилиалах Период] DESC
@@ -124,7 +128,9 @@ INSERT INTO mis.[Gold_Dim_Branch]
     Latitude,
     Longitude,
     BranchDepartment,
-    BranchRegion
+	BranchDepartmentID,
+    BranchRegion,
+	BranchRegionID
 )
 SELECT
     f.[Филиалы ID] AS [BranchID],
@@ -140,7 +146,9 @@ SELECT
     f.[Филиалы Координаты Широта],
     f.[Филиалы Координаты Долгота],
     s.[СведенияОФилиалах Дирекция],
-    s.[СведенияОФилиалах Регион]
+	s.[СведенияОФилиалах Дирекция ID],
+    s.[СведенияОФилиалах Регион],
+	s.[СведенияОФилиалах Регион ID]
 FROM [ATK].[dbo].[Справочники.Филиалы] f
 LEFT JOIN LastSvedeniya s
     ON f.[Филиалы ID] = s.[СведенияОФилиалах Филиал ID]
@@ -544,7 +552,7 @@ GreenCredit AS (
                ROW_NUMBER() OVER(PARTITION BY gc.[ПротоколКомитета Кредит ID]
                                  ORDER BY gc.[ПротоколКомитета Дата] ASC,
                                           gc.[ПротоколКомитета ID] ASC) AS rn
-        FROM [ATK].[dbo].[Документы.ПротоколКомитета] gc
+        FROM [ATK].[mis].[Bronze_Документы.ПротоколКомитета] gc
     ) t
     WHERE rn = 1
 ),

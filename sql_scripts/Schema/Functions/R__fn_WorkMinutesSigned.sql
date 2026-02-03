@@ -1,17 +1,12 @@
-USE [ATK];
-SET NOCOUNT ON;
-SET XACT_ABORT ON;
+-- R__fn_WorkMinutesSigned.sql
+-- Repeatable migration: WorkMinutesSigned function
 
-IF OBJECT_ID('mis.fn_WorkMinutesSigned', 'FN') IS NOT NULL
-    DROP FUNCTION mis.fn_WorkMinutesSigned;
-GO
-
-CREATE FUNCTION mis.fn_WorkMinutesSigned
+CREATE OR ALTER FUNCTION mis.fn_WorkMinutesSigned
 (
-      @A           datetime2(0)
-    , @B           datetime2(0)
-    , @StartMinute int
-    , @EndMinute   int
+      @A           datetime2(0),
+      @B           datetime2(0),
+      @StartMinute int,
+      @EndMinute   int
 )
 RETURNS decimal(18,2)
 AS
@@ -44,8 +39,6 @@ BEGIN
 
         IF @To > @From
             SET @Minutes = DATEDIFF_BIG(second, @From, @To) / 60.0;
-        ELSE
-            SET @Minutes = 0.0;
     END
     ELSE
     BEGIN
@@ -73,4 +66,3 @@ BEGIN
 
     RETURN CAST(ROUND(@Minutes, 2) AS decimal(18,2)) * CAST(@Sign AS decimal(18,2));
 END;
-GO

@@ -1,18 +1,12 @@
-USE [ATK];
-SET NOCOUNT ON;
-SET XACT_ABORT ON;
+-- R__fn_WorkMinutesSigned_MonFri.sql
+-- Repeatable migration: WorkMinutesSigned_MonFri function
 
-
-IF OBJECT_ID('mis.fn_WorkMinutesSigned_MonFri', 'FN') IS NOT NULL
-    DROP FUNCTION mis.fn_WorkMinutesSigned_MonFri;
-GO
-
-CREATE FUNCTION mis.fn_WorkMinutesSigned_MonFri
+CREATE OR ALTER FUNCTION mis.fn_WorkMinutesSigned_MonFri
 (
-      @A           datetime2(0)
-    , @B           datetime2(0)
-    , @StartMinute int
-    , @EndMinute   int
+      @A           datetime2(0),
+      @B           datetime2(0),
+      @StartMinute int,
+      @EndMinute   int
 )
 RETURNS decimal(18,2)
 AS
@@ -32,7 +26,7 @@ BEGIN
 
     DECLARE @Minutes float = 0.0;
 
-    -- 1900-01-01 = Monday => 1=Mon..7=Sun (без DATEFIRST)
+    -- 1900-01-01 = Monday => 1=Mon..7=Sun
     DECLARE @WSD int = (DATEDIFF(day, CONVERT(date,'19000101'), @SD) % 7) + 1;
     DECLARE @WED int = (DATEDIFF(day, CONVERT(date,'19000101'), @ED) % 7) + 1;
 
@@ -105,4 +99,3 @@ BEGIN
 
     RETURN CAST(ROUND(@Minutes, 2) AS decimal(18,2)) * CAST(@Sign AS decimal(18,2));
 END;
-GO

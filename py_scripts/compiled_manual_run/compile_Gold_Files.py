@@ -31,7 +31,8 @@ SQL_ORDER = [
     "mis.Gold_Fact_WriteOffCredits.sql",
     "mis.Gold_Fact_Restruct_Daily_Min.sql",
     "mis.Gold_Fact_Disbursement.sql",
-    "mis.Gold_Fact_Sold_Par.sql"
+    "mis.Gold_Fact_Sold_Par.sql",
+    "V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql"
 ]
 
 # ---- helper to read files with fallback encodings ----

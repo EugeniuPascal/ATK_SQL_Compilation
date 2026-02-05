@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-04 15:24:15.444154
+-- Generated: 2026-02-05 11:45:27.368616
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 22
 --   mis.Gold_Dim_AppUsers.sql
@@ -3016,7 +3016,7 @@ Restores AS (
            MAX(a.[АнулированныеКредитыПартнеров Период]) AS RestorePeriod
     FROM [ATK].[mis].[Bronze_РегистрыСведений.АнулированныеКредитыПартнеров] a
     INNER JOIN BaseIDs b ON b.CreditID = a.[АнулированныеКредитыПартнеров Кредит ID]
-    WHERE a.[АнулированныеКредитыПартнеров Кредит Восстановлен] = N''00''
+    WHERE a.[АнулированныеКредитыПартнеров Кредит Восстановлен] = N''01''
     GROUP BY a.[АнулированныеКредитыПартнеров Кредит ID]
 )
 SELECT b.CreditID,

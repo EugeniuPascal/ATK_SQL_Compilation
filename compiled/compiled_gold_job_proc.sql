@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-05 11:45:27.368616
+-- Generated: 2026-02-05 13:21:42.904070
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 22
 --   mis.Gold_Dim_AppUsers.sql
@@ -2584,7 +2584,7 @@ CREATE INDEX IX_WriteOff_Final
     SET @sql = N'SET NOCOUNT ON;
 
                                                      
-DECLARE @DateFrom date = ''2023-09-01'';
+DECLARE @DateFrom date = ''2024-01-01'';
 DECLARE @DateTo   date = ''2026-12-31'';
 
 PRINT N''=== Пересборка [mis].[Gold_Fact_Restruct_Daily_Min] за период ''
@@ -3130,7 +3130,7 @@ DROP TABLE #Final;';
     -- Start of: mis.Gold_Fact_Sold_Par.sql
     SET @sql = N'SET NOCOUNT ON;
 
-DECLARE @DateFrom DATE = ''2023-09-01'';
+DECLARE @DateFrom DATE = ''2024-01-01'';
 
 
 

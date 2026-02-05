@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-05 11:45:21
+-- Generated: 2026-02-05 13:21:36
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (22):
 --   mis.Gold_Dim_AppUsers.sql
@@ -2702,7 +2702,7 @@ USE [ATK];
 SET NOCOUNT ON;
 
 /* ================== ПАРАМЕТРЫ ================== */
-DECLARE @DateFrom date = '2023-09-01';
+DECLARE @DateFrom date = '2024-01-01';
 DECLARE @DateTo   date = '2026-12-31';
 
 PRINT N'=== Пересборка [mis].[Gold_Fact_Restruct_Daily_Min] за период '
@@ -3279,7 +3279,7 @@ GO
 USE [ATK];
 SET NOCOUNT ON;
 
-DECLARE @DateFrom DATE = '2023-09-01';
+DECLARE @DateFrom DATE = '2024-01-01';
 
 -----------------------------------------------------
 -- Drop & recreate main GOLD table with single Par column

@@ -2,7 +2,7 @@
 SET NOCOUNT ON;
 
 /* ================== PARAMETERS ================== */
-DECLARE @DateFrom date = '2023-09-01';
+DECLARE @DateFrom date = '2024-01-01';
 DECLARE @DateTo   date = '2026-12-31';
 
 PRINT N'=== Rebuilding [mis].[Gold_Fact_Restruct_Daily_Sold_Par] for period '

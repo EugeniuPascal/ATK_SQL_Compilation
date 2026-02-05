@@ -1,7 +1,7 @@
 USE [ATK];
 SET NOCOUNT ON;
 
-DECLARE @DateFrom DATE = '2023-09-01';
+DECLARE @DateFrom DATE = '2024-01-01';
 
 -----------------------------------------------------
 -- Drop & recreate main GOLD table with single Par column

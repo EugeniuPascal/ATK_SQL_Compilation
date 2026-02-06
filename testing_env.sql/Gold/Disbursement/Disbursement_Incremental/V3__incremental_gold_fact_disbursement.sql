@@ -5,6 +5,7 @@
 IF OBJECT_ID('tempdb..#Base')   IS NOT NULL DROP TABLE #Base;
 IF OBJECT_ID('tempdb..#Status') IS NOT NULL DROP TABLE #Status;
 IF OBJECT_ID('tempdb..#Final')  IS NOT NULL DROP TABLE #Final;
+IF OBJECT_ID('tempdb..#FirstDisbursementPerClient') IS NOT NULL DROP TABLE #FirstDisbursementPerClient;
 
 -- ============================
 -- 1. Build #Base (only new/updated disbursements)
@@ -176,32 +177,54 @@ WHERE s.RestorePeriod IS NOT NULL
   AND (s.CancelPeriod IS NULL OR s.RestorePeriod > s.CancelPeriod);
 
 -- ============================
--- 4. Insert only new/updated rows
+-- 4. Build #FirstDisbursementPerClient (all-time for these clients)
+-- ============================
+SELECT
+    k.[Кредиты Владелец] AS ClientID,
+    MIN(d.[ДанныеКредитовВыданных Дата Выдачи]) AS FirstDisbursementDate
+INTO #FirstDisbursementPerClient
+FROM [ATK].[mis].[Bronze_РегистрыСведений.ДанныеКредитовВыданных] d
+INNER JOIN [ATK].[mis].[Bronze_Справочники.Кредиты] k
+    ON k.[Кредиты ID] = d.[ДанныеКредитовВыданных Кредит ID]
+WHERE k.[Кредиты Владелец] IN (SELECT DISTINCT ClientID FROM #Base)
+GROUP BY k.[Кредиты Владелец];
+
+-- ============================
+-- 5. Insert only new/updated rows
 -- ============================
 WITH AllSeq AS (
-    SELECT f.*,
-           ROW_NUMBER() OVER (PARTITION BY f.ClientID ORDER BY f.DisbursementDate, f.CreditID) AS rn_all
+    SELECT
+        f.*,
+        fd.FirstDisbursementDate,
+        ROW_NUMBER() OVER (
+            PARTITION BY f.ClientID
+            ORDER BY f.DisbursementDate, f.CreditID
+        ) AS rn_all
     FROM #Final f
+    LEFT JOIN #FirstDisbursementPerClient fd
+        ON f.ClientID = fd.ClientID
 )
-INSERT INTO mis.Gold_Fact_Disbursement
+INSERT INTO mis.[Gold_Fact_Disbursement]
 (
     CreditID, ClientID, DisbursementDate, CurrencyID, CreditAmount, CreditAmountInMDL,
     CreditCurrency, FirstFilialID, FirstEmployeeID, LastFilialID, LastEmployeeID,
     IRR, IRR_Client, Qty, NewExisting_Client,
     EmployeePositionID, EmployeePosition
 )
-SELECT a.CreditID, a.ClientID, a.DisbursementDate, a.CurrencyID, a.CreditAmount, a.CreditAmountInMDL,
-       a.CreditCurrency, a.FirstFilialID, a.FirstEmployeeID, a.LastFilialID, a.LastEmployeeID,
-       a.IRR, a.IRR_Client, a.Qty,
-       CASE
-           WHEN a.CreditAmount > 0 AND a.rn_all = 1 THEN N'New'
-           WHEN a.CreditAmount > 0 THEN N'Existing'
-           ELSE N'Cancelled'
-       END AS NewExisting_Client,
-       a.EmployeePositionID, a.EmployeePosition
-FROM AllSeq a
-LEFT JOIN dbo.[Справочники.Контрагенты] c
-       ON a.ClientID = c.[Контрагенты ID]
+SELECT
+    a.CreditID, a.ClientID, a.DisbursementDate, a.CurrencyID, a.CreditAmount, a.CreditAmountInMDL,
+    a.CreditCurrency, a.FirstFilialID, a.FirstEmployeeID, a.LastFilialID, a.LastEmployeeID,
+    a.IRR, a.IRR_Client, a.Qty,
+    CASE
+        WHEN a.CreditAmount > 0 AND a.DisbursementDate = a.FirstDisbursementDate THEN N'New'
+        WHEN a.CreditAmount > 0 THEN N'Existing'
+        ELSE N'Cancelled'
+    END AS NewExisting_Client,
+    a.EmployeePositionID,
+    a.EmployeePosition
+FROM AllSeq AS a
+LEFT JOIN dbo.[Справочники.Контрагенты] AS c
+    ON a.ClientID = c.[Контрагенты ID]
 WHERE c.[Контрагенты Тестовый Контрагент] = 00
   AND NOT EXISTS (
         SELECT 1
@@ -212,9 +235,10 @@ WHERE c.[Контрагенты Тестовый Контрагент] = 00
   );
 
 -- ============================
--- 5. Cleanup temp tables
+-- 6. Cleanup temp tables
 -- ============================
 DROP TABLE #Base;
 DROP TABLE #Status;
 DROP TABLE #Final;
+DROP TABLE #FirstDisbursementPerClient;
 GO

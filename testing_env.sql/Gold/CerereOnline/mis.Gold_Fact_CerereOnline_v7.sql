@@ -459,11 +459,6 @@ SET
                         v.VoteDate,
                         8*60, 20*60
                      ) > 420 THEN 1
-            WHEN mis.fn_WorkMinutesSigned(
-                    d.Dep,
-                    v.VoteDate,
-                    8*60, 20*60
-                 ) > 120 THEN 1
             ELSE 0
         END
 

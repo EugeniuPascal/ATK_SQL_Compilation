@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-06 10:09:21.343584
+-- Generated: 2026-02-06 11:24:40.370071
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 22
 --   mis.Gold_Dim_AppUsers.sql
@@ -2861,6 +2861,8 @@ COMMIT TRAN;';
     SET @sql = N'IF OBJECT_ID(''tempdb..#Base'')   IS NOT NULL DROP TABLE #Base;
 IF OBJECT_ID(''tempdb..#Status'') IS NOT NULL DROP TABLE #Status;
 IF OBJECT_ID(''tempdb..#Final'')  IS NOT NULL DROP TABLE #Final;
+IF OBJECT_ID(''tempdb..#FirstDisbursementPerClient'') IS NOT NULL DROP TABLE #FirstDisbursementPerClient;
+
 
 IF OBJECT_ID(''mis.[Gold_Fact_Disbursement]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_Disbursement];
@@ -2991,6 +2993,15 @@ OUTER APPLY (
 WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N''Medier%''
   AND d.[ДанныеКредитовВыданных Дата Выдачи] >= ''2023-09-01'';
 
+SELECT
+    k.[Кредиты Владелец] AS ClientID,
+    MIN(d.[ДанныеКредитовВыданных Дата Выдачи]) AS FirstDisbursementDate
+INTO #FirstDisbursementPerClient
+FROM [ATK].[mis].[Bronze_РегистрыСведений.ДанныеКредитовВыданных] d
+INNER JOIN [ATK].[mis].[Bronze_Справочники.Кредиты] k
+    ON k.[Кредиты ID] = d.[ДанныеКредитовВыданных Кредит ID]
+GROUP BY k.[Кредиты Владелец];
+
 WITH BaseIDs AS (
     SELECT DISTINCT CreditID FROM #Base
 ),
@@ -3061,11 +3072,14 @@ WHERE s.RestorePeriod IS NOT NULL
 WITH AllSeq AS (
     SELECT
         f.*,
+        fd.FirstDisbursementDate,
         ROW_NUMBER() OVER (
             PARTITION BY f.ClientID
-            ORDER BY f.DisbursementDate, f.CreditID
+            ORDER BY  f.DisbursementDate, f.CreditID
         ) AS rn_all
     FROM #Final f
+    LEFT JOIN #FirstDisbursementPerClient fd
+        ON f.ClientID = fd.ClientID
 )
 INSERT INTO mis.[Gold_Fact_Disbursement]
 (
@@ -3079,7 +3093,7 @@ SELECT
     a.CreditCurrency, a.FirstFilialID, a.FirstEmployeeID, a.LastFilialID, a.LastEmployeeID,
     a.IRR, a.IRR_Client, a.Qty,
     CASE
-        WHEN a.CreditAmount > 0 AND a.rn_all = 1 THEN N''New''
+        WHEN a.CreditAmount > 0 AND a.DisbursementDate = a.FirstDisbursementDate THEN N''New''
         WHEN a.CreditAmount > 0 THEN N''Existing''
         ELSE N''Cancelled''
     END AS NewExisting_Client,
@@ -3110,7 +3124,8 @@ ON mis.[Gold_Fact_Disbursement] (ClientID);
 
 DROP TABLE #Base;
 DROP TABLE #Status;
-DROP TABLE #Final;';
+DROP TABLE #Final;
+DROP TABLE #FirstDisbursementPerClient;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

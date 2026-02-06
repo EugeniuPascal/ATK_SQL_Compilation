@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-06 16:51:47.723931
+-- Generated: 2026-02-06 16:58:54.779209
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 22
 --   mis.Gold_Dim_AppUsers.sql

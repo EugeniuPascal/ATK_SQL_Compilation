@@ -75,6 +75,7 @@ def make_idempotent(sql: str) -> str:
 # --------------------------------------------------------------------
 try:
     SQL_ORDER = [
+    "mis.Silver_CommiteeProtocol.sql",
     # creates Gold_Fact_CerereOnline
     "mis.Silver_CerereOnline_base.sql",
     

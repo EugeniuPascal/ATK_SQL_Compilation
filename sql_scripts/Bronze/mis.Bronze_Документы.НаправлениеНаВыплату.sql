@@ -16,7 +16,6 @@ CREATE TABLE mis.[Bronze_Документы.НаправлениеНаВыпла
     [НаправлениеНаВыплату Источник Заполнения] NVARCHAR(256) NULL,
     [НаправлениеНаВыплату Категория Риска AML] NVARCHAR(256) NULL
 );
-GO
 
 /* ======================================================
    1. Last valid document per CreditID
@@ -91,4 +90,4 @@ FROM LastValid lv
 LEFT JOIN CreditLine cl
     ON cl.CreditID = lv.[НаправлениеНаВыплату Кредит ID]
 WHERE lv.rn = 1;
-GO
+

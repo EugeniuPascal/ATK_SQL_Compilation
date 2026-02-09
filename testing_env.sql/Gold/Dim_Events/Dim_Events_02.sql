@@ -1,0 +1,66 @@
+USE [ATK];
+GO
+
+IF OBJECT_ID('mis.[Gold_Dim_Events]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Dim_Events];
+GO
+
+CREATE TABLE mis.[Gold_Dim_Events]
+(
+    Event_Period DATETIME NULL,
+    Event_ID VARCHAR(36) NULL,
+    Event_ClientID VARCHAR(36) NULL,
+    Event_Status NVARCHAR(256) NULL,
+    Event_Kind NVARCHAR(256) NULL,
+	Event_Type NVARCHAR(256) NULL,
+	Event_Project NVARCHAR(150) NULL,
+	Event_Content NVARCHAR(1000) NULL,
+	Event_ResponsibleID VARCHAR(36) NULL,
+	Event_Responsible NVARCHAR(1000) NULL,
+	Event_NextDateEvent DATETIME NULL,
+	Event_NextKindEvent NVARCHAR(256) NULL,
+	Event_BranchID VARCHAR(36) NULL,
+	BranchID VARCHAR(36) NULL,
+	BranchName NVARCHAR(100) NULL
+);
+GO
+
+INSERT INTO mis.[Gold_Dim_Events] 
+(
+    Event_Period,
+    Event_ID,
+    Event_ClientID,
+    Event_Status,
+    Event_Kind,
+	Event_Type,
+	Event_Project,
+	Event_Content,
+	Event_ResponsibleID,
+	Event_Responsible,
+	Event_NextDateEvent,
+	Event_NextKindEvent,
+	Event_BranchID,
+    BranchID,
+	BranchName
+)
+SELECT
+
+    e.[СведенияОСобытиях Период] AS Event_Period,
+    e.[СведенияОСобытиях ID] AS Event_ID,
+    e.[СведенияОСобытиях Контрагент ID] AS Event_ClientID,
+    e.[СведенияОСобытиях Состояние События] AS Event_Status,
+    e.[СведенияОСобытиях Вид События] AS Event_Kind,
+    e.[СведенияОСобытиях Тип События] AS Event_Type,
+    e.[СведенияОСобытиях Проект] AS Event_Project,
+    e.[СведенияОСобытиях Содержание События] AS Event_Content,
+    e.[СведенияОСобытиях Ответственный ID] AS Event_ResponsibleID,
+    e.[СведенияОСобытиях Ответственный] AS Event_Responsible,
+    e.[СведенияОСобытиях Дата Следующего События] AS Event_NextDateEvent,
+    e.[СведенияОСобытиях Вид Следующего События] AS Event_NextKindEvent,
+    e.[СведенияОСобытиях Филиал ID] AS Event_BranchID,
+	f.[Филиалы ID] AS BranchID,
+	f.[Филиалы Наименование] AS BranchName
+
+FROM [ATK].[dbo].[РегистрыСведений.СведенияОСобытиях] AS e
+FULL JOIN [ATK].[dbo].[Справочники.Филиалы] f
+ON f.[Филиалы ID] = e.[СведенияОСобытиях Филиал ID];

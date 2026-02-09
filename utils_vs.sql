@@ -1021,4 +1021,61 @@ SELECT TOP (1000) [Period]
   2tbl_Silver_CPD_TaskDays --add
    2tbl_Gold_Fact_CPD_Sold_v4 --add
   
+  
+  SELECT TOP (1000) [SoldDate]
+,[ClientID]
+      ,[CreditID]
+      
+      ,[Balance_Total]
+      ,[IRR_Values]
+      ,[DaysBucket_Credit]
+      ,[DaysFact_Total]
+      ,[DaysIFRS]
+      ,[StateName_Final]
+      ,[TypeName_Sticky_Final]
+      ,[CreditStatus_Base]
+      ,[LastBranchID]
+      ,[LastExpertID]
+      ,[IsSpecialBranch]
+      ,[SegmentIFRS]
+      ,[ParIFRS]
+      ,[StageName]
+  FROM [ATK].[mis].[Gold_Fact_Restruct_Daily_Min1]
+  ORDER BY SoldDate DESC
 
+SELECT TOP (1000) [SoldDate]
+      ,[ClientID]
+      ,[CreditID]
+      
+      ,[Balance_Total]
+      ,[DaysBucket_Credit]
+      ,[DaysFact_Total]
+      ,[DaysIFRS]
+      ,[StateName_Final]
+      ,[TypeName_Sticky_Final]
+      ,[CreditStatus_Base]
+      ,[LastBranchID]
+      ,[LastExpertID]
+      ,[IsSpecialBranch]
+      ,[SegmentIFRS]
+      ,[ParIFRS]
+      ,[StageName]
+  FROM [ATK].[mis].[Gold_Fact_Restruct_Daily_Min]
+  WHERE CreditID = '813C00155D65040111ED283CC958B111'
+  ORDER BY SoldDate DESC
+  
+  
+  SELECT TOP (1000) [SoldDate]
+      ,[ClientID]
+      ,[CreditID]
+      ,[SoldAmount]
+      ,[NumberOfOverdueDaysIFRS]
+      ,[IRR_Values]
+      ,[BranchShadow]
+      ,[EmployeeID]
+      ,[BranchID]
+      ,[EmployeePositionID]
+      ,[Par]
+  FROM [ATK].[mis].[Gold_Fact_Sold_Par]
+    WHERE CreditID = 'B75C00155D65140C11EE6E5FB1250276'
+  ORDER BY SoldDate DESC

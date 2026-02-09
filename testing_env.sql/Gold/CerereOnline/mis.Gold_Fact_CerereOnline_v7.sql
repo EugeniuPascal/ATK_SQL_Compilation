@@ -459,6 +459,16 @@ SET
                         v.VoteDate,
                         8*60, 20*60
                      ) > 420 THEN 1
+				 WHEN (
+                     cr.IncomeSeg NOT LIKE N'Ipoteca%'
+                  OR cr.IncomeSeg NOT LIKE N'HIL%'
+                  OR cr.IncomeSeg <> N'Consum non-business'	 
+				  )
+				AND mis.fn_WorkMinutesSigned(
+                        d.Dep,
+                        v.VoteDate,
+                        8*60, 20*60
+                     ) > 120 THEN 1
             ELSE 0
         END
 

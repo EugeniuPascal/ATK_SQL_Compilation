@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze)
--- Generated: 2026-02-09 10:15:47
+-- Generated: 2026-02-09 10:28:42
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (28):
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -250,7 +250,6 @@ CREATE TABLE mis.[Bronze_Документы.НаправлениеНаВыпла
     [НаправлениеНаВыплату Источник Заполнения] NVARCHAR(256) NULL,
     [НаправлениеНаВыплату Категория Риска AML] NVARCHAR(256) NULL
 );
-GO
 
 /* ======================================================
    1. Last valid document per CreditID
@@ -325,7 +324,6 @@ FROM LastValid lv
 LEFT JOIN CreditLine cl
     ON cl.CreditID = lv.[НаправлениеНаВыплату Кредит ID]
 WHERE lv.rn = 1;
-GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Bronze_Документы.НаправлениеНаВыплату.sql
 ----------------------------------------------------------------------------------------------------

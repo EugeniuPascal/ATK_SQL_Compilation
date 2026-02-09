@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent
--- Generated: 2026-02-09 10:16:29.747178
+-- Generated: 2026-02-09 10:28:56.105403
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files included: 28
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -252,6 +252,9 @@ CREATE TABLE mis.[Bronze_Документы.НаправлениеНаВыпла
     [НаправлениеНаВыплату Категория Риска AML] NVARCHAR(256) NULL
 );
 
+                                                         
+                                      
+                                                         
 WITH LastValid AS (
     SELECT *,
            ROW_NUMBER() OVER (

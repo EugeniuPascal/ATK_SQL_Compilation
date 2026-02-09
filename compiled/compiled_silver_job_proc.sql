@@ -1,8 +1,9 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-02-06 16:58:51.298881
+-- Generated: 2026-02-09 10:15:56.613813
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
--- Files included: 12
+-- Files included: 13
+--   mis.Silver_CommiteeProtocol.sql
 --   mis.Silver_CerereOnline_base.sql
 --   mis.Silver_Restruct_SCD.sql
 --   mis.Silver_RestructState_SCD.sql
@@ -30,6 +31,64 @@ AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @sql NVARCHAR(MAX);
+
+    -- Start of: mis.Silver_CommiteeProtocol.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[Silver_CommiteeProtocol]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[Silver_CommiteeProtocol];
+
+CREATE TABLE mis.[Silver_CommiteeProtocol]
+(
+    [ПротоколКомитета Дата]                DATETIME NULL,
+	[ПротоколКомитета Дата Решения]        DATETIME NULL,
+	[ПротоколКомитета Кредит ID]           VARCHAR(36) NOT NULL,
+    [ПротоколКомитета ID]	               VARCHAR(36) NOT NULL,
+	[ПротоколКомитета Заявка ID]           VARCHAR(36) NOT NULL,
+    [ПротоколКомитета Сумма на Выдачу]	   DECIMAL(15, 2) NULL,
+	[ПротоколКомитета Сумма Рефинансирования Кредита] DECIMAL(15, 2) NULL,
+	[ПротоколКомитета Назначение Использования Кредита] NVARCHAR(150) NULL,
+	[ПротоколКомитета Категория Риска AML]  NVARCHAR(256) NULL,
+	[ПротоколКомитета Это Зеленый Кредит] VARCHAR(36) NOT NULL,
+	[ПротоколКомитета Комитет]            NVARCHAR(156) NULL,
+	[ПротоколКомитета Партнер]  NVARCHAR(256) NULL
+	
+);
+
+INSERT INTO mis.[Silver_CommiteeProtocol] 
+(
+    [ПротоколКомитета Дата],
+	[ПротоколКомитета Дата Решения],
+	[ПротоколКомитета Кредит ID], 
+	[ПротоколКомитета ID],
+	[ПротоколКомитета Заявка ID],
+    [ПротоколКомитета Сумма на Выдачу],
+	[ПротоколКомитета Сумма Рефинансирования Кредита],
+	[ПротоколКомитета Назначение Использования Кредита],
+	[ПротоколКомитета Категория Риска AML],
+	[ПротоколКомитета Это Зеленый Кредит],
+	[ПротоколКомитета Комитет],
+	[ПротоколКомитета Партнер]
+)
+SELECT
+    [ПротоколКомитета Дата],
+	[ПротоколКомитета Дата Решения],
+	[ПротоколКомитета Кредит ID], 
+	[ПротоколКомитета ID],
+	[ПротоколКомитета Заявка ID],
+    [ПротоколКомитета Сумма на Выдачу],
+	[ПротоколКомитета Сумма Рефинансирования Кредита],
+	[ПротоколКомитета Назначение Использования Кредита],
+	[ПротоколКомитета Категория Риска AML],
+	[ПротоколКомитета Это Зеленый Кредит],
+	[ПротоколКомитета Комитет],
+	[ПротоколКомитета Партнер]
+	
+FROM [ATK].[mis].[Bronze_Документы.ПротоколКомитета];';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
 
     -- Start of: mis.Silver_CerereOnline_base.sql
     SET @sql = N'SET NOCOUNT ON;

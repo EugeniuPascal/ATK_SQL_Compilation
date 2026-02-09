@@ -280,3 +280,50 @@
 2026-02-09 10:29:02,046 [INFO] Processing file: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
 2026-02-09 10:29:02,047 [INFO] Finished file: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
 2026-02-09 10:29:02,047 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql
+2026-02-09 14:56:42,688 [INFO] === Starting Gold SQL Compilation Job ===
+2026-02-09 14:56:42,691 [INFO] Total SQL files to process: 22
+2026-02-09 14:56:42,692 [INFO] Processing file: mis.Gold_Dim_AppUsers.sql
+2026-02-09 14:56:42,692 [INFO] Finished file: mis.Gold_Dim_AppUsers.sql
+2026-02-09 14:56:42,692 [INFO] Processing file: mis.Gold_Dim_Branch.sql
+2026-02-09 14:56:42,692 [INFO] Finished file: mis.Gold_Dim_Branch.sql
+2026-02-09 14:56:42,693 [INFO] Processing file: mis.Gold_Dim_Clients.sql
+2026-02-09 14:56:42,694 [INFO] Finished file: mis.Gold_Dim_Clients.sql
+2026-02-09 14:56:42,694 [INFO] Processing file: mis.Gold_Dim_Credits.sql
+2026-02-09 14:56:42,696 [INFO] Finished file: mis.Gold_Dim_Credits.sql
+2026-02-09 14:56:42,696 [INFO] Processing file: mis.Gold_Dim_EmployeePayrollData.sql
+2026-02-09 14:56:42,696 [INFO] Finished file: mis.Gold_Dim_EmployeePayrollData.sql
+2026-02-09 14:56:42,696 [INFO] Processing file: mis.Gold_Dim_Employees.sql
+2026-02-09 14:56:42,697 [INFO] Finished file: mis.Gold_Dim_Employees.sql
+2026-02-09 14:56:42,697 [INFO] Processing file: mis.Gold_Dim_EmployeesHistory.sql
+2026-02-09 14:56:42,698 [INFO] Finished file: mis.Gold_Dim_EmployeesHistory.sql
+2026-02-09 14:56:42,698 [INFO] Processing file: mis.Gold_Dim_Events.sql
+2026-02-09 14:56:42,698 [INFO] Finished file: mis.Gold_Dim_Events.sql
+2026-02-09 14:56:42,698 [INFO] Processing file: mis.Gold_Dim_GroupMembershipPeriods.sql
+2026-02-09 14:56:42,699 [INFO] Finished file: mis.Gold_Dim_GroupMembershipPeriods.sql
+2026-02-09 14:56:42,699 [INFO] Processing file: mis.Gold_Dim_PartnersBranch.sql
+2026-02-09 14:56:42,699 [INFO] Finished file: mis.Gold_Dim_PartnersBranch.sql
+2026-02-09 14:56:42,699 [INFO] Processing file: mis.Gold_Fact_AdminTasks.sql
+2026-02-09 14:56:42,701 [INFO] Finished file: mis.Gold_Fact_AdminTasks.sql
+2026-02-09 14:56:42,701 [INFO] Processing file: mis.Gold_Fact_ArchiveDocument.sql
+2026-02-09 14:56:42,702 [INFO] Finished file: mis.Gold_Fact_ArchiveDocument.sql
+2026-02-09 14:56:42,702 [INFO] Processing file: mis.Gold_Fact_BudgetEmployees.sql
+2026-02-09 14:56:42,702 [INFO] Finished file: mis.Gold_Fact_BudgetEmployees.sql
+2026-02-09 14:56:42,702 [INFO] Processing file: mis.Gold_Fact_CerereOnline.sql
+2026-02-09 14:56:42,704 [INFO] Finished file: mis.Gold_Fact_CerereOnline.sql
+2026-02-09 14:56:42,704 [INFO] Processing file: mis.Gold_Fact_Comments.sql
+2026-02-09 14:56:42,704 [INFO] Finished file: mis.Gold_Fact_Comments.sql
+2026-02-09 14:56:42,705 [INFO] Processing file: mis.Gold_Fact_CPD.sql
+2026-02-09 14:56:42,705 [INFO] Finished file: mis.Gold_Fact_CPD.sql
+2026-02-09 14:56:42,705 [INFO] Processing file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2026-02-09 14:56:42,706 [INFO] Finished file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2026-02-09 14:56:42,706 [INFO] Processing file: mis.Gold_Fact_WriteOffCredits.sql
+2026-02-09 14:56:42,706 [INFO] Finished file: mis.Gold_Fact_WriteOffCredits.sql
+2026-02-09 14:56:42,706 [INFO] Processing file: mis.Gold_Fact_Restruct_Daily_Min.sql
+2026-02-09 14:56:42,708 [INFO] Finished file: mis.Gold_Fact_Restruct_Daily_Min.sql
+2026-02-09 14:56:42,708 [INFO] Processing file: mis.Gold_Fact_Disbursement.sql
+2026-02-09 14:56:42,710 [INFO] Finished file: mis.Gold_Fact_Disbursement.sql
+2026-02-09 14:56:42,710 [INFO] Processing file: mis.Gold_Fact_Sold_Par.sql
+2026-02-09 14:56:42,711 [INFO] Finished file: mis.Gold_Fact_Sold_Par.sql
+2026-02-09 14:56:42,711 [INFO] Processing file: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
+2026-02-09 14:56:42,712 [INFO] Finished file: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
+2026-02-09 14:56:42,712 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql

@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-09 10:29:02.027264
+-- Generated: 2026-02-09 14:56:42.692089
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 22
 --   mis.Gold_Dim_AppUsers.sql
@@ -2178,6 +2178,16 @@ SET
                         v.VoteDate,
                         8*60, 20*60
                      ) > 420 THEN 1
+				 WHEN (
+                     cr.IncomeSeg NOT LIKE N''Ipoteca%''
+                  OR cr.IncomeSeg NOT LIKE N''HIL%''
+                  OR cr.IncomeSeg <> N''Consum non-business''	 
+				  )
+				AND mis.fn_WorkMinutesSigned(
+                        d.Dep,
+                        v.VoteDate,
+                        8*60, 20*60
+                     ) > 120 THEN 1
             ELSE 0
         END
 

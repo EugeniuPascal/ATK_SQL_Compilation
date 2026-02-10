@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-10 13:08:49.068242
+-- Generated: 2026-02-10 14:20:39.338170
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 24
 --   mis.Gold_Dim_AppUsers.sql
@@ -25,8 +25,8 @@
 --   mis.Gold_Fact_Disbursement.sql
 --   mis.Gold_Fact_Sold_Par.sql
 --   V2__incremental_gold_dim_Event_InProgress.sql
+--   V2__incremental_gold_dim_Event_Responsible.sql
 --   V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
---   mis.Gold_Dim_Event_Responsible.sql
 -- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER
 -- =============================================
 
@@ -3465,6 +3465,56 @@ WHERE NOT EXISTS (
         THROW;
     END CATCH;
 
+    -- Start of: V2__incremental_gold_dim_Event_Responsible.sql
+    SET @sql = N'INSERT INTO mis.[Gold_Dim_Event_Responsible]
+(
+    EventDocumentID,
+    EventRowNumber,
+    ClientType,
+    ClientKind,
+    ClientID,
+    EventStatus,
+    ResponsibleID,
+    ResponsibleName,
+    SelectionFlag,
+    NewResponsibleID,
+    NewResponsibleName,
+    NewBranchID,
+    NewBranchName,
+    AffiliatedGroupID,
+    AffiliatedGroupName
+)
+SELECT
+    [УстановкаОтветственныхПоКредитамИКлиентам ID]                             AS EventDocumentID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Номер Строки]           AS EventRowNumber,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент Tип]             AS ClientType,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент Вид]             AS ClientKind,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент ID]              AS ClientID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Состояние События]      AS EventStatus,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Ответственный ID]       AS ResponsibleID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Ответственный]          AS ResponsibleName,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Отметка Выбора]         AS SelectionFlag,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Ответственный ID] AS NewResponsibleID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Ответственный]    AS NewResponsibleName,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Филиал ID]        AS NewBranchID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Филиал]           AS NewBranchName,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Группа Аффилированных Лиц ID]  AS AffiliatedGroupID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Группа Аффилированных Лиц]     AS AffiliatedGroupName
+	
+FROM [ATK].[dbo].[Документы.УстановкаОтветственныхПоКредитамИКлиентам.События] e
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM mis.[Gold_Dim_Event_Responsible] g
+    WHERE g.EventDocumentID = e.[УстановкаОтветственныхПоКредитамИКлиентам ID]
+      AND g.EventRowNumber  = e.[УстановкаОтветственныхПоКредитамИКлиентам.События Номер Строки]
+);';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
+
     -- Start of: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
     SET @sql = N'SET NOCOUNT ON;
 SET XACT_ABORT ON;
@@ -3706,76 +3756,6 @@ SELECT
 FROM #Joined j;
 
 PRINT N''🏁 Incremental load completed successfully'';';
-    BEGIN TRY
-        EXEC sys.sp_executesql @sql;
-    END TRY
-    BEGIN CATCH
-        THROW;
-    END CATCH;
-
-    -- Start of: mis.Gold_Dim_Event_Responsible.sql
-    SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_Event_Responsible]'', ''U'') IS NULL
-BEGIN
-    CREATE TABLE mis.[Gold_Dim_Event_Responsible]
-    (
-        EventDocumentID      VARCHAR(36)   NOT NULL PRIMARY KEY,
-        EventRowNumber       INT           NULL,
-        ClientType           VARCHAR(36)   NULL,
-        ClientKind           VARCHAR(36)   NULL,
-        ClientID             VARCHAR(36)   NULL,
-        EventStatus          NVARCHAR(256) NULL,
-        ResponsibleID        VARCHAR(36)   NULL,
-        ResponsibleName      NVARCHAR(40)  NULL,
-        SelectionFlag        VARCHAR(36)   NULL,
-        NewResponsibleID     VARCHAR(36)   NULL,
-        NewResponsibleName   NVARCHAR(40)  NULL,
-        NewBranchID          VARCHAR(36)   NULL,
-        NewBranchName        NVARCHAR(100) NULL,
-        AffiliatedGroupID    VARCHAR(36)   NULL,
-        AffiliatedGroupName  NVARCHAR(150) NULL
-    );
-END
-
-INSERT INTO mis.[Gold_Dim_Event_Responsible]
-(
-    EventDocumentID,
-    EventRowNumber,
-    ClientType,
-    ClientKind,
-    ClientID,
-    EventStatus,
-    ResponsibleID,
-    ResponsibleName,
-    SelectionFlag,
-    NewResponsibleID,
-    NewResponsibleName,
-    NewBranchID,
-    NewBranchName,
-    AffiliatedGroupID,
-    AffiliatedGroupName
-)
-SELECT
-    [УстановкаОтветственныхПоКредитамИКлиентам ID]                             AS EventDocumentID,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Номер Строки]           AS EventRowNumber,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент Tип]             AS ClientType,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент Вид]             AS ClientKind,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент ID]              AS ClientID,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Состояние События]      AS EventStatus,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Ответственный ID]       AS ResponsibleID,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Ответственный]          AS ResponsibleName,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Отметка Выбора]         AS SelectionFlag,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Ответственный ID] AS NewResponsibleID,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Ответственный]    AS NewResponsibleName,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Филиал ID]        AS NewBranchID,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Филиал]           AS NewBranchName,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Группа Аффилированных Лиц ID]  AS AffiliatedGroupID,
-    [УстановкаОтветственныхПоКредитамИКлиентам.События Группа Аффилированных Лиц]     AS AffiliatedGroupName
-FROM [ATK].[dbo].[Документы.УстановкаОтветственныхПоКредитамИКлиентам.События] e
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM mis.[Gold_Dim_Event_Responsible] g
-    WHERE g.EventDocumentID = e.[УстановкаОтветственныхПоКредитамИКлиентам ID]
-);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

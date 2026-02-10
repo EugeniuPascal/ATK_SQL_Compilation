@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-10 13:08:11
+-- Generated: 2026-02-10 14:20:28
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (13):
 --   mis.Silver_CommiteeProtocol.sql

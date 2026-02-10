@@ -1,9 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Gold_Dim_Event_InProgress]', 'U') IS NULL
-BEGIN
-    CREATE TABLE mis.[Gold_Dim_Event_InProgress]
+IF OBJECT_ID(N'mis.Gold_Dim_Event_InProgress', 'U') IS NOT NULL
+    DROP TABLE mis.Gold_Dim_Event_InProgress;
+GO
+
+CREATE TABLE mis.Gold_Dim_Event_InProgress
     (
         EventDate                 DATETIME        NULL,
         ClientType                VARCHAR(36)     NULL,
@@ -31,15 +33,13 @@ BEGIN
         PaymentDate               DATETIME        NULL,
         CallStatus                NVARCHAR(256)   NULL
     );
-END
-
+GO
 
 INSERT INTO mis.[Gold_Dim_Event_InProgress]
 (
     EventDate,
     ClientType,
     ClientKind,
-    ClientTRef,
     ClientID,
     CreditID,
     CreditName,
@@ -66,7 +66,6 @@ SELECT
     [СведенияОСобытияхВРаботе Дата События]             AS EventDate,
     [СведенияОСобытияхВРаботе Контрагент Tип]          AS ClientType,
     [СведенияОСобытияхВРаботе Контрагент Вид]          AS ClientKind,
-    [СведенияОСобытияхВРаботе Контрагент _TRef]        AS ClientTRef,
     [СведенияОСобытияхВРаботе Контрагент ID]           AS ClientID,
     [СведенияОСобытияхВРаботе Кредит ID]               AS CreditID,
     [СведенияОСобытияхВРаботе Кредит]                  AS CreditName,
@@ -88,12 +87,14 @@ SELECT
     [СведенияОСобытияхВРаботе Дополнительный Телефон]  AS AdditionalPhone,
     [СведенияОСобытияхВРаботе Дата Оплаты]             AS PaymentDate,
     [СведенияОСобытияхВРаботе Статус Телефонного Звонка] AS CallStatus
+
 FROM [ATK].[dbo].[РегистрыСведений.СведенияОСобытияхВРаботе] e
+
 WHERE NOT EXISTS (
     SELECT 1
     FROM mis.[Gold_Dim_Event_InProgress] g
     WHERE g.ClientID = e.[СведенияОСобытияхВРаботе Контрагент ID]
       AND g.EventDate = e.[СведенияОСобытияхВРаботе Дата События]
       AND g.ResponsibleID = e.[СведенияОСобытияхВРаботе Ответственный ID]
-);
+      );
 

@@ -32,7 +32,7 @@ BEGIN
         CallStatus                NVARCHAR(256)   NULL
     );
 END
-GO
+
 
 INSERT INTO mis.[Gold_Dim_Event_InProgress]
 (
@@ -96,4 +96,4 @@ WHERE NOT EXISTS (
       AND g.EventDate = e.[СведенияОСобытияхВРаботе Дата События]
       AND g.ResponsibleID = e.[СведенияОСобытияхВРаботе Ответственный ID]
 );
-GO
+

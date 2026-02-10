@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-10 11:04:08
+-- Generated: 2026-02-10 11:07:01
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (24):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1085,7 +1085,7 @@ BEGIN
         CallStatus                NVARCHAR(256)   NULL
     );
 END
-GO
+
 
 INSERT INTO mis.[Gold_Dim_Event_InProgress]
 (
@@ -1149,7 +1149,6 @@ WHERE NOT EXISTS (
       AND g.EventDate = e.[СведенияОСобытияхВРаботе Дата События]
       AND g.ResponsibleID = e.[СведенияОСобытияхВРаботе Ответственный ID]
 );
-GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Gold_Dim_Event_InProgress.sql
 ----------------------------------------------------------------------------------------------------

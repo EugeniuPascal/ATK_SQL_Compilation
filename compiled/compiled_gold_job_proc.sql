@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-10 11:04:17.411181
+-- Generated: 2026-02-10 11:07:06.965851
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 24
 --   mis.Gold_Dim_AppUsers.sql
@@ -1032,6 +1032,7 @@ BEGIN
         CallStatus                NVARCHAR(256)   NULL
     );
 END
+
 
 INSERT INTO mis.[Gold_Dim_Event_InProgress]
 (

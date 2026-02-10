@@ -84,8 +84,6 @@ try:
         "mis.Gold_Dim_EmployeePayrollData.sql",
         "mis.Gold_Dim_Employees.sql",
         "mis.Gold_Dim_EmployeesHistory.sql",
-        "mis.Gold_Dim_Event_InProgress.sql",
-        "mis.Gold_Dim_Event_Responsible.sql",
         "mis.Gold_Dim_Events.sql",
         "mis.Gold_Dim_GroupMembershipPeriods.sql",
         "mis.Gold_Dim_PartnersBranch.sql",
@@ -100,6 +98,7 @@ try:
         "mis.Gold_Fact_Restruct_Daily_Min.sql",
         "mis.Gold_Fact_Disbursement.sql",      
         "mis.Gold_Fact_Sold_Par.sql",
+        "V2__incremental_gold_dim_Event_InProgress.sql"
         "V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql"
     ]
 

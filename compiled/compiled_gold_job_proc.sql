@@ -1,8 +1,8 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-09 14:56:42.692089
+-- Generated: 2026-02-10 11:04:17.411181
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files included: 22
+-- Files included: 24
 --   mis.Gold_Dim_AppUsers.sql
 --   mis.Gold_Dim_Branch.sql
 --   mis.Gold_Dim_Clients.sql
@@ -10,6 +10,7 @@
 --   mis.Gold_Dim_EmployeePayrollData.sql
 --   mis.Gold_Dim_Employees.sql
 --   mis.Gold_Dim_EmployeesHistory.sql
+--   mis.Gold_Dim_Event_InProgress.sql
 --   mis.Gold_Dim_Events.sql
 --   mis.Gold_Dim_GroupMembershipPeriods.sql
 --   mis.Gold_Dim_PartnersBranch.sql
@@ -25,6 +26,7 @@
 --   mis.Gold_Fact_Disbursement.sql
 --   mis.Gold_Fact_Sold_Par.sql
 --   V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
+--   mis.Gold_Dim_Event_Responsible.sql
 -- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER
 -- =============================================
 
@@ -998,60 +1000,201 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.Ответственн
         THROW;
     END CATCH;
 
-    -- Start of: mis.Gold_Dim_Events.sql
-    SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_Events]'', ''U'') IS NOT NULL
-    DROP TABLE mis.[Gold_Dim_Events];
+    -- Start of: mis.Gold_Dim_Event_InProgress.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_Event_InProgress]'', ''U'') IS NULL
+BEGIN
+    CREATE TABLE mis.[Gold_Dim_Event_InProgress]
+    (
+        EventDate                 DATETIME        NULL,
+        ClientType                VARCHAR(36)     NULL,
+        ClientKind                VARCHAR(36)     NULL,
+        ClientTRef                NVARCHAR(256)   NULL,
+        ClientID                  VARCHAR(36)     NULL,
+        CreditID                  VARCHAR(36)     NULL,
+        CreditName                NVARCHAR(100)   NULL,
+        ContactPerson             NVARCHAR(150)   NULL,
+        ResponsibleID             VARCHAR(36)     NULL,
+        ResponsibleName           NVARCHAR(40)    NULL,
+        BranchID                  VARCHAR(36)     NULL,
+        BranchName                NVARCHAR(100)   NULL,
+        EventStatus               NVARCHAR(256)   NULL,
+        EventKind                 NVARCHAR(256)   NULL,
+        EventType                 NVARCHAR(256)   NULL,
+        ProjectID                 VARCHAR(36)     NULL,
+        ProjectName               NVARCHAR(100)   NULL,
+        EventContent              NVARCHAR(1000)  NULL,
+        EventResult               NVARCHAR(1000)  NULL,
+        EventPandemicRelated      VARCHAR(36)     NULL,
+        DecisionDeadline          DATETIME        NULL,
+        MobilePhone               NVARCHAR(50)    NULL,
+        AdditionalPhone           NVARCHAR(50)    NULL,
+        PaymentDate               DATETIME        NULL,
+        CallStatus                NVARCHAR(256)   NULL
+    );
+END
 
-CREATE TABLE mis.[Gold_Dim_Events]
+INSERT INTO mis.[Gold_Dim_Event_InProgress]
 (
-    Event_Period DATETIME NOT NULL,
-    Event_ID VARCHAR(36) NOT NULL,
-    Event_ClientID VARCHAR(36) NOT NULL,
-    Event_Status NVARCHAR(256) NULL,
-    Event_Kind NVARCHAR(256) NULL,
-	Event_Type NVARCHAR(256) NULL,
-	Event_Project NVARCHAR(150) NULL,
-	Event_Content NVARCHAR(1000) NULL,
-	Event_ResponsibleID VARCHAR(36) NOT NULL,
-	Event_Responsible NVARCHAR(1000) NULL,
-	Event_NextDateEvent DATETIME NOT NULL,
-	Event_NextKindEvent NVARCHAR(256) NULL,
-	Event_BranchID VARCHAR(36) NOT NULL
-);
+    EventDate,
+    ClientType,
+    ClientKind,
+    ClientTRef,
+    ClientID,
+    CreditID,
+    CreditName,
+    ContactPerson,
+    ResponsibleID,
+    ResponsibleName,
+    BranchID,
+    BranchName,
+    EventStatus,
+    EventKind,
+    EventType,
+    ProjectID,
+    ProjectName,
+    EventContent,
+    EventResult,
+    EventPandemicRelated,
+    DecisionDeadline,
+    MobilePhone,
+    AdditionalPhone,
+    PaymentDate,
+    CallStatus
+)
+SELECT
+    [СведенияОСобытияхВРаботе Дата События]             AS EventDate,
+    [СведенияОСобытияхВРаботе Контрагент Tип]          AS ClientType,
+    [СведенияОСобытияхВРаботе Контрагент Вид]          AS ClientKind,
+    [СведенияОСобытияхВРаботе Контрагент _TRef]        AS ClientTRef,
+    [СведенияОСобытияхВРаботе Контрагент ID]           AS ClientID,
+    [СведенияОСобытияхВРаботе Кредит ID]               AS CreditID,
+    [СведенияОСобытияхВРаботе Кредит]                  AS CreditName,
+    [СведенияОСобытияхВРаботе Контактное Лицо]         AS ContactPerson,
+    [СведенияОСобытияхВРаботе Ответственный ID]        AS ResponsibleID,
+    [СведенияОСобытияхВРаботе Ответственный]           AS ResponsibleName,
+    [СведенияОСобытияхВРаботе Филиал ID]               AS BranchID,
+    [СведенияОСобытияхВРаботе Филиал]                  AS BranchName,
+    [СведенияОСобытияхВРаботе Состояние События]       AS EventStatus,
+    [СведенияОСобытияхВРаботе Вид События]             AS EventKind,
+    [СведенияОСобытияхВРаботе Тип События]             AS EventType,
+    [СведенияОСобытияхВРаботе Проект ID]               AS ProjectID,
+    [СведенияОСобытияхВРаботе Проект]                  AS ProjectName,
+    [СведенияОСобытияхВРаботе Содержание События]      AS EventContent,
+    [СведенияОСобытияхВРаботе Результат События]       AS EventResult,
+    [СведенияОСобытияхВРаботе Событие Связано с Пандемией] AS EventPandemicRelated,
+    [СведенияОСобытияхВРаботе Срок Выполнения Решения] AS DecisionDeadline,
+    [СведенияОСобытияхВРаботе Телефон Мобильный]       AS MobilePhone,
+    [СведенияОСобытияхВРаботе Дополнительный Телефон]  AS AdditionalPhone,
+    [СведенияОСобытияхВРаботе Дата Оплаты]             AS PaymentDate,
+    [СведенияОСобытияхВРаботе Статус Телефонного Звонка] AS CallStatus
+FROM [ATK].[dbo].[РегистрыСведений.СведенияОСобытияхВРаботе] e
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM mis.[Gold_Dim_Event_InProgress] g
+    WHERE g.ClientID = e.[СведенияОСобытияхВРаботе Контрагент ID]
+      AND g.EventDate = e.[СведенияОСобытияхВРаботе Дата События]
+      AND g.ResponsibleID = e.[СведенияОСобытияхВРаботе Ответственный ID]
+);';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
 
-INSERT INTO mis.[Gold_Dim_Events] 
+    -- Start of: mis.Gold_Dim_Events.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_Events]'', ''U'') IS NULL
+BEGIN
+    CREATE TABLE mis.[Gold_Dim_Events]
+    (
+        Event_Period        DATETIME        NOT NULL,
+        Event_ID            VARCHAR(36)     NOT NULL PRIMARY KEY,
+        Event_ClientID      VARCHAR(36)     NOT NULL,
+        Event_Status        NVARCHAR(256)   NULL,
+        Event_Kind          NVARCHAR(256)   NULL,
+        Event_Type          NVARCHAR(256)   NULL,
+        Event_Project       NVARCHAR(150)   NULL,
+        Event_Content       NVARCHAR(1000)  NULL,
+        Event_ResponsibleID VARCHAR(36)     NOT NULL,
+        Event_Responsible   NVARCHAR(1000)  NULL,
+        Event_NextDateEvent DATETIME        NOT NULL,
+        Event_NextKindEvent NVARCHAR(256)   NULL,
+        Event_BranchID      VARCHAR(36)     NOT NULL,
+        Event_Branch_Name   NVARCHAR(256)   NULL,
+        EmployeePosition    NVARCHAR(100)   NULL,
+        EmployeeBranch      NVARCHAR(100)   NULL
+    );
+END
+
+IF NOT EXISTS (
+    SELECT 1 
+    FROM sys.indexes 
+    WHERE name = ''IX_Salary_Employee_Period'' 
+      AND object_id = OBJECT_ID(''mis.[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате]'')
+)
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_Salary_Employee_Period
+    ON mis.[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате]
+    (
+        [СотрудникиДанныеПоЗарплате Сотрудник ID],
+        [СотрудникиДанныеПоЗарплате Период] DESC
+    )
+    INCLUDE ([СотрудникиДанныеПоЗарплате Должность],
+             [СотрудникиДанныеПоЗарплате Филиал]);
+END
+
+INSERT INTO mis.[Gold_Dim_Events]
 (
     Event_Period,
     Event_ID,
     Event_ClientID,
     Event_Status,
     Event_Kind,
-	Event_Type,
-	Event_Project,
-	Event_Content,
-	Event_ResponsibleID,
-	Event_Responsible,
-	Event_NextDateEvent,
-	Event_NextKindEvent,
-	Event_BranchID
+    Event_Type,
+    Event_Project,
+    Event_Content,
+    Event_ResponsibleID,
+    Event_Responsible,
+    Event_NextDateEvent,
+    Event_NextKindEvent,
+    Event_BranchID,
+    Event_Branch_Name,
+    EmployeePosition,
+    EmployeeBranch
 )
 SELECT
-
-    [СведенияОСобытиях Период] AS Event_Period,
-    [СведенияОСобытиях ID] AS Event_ID,
-    [СведенияОСобытиях Контрагент ID] AS Event_ClientID,
-    [СведенияОСобытиях Состояние События] AS Event_Status,
-    [СведенияОСобытиях Вид События] AS Event_Kind,
-    [СведенияОСобытиях Тип События] AS Event_Type,
-    [СведенияОСобытиях Проект] AS Event_Project,
-    [СведенияОСобытиях Содержание События] AS Event_Content,
-    [СведенияОСобытиях Ответственный ID] AS Event_ResponsibleID,
-    [СведенияОСобытиях Ответственный] AS Event_Responsible,
-    [СведенияОСобытиях Дата Следующего События] AS Event_NextDateEvent,
-    [СведенияОСобытиях Вид Следующего События] AS Event_NextKindEvent,
-    [СведенияОСобытиях Филиал ID] AS Event_BranchID
-
-  FROM [ATK].[dbo].[РегистрыСведений.СведенияОСобытиях];';
+    e.[СведенияОСобытиях Период],
+    e.[СведенияОСобытиях ID],
+    e.[СведенияОСобытиях Контрагент ID],
+    e.[СведенияОСобытиях Состояние События],
+    e.[СведенияОСобытиях Вид События],
+    e.[СведенияОСобытиях Тип События],
+    e.[СведенияОСобытиях Проект],
+    e.[СведенияОСобытиях Содержание События],
+    e.[СведенияОСобытиях Ответственный ID],
+    e.[СведенияОСобытиях Ответственный],
+    e.[СведенияОСобытиях Дата Следующего События],
+    e.[СведенияОСобытиях Вид Следующего События],
+    e.[СведенияОСобытиях Филиал ID],
+    e.[СведенияОСобытиях Филиал],
+    s.[СотрудникиДанныеПоЗарплате Должность],
+    s.[СотрудникиДанныеПоЗарплате Филиал]
+FROM [ATK].[dbo].[РегистрыСведений.СведенияОСобытиях] e
+OUTER APPLY
+(
+    SELECT TOP 1
+           p.[СотрудникиДанныеПоЗарплате Должность],
+           p.[СотрудникиДанныеПоЗарплате Филиал]
+    FROM mis.[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] p
+    WHERE p.[СотрудникиДанныеПоЗарплате Сотрудник ID] = e.[СведенияОСобытиях Ответственный ID]
+      AND p.[СотрудникиДанныеПоЗарплате Период] <= e.[СведенияОСобытиях Период]
+    ORDER BY p.[СотрудникиДанныеПоЗарплате Период] DESC
+) s
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM mis.[Gold_Dim_Events] g
+    WHERE g.Event_ID = e.[СведенияОСобытиях ID]
+);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY
@@ -3594,6 +3737,76 @@ SELECT
 FROM #Joined j;
 
 PRINT N''🏁 Incremental load completed successfully'';';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
+
+    -- Start of: mis.Gold_Dim_Event_Responsible.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_Event_Responsible]'', ''U'') IS NULL
+BEGIN
+    CREATE TABLE mis.[Gold_Dim_Event_Responsible]
+    (
+        EventDocumentID      VARCHAR(36)   NOT NULL PRIMARY KEY,
+        EventRowNumber       INT           NULL,
+        ClientType           VARCHAR(36)   NULL,
+        ClientKind           VARCHAR(36)   NULL,
+        ClientID             VARCHAR(36)   NULL,
+        EventStatus          NVARCHAR(256) NULL,
+        ResponsibleID        VARCHAR(36)   NULL,
+        ResponsibleName      NVARCHAR(40)  NULL,
+        SelectionFlag        VARCHAR(36)   NULL,
+        NewResponsibleID     VARCHAR(36)   NULL,
+        NewResponsibleName   NVARCHAR(40)  NULL,
+        NewBranchID          VARCHAR(36)   NULL,
+        NewBranchName        NVARCHAR(100) NULL,
+        AffiliatedGroupID    VARCHAR(36)   NULL,
+        AffiliatedGroupName  NVARCHAR(150) NULL
+    );
+END
+
+INSERT INTO mis.[Gold_Dim_Event_Responsible]
+(
+    EventDocumentID,
+    EventRowNumber,
+    ClientType,
+    ClientKind,
+    ClientID,
+    EventStatus,
+    ResponsibleID,
+    ResponsibleName,
+    SelectionFlag,
+    NewResponsibleID,
+    NewResponsibleName,
+    NewBranchID,
+    NewBranchName,
+    AffiliatedGroupID,
+    AffiliatedGroupName
+)
+SELECT
+    [УстановкаОтветственныхПоКредитамИКлиентам ID]                             AS EventDocumentID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Номер Строки]           AS EventRowNumber,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент Tип]             AS ClientType,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент Вид]             AS ClientKind,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Клиент ID]              AS ClientID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Состояние События]      AS EventStatus,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Ответственный ID]       AS ResponsibleID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Ответственный]          AS ResponsibleName,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Отметка Выбора]         AS SelectionFlag,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Ответственный ID] AS NewResponsibleID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Ответственный]    AS NewResponsibleName,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Филиал ID]        AS NewBranchID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Новый Филиал]           AS NewBranchName,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Группа Аффилированных Лиц ID]  AS AffiliatedGroupID,
+    [УстановкаОтветственныхПоКредитамИКлиентам.События Группа Аффилированных Лиц]     AS AffiliatedGroupName
+FROM [ATK].[dbo].[Документы.УстановкаОтветственныхПоКредитамИКлиентам.События] e
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM mis.[Gold_Dim_Event_Responsible] g
+    WHERE g.EventDocumentID = e.[УстановкаОтветственныхПоКредитамИКлиентам ID]
+);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
     END TRY

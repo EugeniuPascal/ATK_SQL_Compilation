@@ -1,8 +1,9 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-02-10 14:20:36.620112
+-- Generated: 2026-02-11 09:29:29.411427
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
--- Files included: 13
+-- Files included: 14
+--   mis.Silver_Employee_User.sql
 --   mis.Silver_CommiteeProtocol.sql
 --   mis.Silver_CerereOnline_base.sql
 --   mis.Silver_Restruct_SCD.sql
@@ -31,6 +32,86 @@ AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @sql NVARCHAR(MAX);
+
+    -- Start of: mis.Silver_Employee_User.sql
+    SET @sql = N'IF OBJECT_ID(''mis.[Silver_Employee_User]'', ''U'') IS NOT NULL
+   DROP TABLE mis.[Silver_Employee_User];
+
+CREATE TABLE mis.[Silver_Employee_User]
+    (
+        [СотрудникиДанныеПоЗарплате Период]              DATETIME      NULL,
+        [СотрудникиДанныеПоЗарплате Сотрудник ID]        VARCHAR(36)   NULL,
+        [СотрудникиДанныеПоЗарплате Должность]           NVARCHAR(100) NULL,
+        [СотрудникиДанныеПоЗарплате Должность ID]        VARCHAR(36)   NULL,
+        [СотрудникиДанныеПоЗарплате Филиал]              NVARCHAR(100) NULL,
+
+        [Пользователи ID]                                VARCHAR(36)   NULL,
+        [Пользователи Пометка Удаления]                  VARCHAR(36)   NULL,
+        [Пользователи Наименование]                      NVARCHAR(100) NULL,
+        [Пользователи Основная Группа Сотрудников]       NVARCHAR(256) NULL,
+        [Пользователи Сотрудник ID]                      VARCHAR(36)   NULL,
+        [Пользователи Сотрудник]                         NVARCHAR(40)  NULL,
+        [Пользователи Касса ID]                          VARCHAR(36)   NULL,
+        [Пользователи Касса]                             NVARCHAR(50)  NULL,
+        [Пользователи Подключен]                         INT           NULL,
+        [Пользователи Отключить]                         INT           NULL,
+        [Пользователи Представитель MI ID]               VARCHAR(36)   NULL,
+        [Пользователи Представитель MI]                  NVARCHAR(55)  NULL,
+        [Пользователи Недействителен]                    VARCHAR(36)   NULL,
+        [Пользователи Подразделение]                     NVARCHAR(10)  NULL,
+        [Пользователи Физическое Лицо]                   NVARCHAR(10)  NULL,
+        [Пользователи Служебный]                         VARCHAR(36)   NULL,
+        [Пользователи Подготовлен]                       VARCHAR(36)   NULL,
+        [Пользователи Идентификатор Пользователя ИБ]     VARCHAR(36)   NULL,
+        [Пользователи Идентификатор Пользователя Сервиса] VARCHAR(36)  NULL,
+        [Пользователи Свойства Пользователя ИБ]          VARCHAR(36)   NULL,
+        [Пользователи Напоминать о Задолженности Поставщики] VARCHAR(36) NULL,
+        [Пользователи Контрагент ID]                     VARCHAR(36)   NULL
+
+    );
+
+INSERT INTO mis.[Silver_Employee_User]
+SELECT 
+      a.[СотрудникиДанныеПоЗарплате Период],
+      a.[СотрудникиДанныеПоЗарплате Сотрудник ID],
+      a.[СотрудникиДанныеПоЗарплате Должность],
+      a.[СотрудникиДанныеПоЗарплате Должность ID],
+      a.[СотрудникиДанныеПоЗарплате Филиал],
+
+      u.[Пользователи ID],
+      u.[Пользователи Пометка Удаления],
+      u.[Пользователи Наименование],
+      u.[Пользователи Основная Группа Сотрудников],
+      u.[Пользователи Сотрудник ID],
+      u.[Пользователи Сотрудник],
+      u.[Пользователи Касса ID],
+      u.[Пользователи Касса],
+      u.[Пользователи Подключен],
+      u.[Пользователи Отключить],
+      u.[Пользователи Представитель MI ID],
+      u.[Пользователи Представитель MI],
+      u.[Пользователи Недействителен],
+      u.[Пользователи Подразделение],
+      u.[Пользователи Физическое Лицо],
+      u.[Пользователи Служебный],
+      u.[Пользователи Подготовлен],
+      u.[Пользователи Идентификатор Пользователя ИБ],
+      u.[Пользователи Идентификатор Пользователя Сервиса],
+      u.[Пользователи Свойства Пользователя ИБ],
+      u.[Пользователи Напоминать о Задолженности Поставщики],
+      u.[Пользователи Контрагент ID]
+
+
+FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] a
+LEFT JOIN [ATK].[dbo].[Справочники.Пользователи] u
+    ON u.[Пользователи Сотрудник ID] = a.[СотрудникиДанныеПоЗарплате Сотрудник ID]
+WHERE u.[Пользователи Пометка Удаления] <> ''01'';';
+    BEGIN TRY
+        EXEC sys.sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH;
 
     -- Start of: mis.Silver_CommiteeProtocol.sql
     SET @sql = N'IF OBJECT_ID(''mis.[Silver_CommiteeProtocol]'', ''U'') IS NOT NULL

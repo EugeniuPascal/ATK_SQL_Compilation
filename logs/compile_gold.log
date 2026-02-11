@@ -644,3 +644,54 @@
 2026-02-10 14:20:39,358 [INFO] Processing file: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
 2026-02-10 14:20:39,359 [INFO] Finished file: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
 2026-02-10 14:20:39,359 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql
+2026-02-11 09:29:31,566 [INFO] === Starting Gold SQL Compilation Job ===
+2026-02-11 09:29:31,570 [INFO] Total SQL files to process: 24
+2026-02-11 09:29:31,570 [INFO] Processing file: mis.Gold_Dim_AppUsers.sql
+2026-02-11 09:29:31,571 [INFO] Finished file: mis.Gold_Dim_AppUsers.sql
+2026-02-11 09:29:31,571 [INFO] Processing file: mis.Gold_Dim_Branch.sql
+2026-02-11 09:29:31,571 [INFO] Finished file: mis.Gold_Dim_Branch.sql
+2026-02-11 09:29:31,571 [INFO] Processing file: mis.Gold_Dim_Clients.sql
+2026-02-11 09:29:31,573 [INFO] Finished file: mis.Gold_Dim_Clients.sql
+2026-02-11 09:29:31,573 [INFO] Processing file: mis.Gold_Dim_Credits.sql
+2026-02-11 09:29:31,575 [INFO] Finished file: mis.Gold_Dim_Credits.sql
+2026-02-11 09:29:31,575 [INFO] Processing file: mis.Gold_Dim_EmployeePayrollData.sql
+2026-02-11 09:29:31,575 [INFO] Finished file: mis.Gold_Dim_EmployeePayrollData.sql
+2026-02-11 09:29:31,575 [INFO] Processing file: mis.Gold_Dim_Employees.sql
+2026-02-11 09:29:31,576 [INFO] Finished file: mis.Gold_Dim_Employees.sql
+2026-02-11 09:29:31,576 [INFO] Processing file: mis.Gold_Dim_EmployeesHistory.sql
+2026-02-11 09:29:31,577 [INFO] Finished file: mis.Gold_Dim_EmployeesHistory.sql
+2026-02-11 09:29:31,577 [INFO] Processing file: mis.Gold_Dim_Events.sql
+2026-02-11 09:29:31,577 [INFO] Finished file: mis.Gold_Dim_Events.sql
+2026-02-11 09:29:31,577 [INFO] Processing file: mis.Gold_Dim_GroupMembershipPeriods.sql
+2026-02-11 09:29:31,578 [INFO] Finished file: mis.Gold_Dim_GroupMembershipPeriods.sql
+2026-02-11 09:29:31,578 [INFO] Processing file: mis.Gold_Dim_PartnersBranch.sql
+2026-02-11 09:29:31,578 [INFO] Finished file: mis.Gold_Dim_PartnersBranch.sql
+2026-02-11 09:29:31,578 [INFO] Processing file: mis.Gold_Fact_AdminTasks.sql
+2026-02-11 09:29:31,580 [INFO] Finished file: mis.Gold_Fact_AdminTasks.sql
+2026-02-11 09:29:31,580 [INFO] Processing file: mis.Gold_Fact_ArchiveDocument.sql
+2026-02-11 09:29:31,581 [INFO] Finished file: mis.Gold_Fact_ArchiveDocument.sql
+2026-02-11 09:29:31,581 [INFO] Processing file: mis.Gold_Fact_BudgetEmployees.sql
+2026-02-11 09:29:31,581 [INFO] Finished file: mis.Gold_Fact_BudgetEmployees.sql
+2026-02-11 09:29:31,581 [INFO] Processing file: mis.Gold_Fact_CerereOnline.sql
+2026-02-11 09:29:31,583 [INFO] Finished file: mis.Gold_Fact_CerereOnline.sql
+2026-02-11 09:29:31,583 [INFO] Processing file: mis.Gold_Fact_Comments.sql
+2026-02-11 09:29:31,583 [INFO] Finished file: mis.Gold_Fact_Comments.sql
+2026-02-11 09:29:31,583 [INFO] Processing file: mis.Gold_Fact_CPD.sql
+2026-02-11 09:29:31,584 [INFO] Finished file: mis.Gold_Fact_CPD.sql
+2026-02-11 09:29:31,584 [INFO] Processing file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2026-02-11 09:29:31,584 [INFO] Finished file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2026-02-11 09:29:31,584 [INFO] Processing file: mis.Gold_Fact_WriteOffCredits.sql
+2026-02-11 09:29:31,585 [INFO] Finished file: mis.Gold_Fact_WriteOffCredits.sql
+2026-02-11 09:29:31,585 [INFO] Processing file: mis.Gold_Fact_Restruct_Daily_Min.sql
+2026-02-11 09:29:31,587 [INFO] Finished file: mis.Gold_Fact_Restruct_Daily_Min.sql
+2026-02-11 09:29:31,587 [INFO] Processing file: mis.Gold_Fact_Disbursement.sql
+2026-02-11 09:29:31,589 [INFO] Finished file: mis.Gold_Fact_Disbursement.sql
+2026-02-11 09:29:31,589 [INFO] Processing file: mis.Gold_Fact_Sold_Par.sql
+2026-02-11 09:29:31,590 [INFO] Finished file: mis.Gold_Fact_Sold_Par.sql
+2026-02-11 09:29:31,590 [INFO] Processing file: V2__incremental_gold_dim_Event_InProgress.sql
+2026-02-11 09:29:31,590 [INFO] Finished file: V2__incremental_gold_dim_Event_InProgress.sql
+2026-02-11 09:29:31,590 [INFO] Processing file: V2__incremental_gold_dim_Event_Responsible.sql
+2026-02-11 09:29:31,591 [INFO] Finished file: V2__incremental_gold_dim_Event_Responsible.sql
+2026-02-11 09:29:31,591 [INFO] Processing file: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
+2026-02-11 09:29:31,592 [INFO] Finished file: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
+2026-02-11 09:29:31,592 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql

@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-11 09:40:27.472791
+-- Generated: 2026-02-12 08:58:44.667061
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 24
 --   mis.Gold_Dim_AppUsers.sql
@@ -1110,7 +1110,6 @@ CREATE TABLE mis.[Gold_Dim_GroupMembershipPeriods]
     PersonID       VARCHAR(36) NULL,
     PersonName     NVARCHAR(255) NOT NULL,
     PeriodOriginal DATETIME2(0) NOT NULL,
-    RowNumber      INT NULL,
     ActiveFlag     VARCHAR(36) NULL,
     ExcludedFlag   VARCHAR(36) NULL,
     GroupName      NVARCHAR(255) NULL,
@@ -1128,7 +1127,6 @@ WITH Events AS (
         sg.[СоставГруппАффилированныхЛиц Контрагент ID] AS PersonID,
         sg.[СоставГруппАффилированныхЛиц Контрагент] AS PersonName,
         sg.[СоставГруппАффилированныхЛиц Период] AS PeriodOriginal,
-        sg.[СоставГруппАффилированныхЛиц Номер Строки] AS RowNumber,
         sg.[СоставГруппАффилированныхЛиц Активность] AS ActiveFlag,
         sg.[СоставГруппАффилированныхЛиц Исключен] AS ExcludedFlag,
         sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц] AS GroupName,
@@ -1153,7 +1151,7 @@ Dedup AS (
         SELECT *,
                ROW_NUMBER() OVER (
                    PARTITION BY
-                       GroupID, PersonID, PersonName, PeriodOriginal, RowNumber,
+                       GroupID, PersonID, PersonName, PeriodOriginal,
                        ActiveFlag, ExcludedFlag, GroupName,
                        GroupOwner, GroupCode, GroupNameFull, GroupOwnerTax,
                        EventType, DeletionFlag
@@ -1181,13 +1179,13 @@ Ordered AS (
 INSERT INTO mis.[Gold_Dim_GroupMembershipPeriods]
 (
     GroupID, PersonID, PersonName,
-    PeriodOriginal, RowNumber, ActiveFlag, ExcludedFlag, GroupName,
+    PeriodOriginal, ActiveFlag, ExcludedFlag, GroupName,
     GroupOwner, GroupCode, GroupNameFull, GroupOwnerTax,
     PeriodStart, PeriodEnd
 )
 SELECT
     GroupID, PersonID, PersonName,
-    PeriodOriginal, RowNumber, ActiveFlag, ExcludedFlag, GroupName,
+    PeriodOriginal, ActiveFlag, ExcludedFlag, GroupName,
     GroupOwner, GroupCode, GroupNameFull, GroupOwnerTax,
     PeriodOriginal AS PeriodStart,
     CASE 

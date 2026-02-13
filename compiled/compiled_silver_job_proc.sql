@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-02-12 08:58:41.951744
+-- Generated: 2026-02-13 15:51:17.359233
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 14
 --   mis.Silver_Employee_User.sql
@@ -219,7 +219,8 @@ CREATE TABLE mis.[Silver_CerereOnline_base]
     [WebStatus]             NVARCHAR(256)  NULL,
     [WebCreditTerm]         INT            NULL,
     [WebBranchID]           VARCHAR(36)    NULL,
-    [CommitteeDecisionDate] DATETIME       NULL
+    [CommitteeDecisionDate] DATETIME       NULL,
+	[CommitteeDecision]     NVARCHAR(256)  NULL
 );
 
 ;WITH Base AS (
@@ -271,14 +272,17 @@ CREATE TABLE mis.[Silver_CerereOnline_base]
             o.[ОбъединеннаяИнтернетЗаявка Автор ID],
             o.[ОбъединеннаяИнтернетЗаявка ID]
         ) AS ClientKey,
-        c.[ПротоколКомитета Дата Решения] AS [CommitteeDecisionDate]
+        c.[ПротоколКомитета Дата Решения] AS [CommitteeDecisionDate],
+		c.[ПротоколКомитета Решение Комитета] AS [CommitteeDecision]
     FROM [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] o
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
 		AND (o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] = ''00''
 	    OR o.[ОбъединеннаяИнтернетЗаявка Пометка Удаления] IS NULL)
-    LEFT JOIN [ATK].[mis].[Bronze_Документы.ПротоколКомитета] c
+    INNER JOIN [ATK].[mis].[Bronze_Документы.ПротоколКомитета] c
         ON c.[ПротоколКомитета Заявка ID] = z.[ЗаявкаНаКредит ID]
+		AND c.[ПротоколКомитета Проведен] = ''01''
+		
 
     UNION ALL
 
@@ -312,7 +316,9 @@ CREATE TABLE mis.[Silver_CerereOnline_base]
             o.[ОбъединеннаяИнтернетЗаявка Автор ID],
             o.[ОбъединеннаяИнтернетЗаявка ID]
         ) AS ClientKey,
-        NULL AS [CommitteeDecisionDate]
+        NULL AS [CommitteeDecisionDate],
+		NULL AS [CommitteeDecision]
+
     FROM [ATK].[mis].[Bronze_Документы.ОбъединеннаяИнтернетЗаявка] o
     LEFT JOIN [ATK].[mis].[Bronze_Документы.ЗаявкаНаКредит] z
         ON z.[ЗаявкаНаКредит ID] = o.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
@@ -331,7 +337,7 @@ INSERT INTO mis.[Silver_CerereOnline_base]
     [WebDate],[WebNr],[WebPosted],[WebIncomeTypeOnline],[WebAge],
     [WebSubmissionDate],[WebCredit],[WebIdentifier],[WebCreditEmployee],
     [WebMobilePhone],[WebSentForReview],[WebGender],[WebStatus],
-    [WebCreditTerm],[WebBranchID],[CommitteeDecisionDate]
+    [WebCreditTerm],[WebBranchID],[CommitteeDecisionDate], [CommitteeDecision]
 )
 SELECT
     b.[ID], b.[Date], b.[Status], b.[Posted],
@@ -349,7 +355,7 @@ SELECT
     b.[WebDate], b.[WebNr], b.[WebPosted], b.[WebIncomeTypeOnline], b.[WebAge],
     b.[WebSubmissionDate], b.[WebCredit], b.[WebIdentifier], b.[WebCreditEmployee],
     b.[WebMobilePhone], b.[WebSentForReview], b.[WebGender], b.[WebStatus],
-    b.[WebCreditTerm], b.[WebBranchID], b.[CommitteeDecisionDate]
+    b.[WebCreditTerm], b.[WebBranchID], b.[CommitteeDecisionDate], b.[CommitteeDecision]
 FROM Base b
 LEFT JOIN [ATK].[mis].[Bronze_Справочники.Контрагенты] AS c
     ON b.[ClientID] = c.[Контрагенты ID]

@@ -1,7 +1,7 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-12 08:58:35
+-- Generated: 2026-02-13 15:51:11
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files (24):
+-- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
 --   mis.Gold_Dim_Branch.sql
 --   mis.Gold_Dim_Clients.sql
@@ -23,9 +23,10 @@
 --   mis.Gold_Fact_Restruct_Daily_Min.sql
 --   mis.Gold_Fact_Disbursement.sql
 --   mis.Gold_Fact_Sold_Par.sql
---   V2__incremental_gold_dim_Event_InProgress.sql
---   V2__incremental_gold_dim_Event_Responsible.sql
---   V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
+--   V2__inc_Gold_Dim_Event_InProgress.sql
+--   V2__inc_Gold_Dim_Event_Responsible.sql
+--   V2__inc_Gold_Dim_Limits.sql
+--   V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
 
 SET NOCOUNT ON;
@@ -1855,34 +1856,33 @@ USE [ATK];
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
+DECLARE @TargetPosID varchar(36) = '812b00155d65040111ed03ac01bd0d94';
+DECLARE @FromDate    datetime   = '2013-01-01T00:00:00';
+
 --------------------------------------------------------------------------------
--- 0A) Calendar tables (temp) "по примеру графика"
---     1) #Dim_WorkCalendar_All_08_20    -> Mon-Sun, 08:00-20:00 (720)
---     2) #Dim_WorkCalendar_MonFri_08_18 -> Mon-Fri, 08:00-18:00 (600), weekend=0
+-- 0A) Calendar tables (temp) - NO named constraints (avoid PK name collisions)
 --------------------------------------------------------------------------------
 IF OBJECT_ID('tempdb..#Dim_WorkCalendar_All_08_20') IS NOT NULL DROP TABLE #Dim_WorkCalendar_All_08_20;
 IF OBJECT_ID('tempdb..#Dim_WorkCalendar_MonFri_08_18') IS NOT NULL DROP TABLE #Dim_WorkCalendar_MonFri_08_18;
 
 CREATE TABLE #Dim_WorkCalendar_All_08_20
 (
-      [Date]            date        NOT NULL
+      [Date]            date        NOT NULL PRIMARY KEY CLUSTERED
     , IsWeekend         bit         NOT NULL
     , WorkStartDttm     datetime2(0) NOT NULL
     , WorkEndDttm       datetime2(0) NOT NULL
     , WorkMinutesPerDay int         NOT NULL
     , CumWorkMinutes    bigint      NOT NULL
-    , CONSTRAINT PK__CalAll PRIMARY KEY CLUSTERED ([Date])
 );
 
 CREATE TABLE #Dim_WorkCalendar_MonFri_08_18
 (
-      [Date]            date        NOT NULL
+      [Date]            date        NOT NULL PRIMARY KEY CLUSTERED
     , IsWeekend         bit         NOT NULL
     , WorkStartDttm     datetime2(0) NOT NULL
     , WorkEndDttm       datetime2(0) NOT NULL
     , WorkMinutesPerDay int         NOT NULL
     , CumWorkMinutes    bigint      NOT NULL
-    , CONSTRAINT PK__CalMonFri PRIMARY KEY CLUSTERED ([Date])
 );
 
 DECLARE @CalStart date = '2023-01-01';
@@ -1895,35 +1895,16 @@ DECLARE @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
     FROM sys.all_objects a
     CROSS JOIN sys.all_objects b
 ),
-d AS
-(
-    SELECT [Date] = DATEADD(day, n, @CalStart)
-    FROM N
-),
-x AS
-(
-    SELECT
-          [Date]
-        , WDay = (DATEDIFF(day, CONVERT(date,'19000101'), [Date]) % 7) + 1  -- 1=Mon..7=Sun
-    FROM d
-),
-src AS
-(
-    SELECT
-          [Date]
-        , WDay
-        , IsWeekend = CASE WHEN WDay IN (6,7) THEN 1 ELSE 0 END
-    FROM x
-)
+d AS (SELECT [Date] = DATEADD(day, n, @CalStart) FROM N),
+x AS (SELECT [Date], WDay = (DATEDIFF(day, CONVERT(date,'19000101'), [Date]) % 7) + 1 FROM d),
+src AS (SELECT [Date], WDay, IsWeekend = CASE WHEN WDay IN (6,7) THEN 1 ELSE 0 END FROM x)
 INSERT INTO #Dim_WorkCalendar_All_08_20
-(
-    [Date], IsWeekend, WorkStartDttm, WorkEndDttm, WorkMinutesPerDay, CumWorkMinutes
-)
+([Date], IsWeekend, WorkStartDttm, WorkEndDttm, WorkMinutesPerDay, CumWorkMinutes)
 SELECT
       s.[Date]
     , s.IsWeekend
-    , DATEADD(minute, 8*60,  CAST(s.[Date] AS datetime2(0)))  -- 08:00
-    , DATEADD(minute, 20*60, CAST(s.[Date] AS datetime2(0)))  -- 20:00
+    , DATEADD(minute,  8*60, CAST(s.[Date] AS datetime2(0)))
+    , DATEADD(minute, 20*60, CAST(s.[Date] AS datetime2(0)))
     , 720
     , SUM(CAST(720 AS bigint)) OVER (ORDER BY s.[Date] ROWS UNBOUNDED PRECEDING)
 FROM src s;
@@ -1935,55 +1916,51 @@ FROM src s;
     FROM sys.all_objects a
     CROSS JOIN sys.all_objects b
 ),
-d AS
-(
-    SELECT [Date] = DATEADD(day, n, @CalStart)
-    FROM N
-),
-x AS
-(
-    SELECT
-          [Date]
-        , WDay = (DATEDIFF(day, CONVERT(date,'19000101'), [Date]) % 7) + 1
-    FROM d
-),
-src AS
-(
-    SELECT
-          [Date]
-        , WDay
-        , IsWeekend = CASE WHEN WDay IN (6,7) THEN 1 ELSE 0 END
-    FROM x
-)
+d AS (SELECT [Date] = DATEADD(day, n, @CalStart) FROM N),
+x AS (SELECT [Date], WDay = (DATEDIFF(day, CONVERT(date,'19000101'), [Date]) % 7) + 1 FROM d),
+src AS (SELECT [Date], WDay, IsWeekend = CASE WHEN WDay IN (6,7) THEN 1 ELSE 0 END FROM x)
 INSERT INTO #Dim_WorkCalendar_MonFri_08_18
-(
-    [Date], IsWeekend, WorkStartDttm, WorkEndDttm, WorkMinutesPerDay, CumWorkMinutes
-)
+([Date], IsWeekend, WorkStartDttm, WorkEndDttm, WorkMinutesPerDay, CumWorkMinutes)
 SELECT
       s.[Date]
     , s.IsWeekend
-    , DATEADD(minute, 8*60,  CAST(s.[Date] AS datetime2(0)))  -- 08:00
-    , DATEADD(minute, 18*60, CAST(s.[Date] AS datetime2(0)))  -- 18:00
+    , DATEADD(minute,  8*60, CAST(s.[Date] AS datetime2(0)))
+    , DATEADD(minute, 18*60, CAST(s.[Date] AS datetime2(0)))
     , CASE WHEN s.WDay BETWEEN 1 AND 5 THEN 600 ELSE 0 END
     , SUM(CAST(CASE WHEN s.WDay BETWEEN 1 AND 5 THEN 600 ELSE 0 END AS bigint))
         OVER (ORDER BY s.[Date] ROWS UNBOUNDED PRECEDING)
 FROM src s;
 
 --------------------------------------------------------------------------------
--- 1) Rebuild target table from f.* only (убираем дубли колонок!)
+-- 1) Rebuild target table from base (ONLY 2024+)
 --------------------------------------------------------------------------------
 IF OBJECT_ID('mis.Gold_Fact_CerereOnline','U') IS NOT NULL
     DROP TABLE mis.Gold_Fact_CerereOnline;
 
 SELECT f.*
 INTO mis.Gold_Fact_CerereOnline
-FROM [ATK].[mis].[Silver_CerereOnline_base] f;
+FROM [ATK].[mis].[Silver_CerereOnline_base] f
+WHERE f.[Date] >= @FromDate;
+
+--------------------------------------------------------------------------------
+-- 1B) Indexes for faster joins/updates
+--------------------------------------------------------------------------------
+CREATE INDEX IX_Gold_CerereOnline_ID       ON mis.Gold_Fact_CerereOnline([ID]);
+CREATE INDEX IX_Gold_CerereOnline_CreditID ON mis.Gold_Fact_CerereOnline([CreditID]);
+CREATE INDEX IX_Gold_CerereOnline_AuthorID ON mis.Gold_Fact_CerereOnline([AuthorID]);
+CREATE INDEX IX_Gold_CerereOnline_Date     ON mis.Gold_Fact_CerereOnline([Date]);
 
 --------------------------------------------------------------------------------
 -- 2) Ensure required columns (add only if missing)
 --------------------------------------------------------------------------------
 IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Data autorizarii') IS NULL
     ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Data autorizarii] datetime2(0) NULL;
+
+IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Data depunerii cererii') IS NULL
+    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Data depunerii cererii] datetime2(0) NULL;
+
+IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Data votarii') IS NULL
+    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Data votarii] datetime2(0) NULL;
 
 IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Autor Votare') IS NULL
     ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Autor Votare] nvarchar(255) NULL;
@@ -2046,12 +2023,46 @@ IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'LoadDttm_Ext') IS NULL
     ALTER TABLE mis.Gold_Fact_CerereOnline
         ADD [LoadDttm_Ext] datetime NOT NULL
             CONSTRAINT DF_Gold_Fact_CerereOnline_LoadDttm DEFAULT (GETDATE());
+
 GO
 
+USE [ATK];
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+DECLARE @TargetPosID varchar(36) = '812b00155d65040111ed03ac01bd0d94';
+
 --------------------------------------------------------------------------------
--- 3) UPDATE with joins/CTEs
---    ВАЖНО: алиасы как в Cereri v2: Dep / InCC / ProcDttm / Tip
+-- 3) FAST ENRICH: restrict heavy work to only IDs from rebuilt table
 --------------------------------------------------------------------------------
+IF OBJECT_ID('tempdb..#t') IS NOT NULL DROP TABLE #t;
+
+;WITH x AS
+(
+    SELECT
+          t.[ID]
+        , t.[CreditID]
+        , t.[AuthorID]
+        , t.[BranchID]
+        , t.[CommitteeDecisionDate]
+        , rn = ROW_NUMBER() OVER
+          (
+            PARTITION BY t.[ID]
+            ORDER BY t.[Date] DESC, t.[CreditID] DESC
+          )
+    FROM mis.Gold_Fact_CerereOnline t
+)
+SELECT [ID], [CreditID], [AuthorID], [BranchID], [CommitteeDecisionDate]
+INTO #t
+FROM x
+WHERE rn = 1;
+
+CREATE CLUSTERED INDEX CIX_t_ID ON #t([ID]);
+CREATE INDEX IX_t_CreditID ON #t([CreditID]);
+CREATE INDEX IX_t_AuthorID ON #t([AuthorID]);
+
+-- d_last
+IF OBJECT_ID('tempdb..#d_last') IS NOT NULL DROP TABLE #d_last;
 ;WITH d_src AS
 (
     SELECT
@@ -2060,167 +2071,210 @@ GO
         , CAST(d.[ОбъединеннаяИнтернетЗаявка Дата Отправки на Рассмотрение] AS datetime2(0)) AS InCC
         , CAST(d.[ОбъединеннаяИнтернетЗаявка Дата Взятия в Работу] AS datetime2(0)) AS ProcDttm
         , d.[ОбъединеннаяИнтернетЗаявка Тип Рассмотрения Заявки] AS Tip
-        , ROW_NUMBER() OVER
+        , rn = ROW_NUMBER() OVER
           (
               PARTITION BY d.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
               ORDER BY CAST(d.[ОбъединеннаяИнтернетЗаявка Дата] AS datetime2(0)) DESC,
                        d.[ОбъединеннаяИнтернетЗаявка ID] DESC
-          ) AS rn
+          )
     FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗаявка] d
+    JOIN #t tt ON tt.[ID] = d.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID]
     WHERE ISNULL(d.[ОбъединеннаяИнтернетЗаявка Проведен], 0) = 0
       AND ISNULL(d.[ОбъединеннаяИнтернетЗаявка Пометка Удаления], 0) = 0
-      AND d.[ОбъединеннаяИнтернетЗаявка Заявка на Кредит ID] IS NOT NULL
-),
-d_last AS
-(
-    SELECT CerereOnlineID, Dep, InCC, ProcDttm, Tip
-    FROM d_src
-    WHERE rn = 1
-),
-proto_pick AS
+)
+SELECT CerereOnlineID, Dep, InCC, ProcDttm, Tip
+INTO #d_last
+FROM d_src
+WHERE rn = 1;
+
+CREATE UNIQUE CLUSTERED INDEX CIX_dlast_ID ON #d_last(CerereOnlineID);
+
+-- proto_last
+IF OBJECT_ID('tempdb..#proto_last') IS NOT NULL DROP TABLE #proto_last;
+;WITH p_src AS
 (
     SELECT
           p.[ПротоколКомитета Заявка ID] AS CerereOnlineID
         , p.[ПротоколКомитета ID]        AS ProtocolID
-        , ROW_NUMBER() OVER
+        , CAST(p.[ПротоколКомитета Дата] AS datetime2(0)) AS ProtocolDate
+        , p.[ПротоколКомитета Председатель Комитета]       AS ChairName
+        , p.[ПротоколКомитета Председатель Комитета ID]    AS ChairEmployeeID
+        , rn = ROW_NUMBER() OVER
           (
               PARTITION BY p.[ПротоколКомитета Заявка ID]
               ORDER BY CAST(p.[ПротоколКомитета Дата] AS datetime2(0)) DESC,
                        p.[ПротоколКомитета ID] DESC
-          ) AS rn
+          )
     FROM [ATK].[dbo].[Документы.ПротоколКомитета] p
+    JOIN #t tt ON tt.[ID] = p.[ПротоколКомитета Заявка ID]
     WHERE ISNULL(p.[ПротоколКомитета Пометка Удаления], 0) = 0
-      AND p.[ПротоколКомитета Заявка ID] IS NOT NULL
       AND ISNULL(p.[ПротоколКомитета Вид Комитета], N'') = N'ПредоставлениеКредита'
-),
-proto_last AS
-(
-    SELECT CerereOnlineID, ProtocolID
-    FROM proto_pick
-    WHERE rn = 1
-),
-votes_ranked AS
+)
+SELECT CerereOnlineID, ProtocolID, ProtocolDate, ChairName, ChairEmployeeID
+INTO #proto_last
+FROM p_src
+WHERE rn = 1;
+
+CREATE UNIQUE CLUSTERED INDEX CIX_proto_ID ON #proto_last(CerereOnlineID);
+CREATE INDEX IX_proto_ProtocolID ON #proto_last(ProtocolID);
+
+-- members
+IF OBJECT_ID('tempdb..#members') IS NOT NULL DROP TABLE #members;
+SELECT
+      pl.CerereOnlineID
+    , pl.ProtocolDate
+    , VoteDate =
+        NULLIF(
+            CAST(m.[ПротоколКомитета.ЧленыКомитета Дата Голоса] AS datetime2(0)),
+            CAST('1753-01-01T00:00:00' AS datetime2(0))
+        )
+    , MemberName = m.[ПротоколКомитета.ЧленыКомитета Член Комитета]
+    , MemberEmployeeID = m.[ПротоколКомитета.ЧленыКомитета Член Комитета ID]
+INTO #members
+FROM #proto_last pl
+LEFT JOIN [ATK].[dbo].[Документы.ПротоколКомитета.ЧленыКомитета] m
+  ON m.[ПротоколКомитета ID] = pl.ProtocolID;
+
+CREATE INDEX IX_members_ID ON #members(CerereOnlineID);
+CREATE INDEX IX_members_emp ON #members(MemberEmployeeID);
+
+-- salary pos (set-based)
+IF OBJECT_ID('tempdb..#m_pos') IS NOT NULL DROP TABLE #m_pos;
+;WITH s AS
 (
     SELECT
-          pl.CerereOnlineID
-        , VoteDate =
-            NULLIF(
-                CAST(m.[ПротоколКомитета.ЧленыКомитета Дата Голоса] AS datetime2(0)),
-                CAST('1753-01-01T00:00:00' AS datetime2(0))
-            )
-        , [Autor Votare]   = m.[ПротоколКомитета.ЧленыКомитета Член Комитета]
-        , [AutorVotare ID] = m.[ПротоколКомитета.ЧленыКомитета Член Комитета ID]
+          m.CerereOnlineID
+        , m.VoteDate
+        , m.MemberEmployeeID
+        , m.MemberName
+        , PosID = s.[СотрудникиДанныеПоЗарплате Должность ID]
         , rn = ROW_NUMBER() OVER
-            (
-                PARTITION BY pl.CerereOnlineID
-                ORDER BY
-                      CASE WHEN NULLIF(CAST(m.[ПротоколКомитета.ЧленыКомитета Дата Голоса] AS datetime2(0)),
-                                       CAST('1753-01-01T00:00:00' AS datetime2(0))) IS NULL
-                           THEN 1 ELSE 0 END,
-                      NULLIF(CAST(m.[ПротоколКомитета.ЧленыКомитета Дата Голоса] AS datetime2(0)),
-                             CAST('1753-01-01T00:00:00' AS datetime2(0))) ASC,
-                      m.[ПротоколКомитета.ЧленыКомитета Член Комитета ID] ASC
-            )
-    FROM proto_last pl
-    LEFT JOIN [ATK].[dbo].[Документы.ПротоколКомитета.ЧленыКомитета] m
-      ON m.[ПротоколКомитета ID] = pl.ProtocolID
-),
-votes_min AS
-(
-    SELECT CerereOnlineID, VoteDate, [Autor Votare], [AutorVotare ID]
-    FROM votes_ranked
-    WHERE rn = 1
-),
-credits_dim AS
-(
-    SELECT
-          c.[Кредиты ID] AS CreditID,
-          MAX(c.[Кредиты Сегмент Доходов]) AS IncomeSeg
-    FROM [ATK].[mis].[Bronze_Справочники.Кредиты] c
-    GROUP BY c.[Кредиты ID]
-),
-users_dim AS
+          (
+            PARTITION BY m.CerereOnlineID, m.MemberEmployeeID, m.VoteDate
+            ORDER BY CAST(s.[СотрудникиДанныеПоЗарплате Период] AS datetime2(0)) DESC
+          )
+    FROM #members m
+    LEFT JOIN [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] s
+      ON s.[СотрудникиДанныеПоЗарплате Сотрудник ID] = m.MemberEmployeeID
+     AND m.VoteDate IS NOT NULL
+     AND CAST(s.[СотрудникиДанныеПоЗарплате Период] AS datetime2(0)) <= m.VoteDate
+)
+SELECT CerereOnlineID, VoteDate, MemberEmployeeID, MemberName, PosID
+INTO #m_pos
+FROM s
+WHERE rn = 1;
+
+CREATE INDEX IX_mpos_ID ON #m_pos(CerereOnlineID);
+
+-- pick FIRST vote prefer TargetPos; fallback chair if none
+IF OBJECT_ID('tempdb..#vote_final') IS NOT NULL DROP TABLE #vote_final;
+
+;WITH ranked AS
 (
     SELECT
-          u.[Пользователи ID] AS AuthorID,
-          MAX(u.[Пользователи Сотрудник ID]) AS AutorDecizieID,
-          MAX(u.[Пользователи Сотрудник])    AS AutorDecizie
-    FROM [ATK].[dbo].[Справочники.Пользователи] u
-    GROUP BY u.[Пользователи ID]
-),
-pay_pick AS
+          CerereOnlineID
+        , VoteDate
+        , [Autor Votare]    = MemberName
+        , [AutorVotare ID]  = MemberEmployeeID
+        , rn = ROW_NUMBER() OVER
+          (
+            PARTITION BY CerereOnlineID
+            ORDER BY
+                CASE WHEN VoteDate IS NULL THEN 1 ELSE 0 END,
+                CASE WHEN PosID = @TargetPosID THEN 0 ELSE 1 END,
+                VoteDate ASC,
+                MemberEmployeeID ASC
+          )
+    FROM #m_pos
+)
+SELECT CerereOnlineID, VoteDate, [Autor Votare], [AutorVotare ID]
+INTO #vote_final
+FROM ranked
+WHERE rn = 1;
+
+INSERT INTO #vote_final(CerereOnlineID, VoteDate, [Autor Votare], [AutorVotare ID])
+SELECT
+      pl.CerereOnlineID
+    , pl.ProtocolDate
+    , pl.ChairName
+    , pl.ChairEmployeeID
+FROM #proto_last pl
+WHERE NOT EXISTS (SELECT 1 FROM #vote_final v WHERE v.CerereOnlineID = pl.CerereOnlineID);
+
+CREATE UNIQUE CLUSTERED INDEX CIX_vote_ID ON #vote_final(CerereOnlineID);
+
+-- credits_dim
+IF OBJECT_ID('tempdb..#credits_dim') IS NOT NULL DROP TABLE #credits_dim;
+SELECT c.[Кредиты ID] AS CreditID, MAX(c.[Кредиты Сегмент Доходов]) AS IncomeSeg
+INTO #credits_dim
+FROM [ATK].[mis].[Bronze_Справочники.Кредиты] c
+JOIN (SELECT DISTINCT CreditID FROM #t) x ON x.CreditID = c.[Кредиты ID]
+GROUP BY c.[Кредиты ID];
+CREATE UNIQUE CLUSTERED INDEX CIX_cr ON #credits_dim(CreditID);
+
+-- users_dim
+IF OBJECT_ID('tempdb..#users_dim') IS NOT NULL DROP TABLE #users_dim;
+SELECT u.[Пользователи ID] AS AuthorID,
+       MAX(u.[Пользователи Сотрудник ID]) AS AutorDecizieID,
+       MAX(u.[Пользователи Сотрудник])    AS AutorDecizie
+INTO #users_dim
+FROM [ATK].[dbo].[Справочники.Пользователи] u
+JOIN (SELECT DISTINCT AuthorID FROM #t) x ON x.AuthorID = u.[Пользователи ID]
+GROUP BY u.[Пользователи ID];
+CREATE UNIQUE CLUSTERED INDEX CIX_usr ON #users_dim(AuthorID);
+
+-- pay_last
+IF OBJECT_ID('tempdb..#pay_last') IS NOT NULL DROP TABLE #pay_last;
+;WITH p AS
 (
     SELECT
           p.[НаправлениеНаВыплату Кредит ID] AS CreditID
         , CAST(p.[НаправлениеНаВыплату Дата] AS datetime2(0)) AS DataAut
-        , ROW_NUMBER() OVER
+        , rn = ROW_NUMBER() OVER
           (
               PARTITION BY p.[НаправлениеНаВыплату Кредит ID]
               ORDER BY CAST(p.[НаправлениеНаВыплату Дата] AS datetime2(0)) DESC,
                        p.[НаправлениеНаВыплату ID] DESC
-          ) AS rn
+          )
     FROM [ATK].[dbo].[Документы.НаправлениеНаВыплату] p
+    JOIN (SELECT DISTINCT CreditID FROM #t) x ON x.CreditID = p.[НаправлениеНаВыплату Кредит ID]
     WHERE ISNULL(p.[НаправлениеНаВыплату Пометка Удаления], 0) = 0
       AND ISNULL(p.[НаправлениеНаВыплату Проведен], 0) = 0
-      AND p.[НаправлениеНаВыплату Кредит ID] IS NOT NULL
-),
-pay_last AS
-(
-    SELECT CreditID, DataAut
-    FROM pay_pick
-    WHERE rn = 1
 )
+SELECT CreditID, DataAut
+INTO #pay_last
+FROM p
+WHERE rn = 1;
+CREATE UNIQUE CLUSTERED INDEX CIX_pay ON #pay_last(CreditID);
+
+--------------------------------------------------------------------------------
+-- FINAL UPDATE
+--------------------------------------------------------------------------------
 UPDATE t
 SET
       t.[Autor Votare]            = v.[Autor Votare]
     , t.[AutorVotare ID]          = v.[AutorVotare ID]
+    , t.[Data depunerii cererii]  = d.Dep
+    , t.[Data votarii]            = v.VoteDate
     , t.[Autor decizie]           = u.[AutorDecizie]
     , t.[AutorDecizie ID]         = u.[AutorDecizieID]
     , t.[Кредиты Сегмент Доходов] = cr.IncomeSeg
     , t.[Data autorizarii]        = pay.DataAut
-
-, t.[Tip Рассмотрения Заявки RO] =
-    CASE
-        WHEN v.[AutorVotare ID] = '813100155D65040111ED171A45F42146' THEN N'Fara sunet'
-        WHEN d.Tip = N'БезЗвонка'   THEN N'Fara sunet'
-        WHEN d.Tip = N'Стандартный' THEN N'Standart'
-        ELSE NULL
-    END
-
-    --------------------------------------------------------------------------------
-    -- OLD speeds (как было): ALL DAYS 08-20
-    --------------------------------------------------------------------------------
+    , t.[Tip Рассмотрения Заявки RO] =
+        CASE
+            WHEN v.[AutorVotare ID] = '813100155D65040111ED171A45F42146' THEN N'Fara sunet'
+            WHEN d.Tip = N'БезЗвонка'   THEN N'Fara sunet'
+            WHEN d.Tip = N'Стандартный' THEN N'Standart'
+            ELSE NULL
+        END
     , t.[Viteza de decizie] =
-        mis.fn_WorkMinutesSigned(
-            d.Dep,
-            t.[CommitteeDecisionDate],
-            8*60, 20*60
-        )
-
+        mis.fn_WorkMinutesSigned(d.Dep, t.[CommitteeDecisionDate], 8*60, 20*60)
     , t.[Viteza de votare] =
-        mis.fn_WorkMinutesSigned(
-            d.Dep,
-            v.VoteDate,
-            8*60, 20*60
-        )
-
+        mx.Minutes_DepVote_08_20
     , t.[Viteza de procesare] =
-        mis.fn_WorkMinutesSigned(
-           d.ProcDttm,
-           v.VoteDate,
-            8*60, 20*60
-        )
-
-    --------------------------------------------------------------------------------
-    -- NEW formulas: Mon-Fri only (как ты попросил "не учитывать выходные")
-    --------------------------------------------------------------------------------
+        mis.fn_WorkMinutesSigned(d.ProcDttm, v.VoteDate, 8*60, 20*60)
     , t.[Analyse] =
-        mis.fn_WorkMinutesSigned_MonFri(
-            d.Dep,
-            d.InCC,
-            8*60, 18*60
-        )
-
+        mis.fn_WorkMinutesSigned_MonFri(d.Dep, d.InCC, 8*60, 18*60)
     , t.[Viteza de votare CC] =
         CASE
             WHEN t.[BranchID] IN
@@ -2231,108 +2285,58 @@ SET
                 '975B0018FEFB2E3711DD498DDAA682E1',
                 'B7B700155D65140C11EFB0AFF47A513B'
             )
-            THEN mis.fn_WorkMinutesSigned_MonFri(
-                     d.InCC,
-                     v.VoteDate,
-                     9*60, 18*60
-                 )
-            ELSE mis.fn_WorkMinutesSigned_MonFri(
-                     d.InCC,
-                     v.VoteDate,
-                     8*60, 17*60
-                 )
+            THEN mis.fn_WorkMinutesSigned_MonFri(d.InCC, v.VoteDate, 9*60, 18*60)
+            ELSE mis.fn_WorkMinutesSigned_MonFri(d.InCC, v.VoteDate, 8*60, 17*60)
         END
-
     , t.[CC] =
-        mis.fn_WorkMinutesSigned_MonFri(
-            d.InCC,
-            t.[CommitteeDecisionDate],
-            8*60, 18*60
-        )
-
+        mis.fn_WorkMinutesSigned_MonFri(d.InCC, t.[CommitteeDecisionDate], 8*60, 18*60)
     , t.[Disbusement speed] =
-        mis.fn_WorkMinutesSigned_MonFri(
-            t.[CommitteeDecisionDate],
-            pay.DataAut,
-            8*60, 18*60
-        )
-
+        mis.fn_WorkMinutesSigned_MonFri(t.[CommitteeDecisionDate], pay.DataAut, 8*60, 18*60)
     , t.[Total speed] =
-        mis.fn_WorkMinutesSigned_MonFri(
-           d.Dep, 
-            pay.DataAut,
-            8*60, 18*60
-        )
-
+        mis.fn_WorkMinutesSigned_MonFri(d.Dep, pay.DataAut, 8*60, 18*60)
     , t.[Timpul de asteptare] =
-        mis.fn_WorkMinutesSigned_MonFri(
-            d.Dep, 
-            d.ProcDttm,
-            9*60, 18*60
-        )
-
+        mis.fn_WorkMinutesSigned_MonFri(d.Dep, d.ProcDttm, 9*60, 18*60)
     , t.[Viteza de decizie CC] =
-        mis.fn_WorkMinutesSigned_MonFri(
-            d.Dep,
-            t.[CommitteeDecisionDate],
-            8*60, 18*60
-        )
-
+        mis.fn_WorkMinutesSigned_MonFri(d.Dep, t.[CommitteeDecisionDate], 8*60, 18*60)
     , t.[Viteza debursare(dupa procesare)] =
-        mis.fn_WorkMinutesSigned_MonFri(
-            d.ProcDttm,
-            pay.DataAut,
-            8*60, 18*60
-        )
-
+        mis.fn_WorkMinutesSigned_MonFri(d.ProcDttm, pay.DataAut, 8*60, 18*60)
     , t.[Viteza debursare(dupa Decizie)] =
-        mis.fn_WorkMinutesSigned_MonFri(
-            t.[CommitteeDecisionDate],
-            pay.DataAut,
-            8*60, 18*60
-        )
-
-    --------------------------------------------------------------------------------
-    -- Depasire norma viteza (оставил как было: ALL DAYS 08-20, чтобы не менять логику)
-    --------------------------------------------------------------------------------
+        mis.fn_WorkMinutesSigned_MonFri(t.[CommitteeDecisionDate], pay.DataAut, 8*60, 18*60)
     , t.[Depasire norma viteza] =
         CASE
-            WHEN mis.fn_WorkMinutesSigned(
-                   d.Dep, 
-                    v.VoteDate,
-                    8*60, 20*60
-                 ) IS NULL THEN NULL
+            WHEN mx.Minutes_DepVote_08_20 IS NULL THEN NULL
             WHEN (
                      cr.IncomeSeg LIKE N'Ipoteca%'
                   OR cr.IncomeSeg LIKE N'HIL%'
                   OR cr.IncomeSeg =  N'Consum non-business'
+                  OR cr.IncomeSeg =  N'Linia de credit retail'
                  )
-                 AND mis.fn_WorkMinutesSigned(
-                        d.Dep,
-                        v.VoteDate,
-                        8*60, 20*60
-                     ) > 420 THEN 1
-				 WHEN (
+                 AND mx.Minutes_DepVote_08_20 > 420 THEN 1
+            WHEN (
                      cr.IncomeSeg NOT LIKE N'Ipoteca%'
-                  OR cr.IncomeSeg NOT LIKE N'HIL%'
-                  OR cr.IncomeSeg <> N'Consum non-business'	 
-				  )
-				AND mis.fn_WorkMinutesSigned(
-                        d.Dep,
-                        v.VoteDate,
-                        8*60, 20*60
-                     ) > 120 THEN 1
+                 AND cr.IncomeSeg NOT LIKE N'HIL%'
+                 AND cr.IncomeSeg <> N'Consum non-business'
+                 AND cr.IncomeSeg <> N'Linia de credit retail'
+                 )
+                 AND mx.Minutes_DepVote_08_20 > 120 THEN 1
             ELSE 0
         END
-
     , t.[LoadDttm_Ext] = GETDATE()
 FROM mis.Gold_Fact_CerereOnline t
-LEFT JOIN d_last      d   ON d.CerereOnlineID = t.[ID]
-LEFT JOIN votes_min   v   ON v.CerereOnlineID = t.[ID]
-LEFT JOIN credits_dim cr  ON cr.CreditID      = t.[CreditID]
-LEFT JOIN users_dim   u   ON u.AuthorID       = t.[AuthorID]
-LEFT JOIN pay_last    pay ON pay.CreditID     = t.[CreditID];
-GO
+JOIN #t tt               ON tt.[ID] = t.[ID]
+LEFT JOIN #d_last d       ON d.CerereOnlineID = t.[ID]
+LEFT JOIN #vote_final v   ON v.CerereOnlineID = t.[ID]
+LEFT JOIN #credits_dim cr ON cr.CreditID      = t.[CreditID]
+LEFT JOIN #users_dim u    ON u.AuthorID       = t.[AuthorID]
+LEFT JOIN #pay_last pay   ON pay.CreditID     = t.[CreditID]
+OUTER APPLY
+(
+    SELECT Minutes_DepVote_08_20 =
+        CASE WHEN d.Dep IS NULL OR v.VoteDate IS NULL
+             THEN NULL
+             ELSE mis.fn_WorkMinutesSigned(d.Dep, v.VoteDate, 8*60, 20*60)
+        END
+) mx;
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Gold_Fact_CerereOnline.sql
 ----------------------------------------------------------------------------------------------------
@@ -3555,9 +3559,8 @@ DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR, #MaxDays;
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: V2__incremental_gold_dim_Event_InProgress.sql
+-- Start of: V2__inc_Gold_Dim_Event_InProgress.sql
 ----------------------------------------------------------------------------------------------------
-
 INSERT INTO mis.[Gold_Dim_Event_InProgress]
 (
     EventDate,
@@ -3622,15 +3625,14 @@ WHERE NOT EXISTS (
       AND g.ResponsibleID = e.[СведенияОСобытияхВРаботе Ответственный ID]
       );
 ----------------------------------------------------------------------------------------------------
--- End of:   V2__incremental_gold_dim_Event_InProgress.sql
+-- End of:   V2__inc_Gold_Dim_Event_InProgress.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: V2__incremental_gold_dim_Event_Responsible.sql
+-- Start of: V2__inc_Gold_Dim_Event_Responsible.sql
 ----------------------------------------------------------------------------------------------------
-
 INSERT INTO mis.[Gold_Dim_Event_Responsible]
 (
     EventDocumentID,
@@ -3674,13 +3676,162 @@ WHERE NOT EXISTS (
       AND g.EventRowNumber  = e.[УстановкаОтветственныхПоКредитамИКлиентам.События Номер Строки]
 );
 ----------------------------------------------------------------------------------------------------
--- End of:   V2__incremental_gold_dim_Event_Responsible.sql
+-- End of:   V2__inc_Gold_Dim_Event_Responsible.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
 
 ----------------------------------------------------------------------------------------------------
--- Start of: V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
+-- Start of: V2__inc_Gold_Dim_Limits.sql
+----------------------------------------------------------------------------------------------------
+;WITH LatestGroups AS
+(
+    SELECT
+        sg.[СоставГруппАффилированныхЛиц Контрагент ID] AS ClientID,
+        sg.[СоставГруппАффилированныхЛиц Группа Аффилированных Лиц ID] AS GroupID,
+        sg.[СоставГруппАффилированныхЛиц Период] AS Period,
+        d.[РегистрацияЛимита ID] AS LimitRegID,
+        ROW_NUMBER() OVER(PARTITION BY d.[РегистрацияЛимита ID] ORDER BY sg.[СоставГруппАффилированныхЛиц Период] DESC) AS rn
+    FROM [ATK].[dbo].[РегистрыСведений.СоставГруппАффилированныхЛиц] sg
+    JOIN [ATK].[dbo].[Документы.РегистрацияЛимита] d
+        ON sg.[СоставГруппАффилированныхЛиц Контрагент ID] = d.[РегистрацияЛимита Основной Клиент ID]
+       AND sg.[СоставГруппАффилированныхЛиц Период] <= d.[РегистрацияЛимита Дата]
+    WHERE d.[РегистрацияЛимита Проведен] = '01'
+      AND d.[РегистрацияЛимита Пометка Удаления] = '00'
+)
+INSERT INTO mis.[Gold_Dim_Limits]
+(
+    [LimitRegistrationID],
+    [LimitRegistrationDate],
+    [AuthorID],
+    [AuthorName],
+    [UsageType],
+    [LimitType],
+    [OperationType],
+    [DecisionDate],
+    [BaseDocumentType],
+    [BaseDocumentID],
+    [ValidityMonths],
+    [CommitteeID],
+    [CommitteeName],
+    [Comment],
+    [CreditExpertID],
+    [CreditExpertName],
+    [LimitRegLimitID],
+    [MainClientID],
+    [MainClientName],
+    [CommitteeChairmanID],
+    [CommitteeChairmanName],
+    [MIRepresentativeID],
+    [MIRepresentativeName],
+    [RejectionReasonID],
+    [RejectionReason],
+    [RejectionReasonDescription],
+    [RegistrationStatus],
+    [ApprovedAmount],
+    [DecisionText],
+    [BranchID],
+    [BranchName],
+    [ExcessPercentage],
+    [SummaryData],
+    [SubmissionDate],
+    [IsSummaryCompleted],
+    [AffiliatedGroupID],
+    [AffiliatedGroupName],
+    [ConsolidatedBalance],
+    [EffectiveStartDate],
+    [AnalysisType],
+    [UnsecuredAmount],
+    [UnsecuredAmountComment],
+    [IsIndividualGuaranteeAnalyzed],
+    [ProceduralUnsecuredAmount],
+    [LimitID],
+    [LimitDeletedFlag],
+    [LimitCode],
+    [GroupOwner],
+    [GroupNameFull],
+    [EmployeeID]
+)
+SELECT  
+     d.[РегистрацияЛимита ID]                       AS [LimitRegistrationID],
+     d.[РегистрацияЛимита Дата]                     AS [LimitRegistrationDate],
+     d.[РегистрацияЛимита Автор ID]                 AS [AuthorID],
+     d.[РегистрацияЛимита Автор]                    AS [AuthorName],
+     d.[РегистрацияЛимита Вид Использования]        AS [UsageType],
+     d.[РегистрацияЛимита Вид Лимита]               AS [LimitType],
+     d.[РегистрацияЛимита Вид Операции]             AS [OperationType],
+     d.[РегистрацияЛимита Дата Решения]             AS [DecisionDate],
+     d.[РегистрацияЛимита Документ Основание Tип]   AS [BaseDocumentType],
+     d.[РегистрацияЛимита Документ Основание ID]    AS [BaseDocumentID],
+     d.[РегистрацияЛимита Количество Месяцев Действия Лимита]     AS [ValidityMonths],
+     d.[РегистрацияЛимита Комитет ID]               AS [CommitteeID],
+     d.[РегистрацияЛимита Комитет]                  AS [CommitteeName],
+     d.[РегистрацияЛимита Комментарий]              AS [Comment],
+     d.[РегистрацияЛимита Кредитный Эксперт ID]     AS [CreditExpertID],
+     d.[РегистрацияЛимита Кредитный Эксперт]        AS [CreditExpertName],
+     d.[РегистрацияЛимита Лимит ID]                 AS [LimitRegLimitID],
+     d.[РегистрацияЛимита Основной Клиент ID]       AS [MainClientID],
+     d.[РегистрацияЛимита Основной Клиент]          AS [MainClientName],
+     d.[РегистрацияЛимита Председатель Комитета ID] AS [CommitteeChairmanID],
+     d.[РегистрацияЛимита Председатель Комитета]    AS [CommitteeChairmanName],
+     d.[РегистрацияЛимита Представитель MI ID]      AS [MIRepresentativeID],
+     d.[РегистрацияЛимита Представитель MI]         AS [MIRepresentativeName],
+     d.[РегистрацияЛимита Причина Отказа ID]        AS [RejectionReasonID],
+     d.[РегистрацияЛимита Причина Отказа]           AS [RejectionReason],
+     d.[РегистрацияЛимита Причина Отказа Описание]  AS [RejectionReasonDescription],
+     d.[РегистрацияЛимита Состояние]                AS [RegistrationStatus],
+     d.[РегистрацияЛимита Сумма]                    AS [ApprovedAmount],
+     d.[РегистрацияЛимита Текст Решения]            AS [DecisionText],
+     d.[РегистрацияЛимита Филиал ID]                AS [BranchID],
+     d.[РегистрацияЛимита Филиал]                   AS [BranchName],
+     d.[РегистрацияЛимита Процент Превышения Лимита]       AS [ExcessPercentage],
+     d.[РегистрацияЛимита Данные Резюме]                   AS [SummaryData],
+     d.[РегистрацияЛимита Дата Отправки на Рассмотрение]   AS [SubmissionDate],
+     d.[РегистрацияЛимита Резюме Заполнено]                AS [IsSummaryCompleted],
+     d.[РегистрацияЛимита Группа Аффилированных Лиц ID]    AS [AffiliatedGroupID],
+     d.[РегистрацияЛимита Группа Аффилированных Лиц]       AS [AffiliatedGroupName],
+     d.[РегистрацияЛимита Консолидированное Сальдо]        AS [ConsolidatedBalance],
+     d.[РегистрацияЛимита Начало Действия]                 AS [EffectiveStartDate],
+     d.[РегистрацияЛимита Тип Анализа Лимита]              AS [AnalysisType],
+     d.[РегистрацияЛимита Сумма к Выдаче без Залога]       AS [UnsecuredAmount],
+     d.[РегистрацияЛимита Комментарий Сумма к Выдаче без Залога] AS [UnsecuredAmountComment],
+     d.[РегистрацияЛимита Предложенное Поручительство Анализировано Индивидуально] AS [IsIndividualGuaranteeAnalyzed],
+     d.[РегистрацияЛимита В Соответствии с Процедурой Сумма к Выдаче без Залога]   AS [ProceduralUnsecuredAmount],
+     l.[Лимиты ID]                                    AS [LimitID],
+     l.[Лимиты Пометка Удаления]                      AS [LimitDeletedFlag],
+     l.[Лимиты Код]                                   AS [LimitCode],
+     COALESCE(g.[ГруппыАффилированныхЛиц Владелец], d.[РегистрацияЛимита Основной Клиент ID])  AS [GroupOwner],
+     g.[ГруппыАффилированныхЛиц Наименование]         AS [GroupNameFull],
+     CASE 
+         WHEN k.[Контрагенты Сотрудник ID] = '00000000000000000000000000000000' 
+         THEN NULL 
+         ELSE k.[Контрагенты Сотрудник ID] 
+     END AS [EmployeeID]
+FROM [ATK].[dbo].[Документы.РегистрацияЛимита] d
+LEFT JOIN [ATK].[dbo].[Справочники.Лимиты] l
+       ON d.[РегистрацияЛимита Лимит ID] = l.[Лимиты ID]
+LEFT JOIN LatestGroups lg
+       ON lg.LimitRegID = d.[РегистрацияЛимита ID] AND lg.rn = 1
+LEFT JOIN [ATK].[dbo].[Справочники.ГруппыАффилированныхЛиц] g
+       ON lg.GroupID = g.[ГруппыАффилированныхЛиц ID]
+LEFT JOIN [ATK].[dbo].[Справочники.Контрагенты] k
+       ON k.[Контрагенты ID] = COALESCE(g.[ГруппыАффилированныхЛиц Владелец], d.[РегистрацияЛимита Основной Клиент ID])
+WHERE d.[РегистрацияЛимита Проведен] = '01'
+  AND d.[РегистрацияЛимита Пометка Удаления] = '00'
+  AND NOT EXISTS
+  (
+      SELECT 1
+      FROM mis.[Gold_Dim_Limits] gl
+      WHERE gl.LimitRegistrationID = d.[РегистрацияЛимита ID]
+  );
+----------------------------------------------------------------------------------------------------
+-- End of:   V2__inc_Gold_Dim_Limits.sql
+----------------------------------------------------------------------------------------------------
+
+GO
+
+----------------------------------------------------------------------------------------------------
+-- Start of: V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
 USE [ATK];
 GO
@@ -3925,7 +4076,7 @@ FROM #Joined j;
 
 PRINT N'🏁 Incremental load completed successfully';
 ----------------------------------------------------------------------------------------------------
--- End of:   V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql
+-- End of:   V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
 
 GO

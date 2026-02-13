@@ -98,9 +98,10 @@ try:
         "mis.Gold_Fact_Restruct_Daily_Min.sql",
         "mis.Gold_Fact_Disbursement.sql",      
         "mis.Gold_Fact_Sold_Par.sql",
-        "V2__incremental_gold_dim_Event_InProgress.sql",
-        "V2__incremental_gold_dim_Event_Responsible.sql",
-        "V3__incremental_gold_fact_Restruct_Daily_Sold_Par.sql"
+        "V2__inc_Gold_Dim_Event_InProgress.sql",
+        "V2__inc_Gold_Dim_Event_Responsible.sql",
+        "V2__inc_Gold_Dim_Limits.sql",
+        "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
     ]
 
     # ---- 1) List all SQL files in folder ----

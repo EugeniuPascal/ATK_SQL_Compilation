@@ -147,7 +147,7 @@ def main():
     # LOAD TO SQL
     # ----------------------------
     load_to_sql(df)
-    print("✅ ETL completed successfully")
+    print("ETL completed successfully")
 
 
 if __name__ == "__main__":

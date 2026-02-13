@@ -1,6 +1,6 @@
-IF OBJECT_ID('mis.Gold_Fact_Disbursement', 'U') IS NULL
+IF OBJECT_ID('[mis].Gold_Fact_Disbursement', 'U') IS NULL
 BEGIN
-    CREATE TABLE mis.Gold_Fact_Disbursement
+    CREATE TABLE [mis].[Gold_Fact_Disbursement]
     (
         CreditID           NVARCHAR(36)   NOT NULL,
         ClientID           NVARCHAR(36)   NULL,

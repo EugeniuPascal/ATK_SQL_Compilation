@@ -1,4 +1,3 @@
-
 INSERT INTO mis.[Gold_Dim_Event_InProgress]
 (
     EventDate,

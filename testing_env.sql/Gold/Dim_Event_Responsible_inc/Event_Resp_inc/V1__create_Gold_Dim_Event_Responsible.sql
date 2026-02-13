@@ -1,11 +1,10 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID('mis.[Gold_Dim_Event_Responsible]', 'U') IS NOT NULL
-    DROP TABLE mis.[Gold_Dim_Event_Responsible];
-GO
+IF OBJECT_ID('[mis].[Gold_Dim_Event_Responsible]', 'U') IS NULL
+BEGIN
 
-CREATE TABLE mis.[Gold_Dim_Event_Responsible]
+    CREATE TABLE [mis].[Gold_Dim_Event_Responsible]
     (
         EventDocumentID      VARCHAR(36)   NOT NULL,
         EventRowNumber       INT           NULL,
@@ -23,4 +22,5 @@ CREATE TABLE mis.[Gold_Dim_Event_Responsible]
         AffiliatedGroupID    VARCHAR(36)   NULL,
         AffiliatedGroupName  NVARCHAR(150) NULL
     );
+END;
 GO

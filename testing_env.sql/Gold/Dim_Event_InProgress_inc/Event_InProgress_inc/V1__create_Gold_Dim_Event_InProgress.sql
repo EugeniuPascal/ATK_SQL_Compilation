@@ -1,11 +1,9 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID(N'mis.Gold_Dim_Event_InProgress', 'U') IS NOT NULL
-    DROP TABLE mis.Gold_Dim_Event_InProgress;
-GO
-
-CREATE TABLE mis.Gold_Dim_Event_InProgress
+IF OBJECT_ID('[mis].[Gold_Dim_Event_InProgress]', 'U') IS NULL
+BEGIN
+     CREATE TABLE [mis].[Gold_Dim_Event_InProgress]
     (
         EventDate                 DATETIME        NULL,
         ClientType                VARCHAR(36)     NULL,
@@ -33,8 +31,7 @@ CREATE TABLE mis.Gold_Dim_Event_InProgress
         PaymentDate               DATETIME        NULL,
         CallStatus                NVARCHAR(256)   NULL
     );
+END;
 GO
-
-
 
 

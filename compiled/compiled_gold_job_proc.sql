@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-16 11:41:59.289830
+-- Generated: 2026-02-16 16:56:28.640659
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -3047,7 +3047,7 @@ OUTER APPLY (
 ) finalAmount
 
 WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N''Medier%''
-  AND d.[ДанныеКредитовВыданных Дата Выдачи] >= ''2023-09-01'';
+  AND d.[ДанныеКредитовВыданных Дата Выдачи] >= ''2015-01-01'';
 
 SELECT
     k.[Кредиты Владелец] AS ClientID,

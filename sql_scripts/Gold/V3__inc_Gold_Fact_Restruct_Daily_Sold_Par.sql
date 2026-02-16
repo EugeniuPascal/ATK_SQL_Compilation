@@ -6,7 +6,7 @@ SET XACT_ABORT ON;
 ---------------------------------------------------------
 -- PARAMETERS (incremental window)
 ---------------------------------------------------------
-DECLARE @DateFrom date = DATEADD(day, -2, CAST(GETDATE() AS date));
+DECLARE @DateFrom date = DATEADD(day, -60, CAST(GETDATE() AS date));
 DECLARE @DateTo   date = CAST(GETDATE() AS date);
 
 PRINT N'=== Incremental load [mis].[Gold_Fact_Restruct_Daily_Sold_Par] '

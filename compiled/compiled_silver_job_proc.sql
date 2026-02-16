@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-02-16 10:15:06.876518
+-- Generated: 2026-02-16 11:41:57.235794
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 14
 --   mis.Silver_Employee_User.sql
@@ -219,6 +219,8 @@ CREATE TABLE mis.[Silver_CerereOnline_base]
     [WebStatus]             NVARCHAR(256)  NULL,
     [WebCreditTerm]         INT            NULL,
     [WebBranchID]           VARCHAR(36)    NULL,
+	[ContactPerson]         NVARCHAR(100)  NULL,
+	[ContactPersonPhone]     NVARCHAR(50)   NULL,
     [CommitteeDecisionDate] DATETIME       NULL,
 	[CommitteeDecision]     NVARCHAR(256)  NULL
 );
@@ -265,6 +267,8 @@ CREATE TABLE mis.[Silver_CerereOnline_base]
         o.[ОбъединеннаяИнтернетЗаявка Состояние Заявки] AS [WebStatus],
         o.[ОбъединеннаяИнтернетЗаявка Срок Кредита] AS [WebCreditTerm],
         o.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS [WebBranchID],
+		o.[ОбъединеннаяИнтернетЗаявка Контактное Лицо] AS ContactPerson,
+		o.[ОбъединеннаяИнтернетЗаявка Контактное Лицо Номер Телефона Мобильный] AS [ContactPersonPhone],
         COALESCE(
             z.[ЗаявкаНаКредит Клиент ID],
             o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
@@ -310,6 +314,8 @@ CREATE TABLE mis.[Silver_CerereOnline_base]
         o.[ОбъединеннаяИнтернетЗаявка Состояние Заявки],
         o.[ОбъединеннаяИнтернетЗаявка Срок Кредита],
         o.[ОбъединеннаяИнтернетЗаявка Филиал ID],
+		o.[ОбъединеннаяИнтернетЗаявка Контактное Лицо],
+		o.[ОбъединеннаяИнтернетЗаявка Контактное Лицо Номер Телефона Мобильный],
         COALESCE(
             o.[ОбъединеннаяИнтернетЗаявка Идентификатор],
             o.[ОбъединеннаяИнтернетЗаявка Номер Телефона Мобильный],
@@ -337,7 +343,8 @@ INSERT INTO mis.[Silver_CerereOnline_base]
     [WebDate],[WebNr],[WebPosted],[WebIncomeTypeOnline],[WebAge],
     [WebSubmissionDate],[WebCredit],[WebIdentifier],[WebCreditEmployee],
     [WebMobilePhone],[WebSentForReview],[WebGender],[WebStatus],
-    [WebCreditTerm],[WebBranchID],[CommitteeDecisionDate], [CommitteeDecision]
+    [WebCreditTerm],[WebBranchID],[ContactPerson],[ContactPersonPhone], 
+	[CommitteeDecisionDate], [CommitteeDecision]
 )
 SELECT
     b.[ID], b.[Date], b.[Status], b.[Posted],
@@ -355,7 +362,8 @@ SELECT
     b.[WebDate], b.[WebNr], b.[WebPosted], b.[WebIncomeTypeOnline], b.[WebAge],
     b.[WebSubmissionDate], b.[WebCredit], b.[WebIdentifier], b.[WebCreditEmployee],
     b.[WebMobilePhone], b.[WebSentForReview], b.[WebGender], b.[WebStatus],
-    b.[WebCreditTerm], b.[WebBranchID], b.[CommitteeDecisionDate], b.[CommitteeDecision]
+    b.[WebCreditTerm], b.[WebBranchID], b.[ContactPerson], b.[ContactPersonPhone],
+	b.[CommitteeDecisionDate], b.[CommitteeDecision]
 FROM Base b
 LEFT JOIN [ATK].[mis].[Bronze_Справочники.Контрагенты] AS c
     ON b.[ClientID] = c.[Контрагенты ID]

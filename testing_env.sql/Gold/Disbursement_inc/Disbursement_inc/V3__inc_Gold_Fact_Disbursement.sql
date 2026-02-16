@@ -101,7 +101,7 @@ OUTER APPLY (
 
 WHERE d.[ДанныеКредитовВыданных Кредитный Продукт] NOT LIKE N'Medier%'
   AND d.[ДанныеКредитовВыданных Дата Выдачи] >
-      ISNULL((SELECT MAX(DisbursementDate) FROM mis.Gold_Fact_Disbursement), '2023-09-01');
+      ISNULL((SELECT MAX(DisbursementDate) FROM mis.Gold_Fact_Disbursement), '2015-01-01');
 
 -- ============================
 -- 2. Build #Status (cancel/restore)

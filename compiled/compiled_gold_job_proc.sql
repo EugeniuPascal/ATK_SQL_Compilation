@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-13 15:51:19.466260
+-- Generated: 2026-02-16 10:15:10.118881
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -3675,7 +3675,7 @@ SET XACT_ABORT ON;
 
 
 
-DECLARE @DateFrom date = DATEADD(day, -2, CAST(GETDATE() AS date));
+DECLARE @DateFrom date = DATEADD(day, -60, CAST(GETDATE() AS date));
 DECLARE @DateTo   date = CAST(GETDATE() AS date);
 
 PRINT N''=== Incremental load [mis].[Gold_Fact_Restruct_Daily_Sold_Par] ''

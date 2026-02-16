@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-13 15:51:11
+-- Generated: 2026-02-16 10:14:34
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -3841,7 +3841,7 @@ SET XACT_ABORT ON;
 ---------------------------------------------------------
 -- PARAMETERS (incremental window)
 ---------------------------------------------------------
-DECLARE @DateFrom date = DATEADD(day, -2, CAST(GETDATE() AS date));
+DECLARE @DateFrom date = DATEADD(day, -60, CAST(GETDATE() AS date));
 DECLARE @DateTo   date = CAST(GETDATE() AS date);
 
 PRINT N'=== Incremental load [mis].[Gold_Fact_Restruct_Daily_Sold_Par] '

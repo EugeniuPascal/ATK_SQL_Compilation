@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-16 16:56:28.640659
+-- Generated: 2026-02-17 10:03:15.568105
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -411,9 +411,10 @@ CREATE TABLE mis.[Gold_Dim_Credits]
     [ProductType] NVARCHAR(255) NULL,
     [EconomicUsageArea] NVARCHAR(255) NULL,
     [SigningSource] NVARCHAR(500) NULL,
+	[CreditHistoryType] NVARCHAR(256) NULL,	
     [FinancialProductsMainGroup] NVARCHAR(255) NULL,
-    [IssuedCreditsStatus] NVARCHAR(50) NULL,
-    [CreditApplicationPartnerID] VARCHAR(36) NULL,
+    [IssuedCreditsStatus] NVARCHAR(50) NULL, 
+	[CreditApplicationPartnerID] VARCHAR(36) NULL,	
     [CreditPartnerName] NVARCHAR(255) NULL,
     [FirstFilialID] VARCHAR(36) NULL,
     [FirstEmployeeID] VARCHAR(36) NULL,
@@ -443,6 +444,7 @@ Credits AS (
     ) t
     WHERE rn = 1
 ),
+
 OIA_LatestPerApp AS (
     SELECT *
     FROM (
@@ -456,12 +458,15 @@ OIA_LatestPerApp AS (
     ) t
     WHERE rn = 1
 ),
+
+
 CreditRequest AS (
     SELECT *
     FROM (
         SELECT
             znk.[ЗаявкаНаКредит Кредит ID] AS CreditID,
             znk.[ЗаявкаНаКредит Партнер ID] AS ApplicationPartnerID,
+			znk.[ЗаявкаНаКредит Вид Кредитной Истории] AS CreditHistoryType,
             oia.[ОбъединеннаяИнтернетЗаявка Дилер ID] AS DealerID,
             NULLIF(LTRIM(RTRIM(oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения])), '''') AS Source,
             oia.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS FilialID,
@@ -478,6 +483,7 @@ CreditRequest AS (
     ) t
     WHERE rn = 1
 ),
+
 Resp AS (
     SELECT
         CreditID,
@@ -502,11 +508,13 @@ Resp AS (
     ) t
     GROUP BY CreditID
 ),
+
 FinProducts AS (
     SELECT [ФинансовыеПродукты ID] AS FinancialProductID,
            [ФинансовыеПродукты Основная Группа] AS FinancialProductsMainGroup
     FROM [ATK].[mis].[Bronze_Справочники.ФинансовыеПродукты]
 ),
+
 Statuses AS (
     SELECT *
     FROM (
@@ -520,6 +528,7 @@ Statuses AS (
     ) t
     WHERE rn = 1
 ),
+
 LatestOutstanding AS (
     SELECT sd.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
            sd.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS LatestOutstandingAmount
@@ -541,6 +550,7 @@ SegmentRevenue AS (
     WHERE [КредитныеПродукты Сегмент Доходов] IS NOT NULL
     GROUP BY [КредитныеПродукты ID]
 ),
+
 GreenCredit AS (
     SELECT *
     FROM (
@@ -556,6 +566,7 @@ GreenCredit AS (
     ) t
     WHERE rn = 1
 ),
+
 ClientPartner AS (
     SELECT 
         c.[Кредиты ID] AS CreditID,
@@ -572,6 +583,7 @@ ClientPartner AS (
         ORDER BY znk.[ЗаявкаНаКредит Дата] DESC, znk.[ЗаявкаНаКредит ID] DESC
     ) cpLatest
 ),
+
 DigitalSignSrc AS (
     SELECT
         [НаправлениеНаВыплату Кредит ID] AS CreditID,
@@ -579,6 +591,7 @@ DigitalSignSrc AS (
              THEN 1 ELSE 0 END AS HasPaymentDirectionSource
     FROM mis.[Bronze_Документы.НаправлениеНаВыплату]
 ),
+
 FormalCredits AS (
     SELECT DISTINCT c.[Кредиты ID] AS CreditID
     FROM Credits c
@@ -639,6 +652,7 @@ FinalData AS (
             WHEN ''Сайт'' THEN ''WebSite''
             ELSE crd.[Кредиты Источник Подписания]
         END AS SigningSource,
+		cr.CreditHistoryType,		
 		CASE 
 		    WHEN seg.SegmentRevenue = ''Consum non-business''
 			   AND fp.FinancialProductsMainGroup = ''Business''
@@ -651,7 +665,7 @@ FinalData AS (
             WHEN ''Списан'' THEN ''Written off''
             ELSE st.IssuedCreditsStatus
         END AS IssuedCreditsStatus,
-        cr.ApplicationPartnerID AS CreditApplicationPartnerID,
+        cr.ApplicationPartnerID AS CreditApplicationPartnerID,		
         COALESCE(cp.CreditPartnerName, gc.CommitteePartner) AS CreditPartnerName, 
         COALESCE(resp.FirstFilialID, cr.FilialID) AS FirstFilialID,
         COALESCE(resp.FirstEmployeeID, cr.EmployeeID) AS FirstEmployeeID,
@@ -713,8 +727,8 @@ INSERT INTO mis.[Gold_Dim_Credits] (
     FinancialProductID, FinancialProduct, AgroCredit, LocalityType, Currency,
     ProductID, Product, Purpose, RemoveFundingSource, ContractType, ContractDate,
     IncomeSegment, UsagePurpose, PurposeDescription, ProductType, EconomicUsageArea,
-    SigningSource, FinancialProductsMainGroup, IssuedCreditsStatus,
-    CreditApplicationPartnerID, CreditPartnerName, FirstFilialID, FirstEmployeeID,
+    SigningSource, CreditHistoryType, FinancialProductsMainGroup, IssuedCreditsStatus, 
+	CreditApplicationPartnerID, CreditPartnerName, FirstFilialID, FirstEmployeeID,
     LastFilialID, LastEmployeeID, DealerID, Source, LatestOutstandingAmount, SegmentRevenue,
     GreenCredit, CommitteeProt_CrPurpose, CommitteeProt_AMLRiskCat,
     DigitalSign, EconomicSectorEFSE, EconomicSector, Agro, IsFormal

@@ -1,16 +1,15 @@
-# compile_gold_tables_job_proc_idempotent.py
-import os
-import re
+# compile_silver_tables_job_proc_idempotent.py
 import logging
 from datetime import datetime
 from pathlib import Path
+import re
 
 # ---- Settings ----
 DB_NAME        = "ATK"
-DEFAULT_SCHEMA = "mis"   # only schema you can use
-SOURCE_FOLDER  = Path(r"C:\ATK_Project\sql_scripts\Gold")
-OUTPUT_FILE    = Path(r"C:\ATK_Project\compiled\compiled_gold_job_proc.sql")
-LOG_FILE       = Path(r"C:\ATK_Project\logs\compile_gold.log")
+DEFAULT_SCHEMA = "mis"
+SOURCE_FOLDER  = Path(r"C:\ATK_Project\sql_scripts\Silver")
+OUTPUT_FILE    = Path(r"C:\ATK_Project\compiled\compiled_silver_job_proc.sql")
+LOG_FILE       = Path(r"C:\ATK_Project\logs\compile_silver.log")
 
 # ---- Logging ----
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -19,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
-logging.info("=== Starting Gold SQL Compilation Job ===")
+logging.info("=== Starting Silver SQL Compilation Job ===")
 
 # --------------------------------------------------------------------
 # Regexes
@@ -75,39 +74,34 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
-    # ---- Ordered list of Gold files ----
     SQL_ORDER = [
-        "mis.Gold_Dim_AppUsers.sql",
-        "mis.Gold_Dim_Branch.sql",
-        "mis.Gold_Dim_Clients.sql",
-        "mis.Gold_Dim_Credits.sql",
-        "mis.Gold_Dim_EmployeePayrollData.sql",
-        "mis.Gold_Dim_Employees.sql",
-        "mis.Gold_Dim_EmployeesHistory.sql",
-        "mis.Gold_Dim_Events.sql",
-        "mis.Gold_Dim_GroupMembershipPeriods.sql",
-        "mis.Gold_Dim_PartnersBranch.sql",
-        "mis.Gold_Fact_AdminTasks.sql",
-        "mis.Gold_Fact_ArchiveDocument.sql",
-        "mis.Gold_Fact_BudgetEmployees.sql",
-        # "mis.Gold_Fact_CerereOnline.sql",
-        "mis.Gold_Fact_Comments.sql",
-        "mis.Gold_Fact_CPD.sql",
-        "mis.Gold_Fact_CreditsInShadowBranches.sql",
-        "mis.Gold_Fact_WriteOffCredits.sql",
-        "mis.Gold_Fact_Restruct_Daily_Min.sql",
-        "mis.Gold_Fact_Disbursement.sql",      
-        "mis.Gold_Fact_Sold_Par.sql",
-        "V2__inc_Gold_Dim_Event_InProgress.sql",
-        "V2__inc_Gold_Dim_Event_Responsible.sql",
-        "V2__inc_Gold_Dim_Limits.sql",
-        "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
+    #independent
+    "mis.Silver_Employee_User.sql",
+    "mis.Silver_CommiteeProtocol.sql",
+    
+    # creates Gold_Fact_CerereOnline
+    "mis.Silver_CerereOnline_base.sql",
+    
+    # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
+    "mis.Silver_Restruct_SCD.sql",    
+    "mis.Silver_RestructState_SCD.sql",
+    "mis.Silver_Restruct_Merged_SCD.sql",
+    "mis.Silver_Client_UnhealedFlag.sql",
+    "mis.Silver_Resp_SCD.sql",
+    "mis.Silver_Stages_SCD.sql",
+    
+    # below table execution order to create mis.Gold_Fact_CPD_Sold 
+    "mis.Silver_SCD_GroupMembershipPeriods.sql", 
+    "mis.Silver_Sold_Owner.sql",
+    "mis.Silver_Limits.sql",
+    "mis.Silver_Conditions_After_Disb.sql",
+    "mis.Silver_CPD_TaskDays.sql",
     ]
 
-    # ---- 1) List all SQL files in folder ----
+    # 1) List all SQL files
     all_files = sorted([f.name for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
 
-    # ---- 2) Identify extra files not in SQL_ORDER ----
+    # 2) Identify extra files
     extra_files = [f for f in all_files if f not in SQL_ORDER]
     if extra_files:
         logging.info(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER:")
@@ -115,30 +109,26 @@ try:
             logging.info(f"   {f}")
             print(f"ℹ Extra file appended: {f}")
 
-    # ---- 3) Build final ordered list ----
+    # 3) Build final ordered list
     sql_files = []
     processed_names = set()
-
     for fname in SQL_ORDER:
         fpath = SOURCE_FOLDER / fname
         if fpath.exists():
             sql_files.append(fpath)
             processed_names.add(fname)
         else:
-            logging.warning(f"File listed in SQL_ORDER but not found: {fpath}")
+            logging.warning(f"⚠ File listed in SQL_ORDER but not found: {fpath}")
             print(f"⚠ Warning: file listed but not found -> {fpath}")
 
-    # Append extra files
     sql_files.extend([SOURCE_FOLDER / f for f in extra_files])
-
     logging.info(f"Total SQL files to process: {len(sql_files)}")
 
-    # ---- 4) Generate stored procedure
+    # 4) Generate stored procedure
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
-        # header
         f_out.write("-- =============================================\n")
-        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent\n")
+        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
         f_out.write(f"-- Source folder: {SOURCE_FOLDER}\n")
         f_out.write(f"-- Files included: {len(sql_files)}\n")
@@ -147,15 +137,13 @@ try:
         f_out.write("-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER\n")
         f_out.write("-- =============================================\n\n")
 
-        # preamble
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
-        f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_GoldTables', 'P') IS NOT NULL\n")
-        f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_GoldTables;\nGO\n\n")
-        f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_GoldTables\nAS\nBEGIN\n")
+        f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_SilverTables', 'P') IS NOT NULL\n")
+        f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_SilverTables;\nGO\n\n")
+        f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_SilverTables\nAS\nBEGIN\n")
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 
-        # process each file
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf.name}")

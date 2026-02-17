@@ -2,8 +2,8 @@ USE [ATK];
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-SET @TargetPosID varchar(36) = '812b00155d65040111ed03ac01bd0d94';
-SET @FromDate    datetime   = '2015-01-01T00:00:00';  -- поменяй при необходимости
+DECLARE @TargetPosID varchar(36) = '812b00155d65040111ed03ac01bd0d94';
+DECLARE @FromDate    datetime   = '2015-01-01T00:00:00';  -- поменяй при необходимости
 
 --------------------------------------------------------------------------------
 -- 0A) Calendars (temp) - NO named constraints (avoid PK name collisions)
@@ -31,8 +31,8 @@ CREATE TABLE #Dim_WorkCalendar_MonFri_08_18
     , CumWorkMinutes    bigint      NOT NULL
 );
 
-SET @CalStart date = '2023-01-01';
-SET @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
+DECLARE @CalStart date = '2023-01-01';
+DECLARE @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
 
 ;WITH N AS
 (

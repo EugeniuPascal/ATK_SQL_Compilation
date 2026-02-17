@@ -38,7 +38,7 @@ def to_decimal_safe(x):
     try:
         if isinstance(x, str):
             x = x.replace(',', '').strip()
-        return float(Decimal(x).quantize(Decimal("0.00")))
+        return Decimal(x).quantize(Decimal("0.00"))
     except (InvalidOperation, ValueError, TypeError):
         return None
 
@@ -53,6 +53,7 @@ def to_datetime_safe(x):
 def safe_val(val):
     return None if pd.isna(val) else val
 
+
 # ============================================================
 # EXTRACT
 # ============================================================
@@ -61,6 +62,7 @@ def read_excel(path: str) -> pd.DataFrame:
     df.columns = df.columns.str.strip()
     df = df.replace({np.nan: None, "": None})
     return df
+
 
 # ============================================================
 # TRANSFORM
@@ -72,16 +74,17 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
 
     for col in ['Disbursed', 'Repayments', 'LP']:
         df[col] = df[col].apply(to_decimal_safe)
+        df[col] = df[col].astype(object)  # keep Decimal for SQL insert
 
     df['Month'] = df['Month'].apply(to_datetime_safe)
 
     return df[COLUMNS]
 
+
 # ============================================================
 # LOAD
 # ============================================================
 def load_to_sql(df: pd.DataFrame):
-    # Prepare data for pyodbc (convert NaN/Decimal → float/None)
     data = [
         tuple(safe_val(row[col]) for col in COLUMNS)
         for _, row in df.iterrows()
@@ -92,23 +95,37 @@ def load_to_sql(df: pd.DataFrame):
     cursor.fast_executemany = True
 
     try:
-        # Delete all existing rows first
-        cursor.execute(f"DELETE FROM {SQL_TABLE}")
+        cursor.execute("BEGIN TRAN")
 
-        # Bulk insert
+        # Empty the table first
+        cursor.execute(f"TRUNCATE TABLE {SQL_TABLE}")
+
         cursor.executemany(f"""
             INSERT INTO {SQL_TABLE}
-               (BranchID, Month, Product_Segment, Product_Adjusted,
-                BranchRegion, BranchName, Disbursed, Repayments, LP)
+               (BranchID,
+                Month,
+                Product_Segment,
+                Product_Adjusted,
+                BranchRegion,
+                BranchName,
+                Disbursed,
+                Repayments,
+                LP)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, data)
 
-        conn.commit()  # commit transaction
+        cursor.execute("COMMIT TRAN")
+
         print(f"Inserted {len(data):,} rows into {SQL_TABLE}")
+
+    except Exception:
+        cursor.execute("ROLLBACK TRAN")
+        raise
 
     finally:
         cursor.close()
         conn.close()
+
 
 # ============================================================
 # MAIN
@@ -117,12 +134,21 @@ def main():
     df = read_excel(EXCEL_PATH)
     df = transform(df)
 
-    # Display first 20 rows nicely
-    print(tabulate(df.head(20), headers='keys', tablefmt='psql', floatfmt=".2f"))
+    # ----------------------------
+    # DISPLAY FIX: show Decimals exactly like SQL
+    # ----------------------------
+    df_display = df.copy()
+    for col in ['Disbursed', 'Repayments', 'LP']:
+        df_display[col] = df_display[col].apply(lambda x: float(x) if x is not None else None)
 
-    # Load into SQL
+    print(tabulate(df_display.head(21), headers='keys', tablefmt='psql', floatfmt=".2f"))
+
+    # ----------------------------
+    # LOAD TO SQL
+    # ----------------------------
     load_to_sql(df)
     print("ETL completed successfully")
+
 
 if __name__ == "__main__":
     main()

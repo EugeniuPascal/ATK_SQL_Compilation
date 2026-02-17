@@ -21,7 +21,8 @@ CREATE TABLE mis.[Gold_Dim_Events]
     Event_NextKindEvent NVARCHAR(256)   NULL,
     Event_BranchID      VARCHAR(36)     NOT NULL,
     Event_Branch_Name   NVARCHAR(256)   NULL,
-    EmployeePosition    NVARCHAR(100)   NULL
+    EmployeePosition    NVARCHAR(100)   NULL,
+	EmployeeBranch      NVARCHAR(100)   NULL
 );
 GO
 
@@ -41,7 +42,8 @@ INSERT INTO mis.[Gold_Dim_Events]
     Event_NextKindEvent,
     Event_BranchID,
     Event_Branch_Name,
-    EmployeePosition
+    EmployeePosition,
+	EmployeeBranch
 )
 SELECT
     e.[СведенияОСобытиях Период]                   AS Event_Period,
@@ -58,18 +60,23 @@ SELECT
     e.[СведенияОСобытиях Вид Следующего События]   AS Event_NextKindEvent,
     e.[СведенияОСобытиях Филиал ID]                AS Event_BranchID,
     e.[СведенияОСобытиях Филиал]                   AS Event_Branch_Name,
-    s.[СотрудникиДанныеПоЗарплате Должность]      AS EmployeePosition
+    s.[СотрудникиДанныеПоЗарплате Должность]      AS EmployeePosition,
+	s.[СотрудникиДанныеПоЗарплате Филиал]         AS EmployeeBranch
 FROM [ATK].[dbo].[РегистрыСведений.СведенияОСобытиях] e
 OUTER APPLY
 (
     SELECT TOP 1
-           p.[СотрудникиДанныеПоЗарплате Должность]
-    FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] p
-    WHERE p.[СотрудникиДанныеПоЗарплате Сотрудник ID] =
-          e.[СведенияОСобытиях Ответственный ID]
-      AND p.[СотрудникиДанныеПоЗарплате Период] <=
-          e.[СведенияОСобытиях Период]
+           p.[СотрудникиДанныеПоЗарплате Должность],
+           p.[СотрудникиДанныеПоЗарплате Филиал]
+    FROM mis.[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] p
+    WHERE p.[СотрудникиДанныеПоЗарплате Сотрудник ID] = e.[СведенияОСобытиях Ответственный ID]
+      AND p.[СотрудникиДанныеПоЗарплате Период] <= e.[СведенияОСобытиях Период]
     ORDER BY p.[СотрудникиДанныеПоЗарплате Период] DESC
-) s;
-
+) s
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM mis.[Gold_Dim_Events] g
+    WHERE g.Event_ID = e.[СведенияОСобытиях ID]
+);
+GO
 

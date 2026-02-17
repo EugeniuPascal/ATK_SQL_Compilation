@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-17 10:37:55
+-- Generated: 2026-02-17 11:05:56
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1854,11 +1854,11 @@ USE [ATK];
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-DECLARE @TargetPosID varchar(36) = '812b00155d65040111ed03ac01bd0d94';
-DECLARE @FromDate    datetime   = '2013-01-01T00:00:00';
+SET @TargetPosID varchar(36) = '812b00155d65040111ed03ac01bd0d94';
+SET @FromDate    datetime   = '2015-01-01T00:00:00';  -- поменяй при необходимости
 
 --------------------------------------------------------------------------------
--- 0A) Calendar tables (temp) - NO named constraints (avoid PK name collisions)
+-- 0A) Calendars (temp) - NO named constraints (avoid PK name collisions)
 --------------------------------------------------------------------------------
 IF OBJECT_ID('tempdb..#Dim_WorkCalendar_All_08_20') IS NOT NULL DROP TABLE #Dim_WorkCalendar_All_08_20;
 IF OBJECT_ID('tempdb..#Dim_WorkCalendar_MonFri_08_18') IS NOT NULL DROP TABLE #Dim_WorkCalendar_MonFri_08_18;
@@ -1883,8 +1883,8 @@ CREATE TABLE #Dim_WorkCalendar_MonFri_08_18
     , CumWorkMinutes    bigint      NOT NULL
 );
 
-DECLARE @CalStart date = '2023-01-01';
-DECLARE @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
+SET @CalStart date = '2023-01-01';
+SET @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
 
 ;WITH N AS
 (
@@ -1930,7 +1930,7 @@ SELECT
 FROM src s;
 
 --------------------------------------------------------------------------------
--- 1) Rebuild target table from base (ONLY 2024+)
+-- 1) Rebuild GOLD table from base
 --------------------------------------------------------------------------------
 IF OBJECT_ID('mis.Gold_Fact_CerereOnline','U') IS NOT NULL
     DROP TABLE mis.Gold_Fact_CerereOnline;
@@ -1943,10 +1943,10 @@ WHERE f.[Date] >= @FromDate;
 --------------------------------------------------------------------------------
 -- 1B) Indexes for faster joins/updates
 --------------------------------------------------------------------------------
-CREATE INDEX IX_Gold_CerereOnline_ID       ON mis.Gold_Fact_CerereOnline([ID]);
-CREATE INDEX IX_Gold_CerereOnline_CreditID ON mis.Gold_Fact_CerereOnline([CreditID]);
-CREATE INDEX IX_Gold_CerereOnline_AuthorID ON mis.Gold_Fact_CerereOnline([AuthorID]);
-CREATE INDEX IX_Gold_CerereOnline_Date     ON mis.Gold_Fact_CerereOnline([Date]);
+CREATE INDEX IX_CerereOnline_ID       ON mis.Gold_Fact_CerereOnline([ID]);
+CREATE INDEX IX_CerereOnline_CreditID ON mis.Gold_Fact_CerereOnline([CreditID]);
+CREATE INDEX IX_CerereOnline_AuthorID ON mis.Gold_Fact_CerereOnline([AuthorID]);
+CREATE INDEX IX_CerereOnline_Date     ON mis.Gold_Fact_CerereOnline([Date]);
 
 --------------------------------------------------------------------------------
 -- 2) Ensure required columns (add only if missing)
@@ -1965,6 +1965,9 @@ IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Autor Votare') IS NULL
 
 IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'AutorVotare ID') IS NULL
     ALTER TABLE mis.Gold_Fact_CerereOnline ADD [AutorVotare ID] varchar(36) NULL;
+
+IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Autor Votare Position') IS NULL
+    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Autor Votare Position] varchar(36) NULL;
 
 IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'Autor decizie') IS NULL
     ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Autor decizie] nvarchar(255) NULL;
@@ -2022,40 +2025,25 @@ IF COL_LENGTH('mis.Gold_Fact_CerereOnline', 'LoadDttm_Ext') IS NULL
         ADD [LoadDttm_Ext] datetime NOT NULL
             CONSTRAINT DF_Gold_Fact_CerereOnline_LoadDttm DEFAULT (GETDATE());
 
-GO
-
-USE [ATK];
-SET NOCOUNT ON;
-SET XACT_ABORT ON;
-
-DECLARE @TargetPosID varchar(36) = '812b00155d65040111ed03ac01bd0d94';
-
 --------------------------------------------------------------------------------
 -- 3) FAST ENRICH: restrict heavy work to only IDs from rebuilt table
+--    VoteDate logic: FIRST vote, prefer TargetPos; fallback to chair (ProtocolDate)
+--    Position logic: from ATK.mis.dev_Silver_EmployeesPosition_SCD (SCD by date)
 --------------------------------------------------------------------------------
 IF OBJECT_ID('tempdb..#t') IS NOT NULL DROP TABLE #t;
 
-;WITH x AS
-(
-    SELECT
-          t.[ID]
-        , t.[CreditID]
-        , t.[AuthorID]
-        , t.[BranchID]
-        , t.[CommitteeDecisionDate]
-        , rn = ROW_NUMBER() OVER
-          (
-            PARTITION BY t.[ID]
-            ORDER BY t.[Date] DESC, t.[CreditID] DESC
-          )
-    FROM mis.Gold_Fact_CerereOnline t
-)
-SELECT [ID], [CreditID], [AuthorID], [BranchID], [CommitteeDecisionDate]
+SELECT
+      ID   = t.[ID]
+    , CreditID              = MAX(t.[CreditID])
+    , AuthorID              = MAX(t.[AuthorID])
+    , BranchID              = MAX(t.[BranchID])
+    , CommitteeDecisionDate = MAX(t.[CommitteeDecisionDate])
 INTO #t
-FROM x
-WHERE rn = 1;
+FROM mis.Gold_Fact_CerereOnline t
+WHERE t.[ID] IS NOT NULL
+GROUP BY t.[ID];
 
-CREATE CLUSTERED INDEX CIX_t_ID ON #t([ID]);
+CREATE UNIQUE CLUSTERED INDEX CIX_t_ID ON #t([ID]);
 CREATE INDEX IX_t_CreditID ON #t([CreditID]);
 CREATE INDEX IX_t_AuthorID ON #t([AuthorID]);
 
@@ -2087,7 +2075,7 @@ WHERE rn = 1;
 
 CREATE UNIQUE CLUSTERED INDEX CIX_dlast_ID ON #d_last(CerereOnlineID);
 
--- proto_last
+-- proto_last (ВАЖНО: учитываем Вид Комитета = ПредоставлениеКредита)
 IF OBJECT_ID('tempdb..#proto_last') IS NOT NULL DROP TABLE #proto_last;
 ;WITH p_src AS
 (
@@ -2116,11 +2104,10 @@ WHERE rn = 1;
 CREATE UNIQUE CLUSTERED INDEX CIX_proto_ID ON #proto_last(CerereOnlineID);
 CREATE INDEX IX_proto_ProtocolID ON #proto_last(ProtocolID);
 
--- members
+-- members for these protocols only
 IF OBJECT_ID('tempdb..#members') IS NOT NULL DROP TABLE #members;
 SELECT
       pl.CerereOnlineID
-    , pl.ProtocolDate
     , VoteDate =
         NULLIF(
             CAST(m.[ПротоколКомитета.ЧленыКомитета Дата Голоса] AS datetime2(0)),
@@ -2133,38 +2120,34 @@ FROM #proto_last pl
 LEFT JOIN [ATK].[dbo].[Документы.ПротоколКомитета.ЧленыКомитета] m
   ON m.[ПротоколКомитета ID] = pl.ProtocolID;
 
-CREATE INDEX IX_members_ID ON #members(CerereOnlineID);
+CREATE INDEX IX_members_ID  ON #members(CerereOnlineID);
 CREATE INDEX IX_members_emp ON #members(MemberEmployeeID);
 
--- salary pos (set-based)
+-- positions for members (SCD by date) from dev_Silver_EmployeesPosition_SCD
 IF OBJECT_ID('tempdb..#m_pos') IS NOT NULL DROP TABLE #m_pos;
-;WITH s AS
-(
-    SELECT
-          m.CerereOnlineID
-        , m.VoteDate
-        , m.MemberEmployeeID
-        , m.MemberName
-        , PosID = s.[СотрудникиДанныеПоЗарплате Должность ID]
-        , rn = ROW_NUMBER() OVER
-          (
-            PARTITION BY m.CerereOnlineID, m.MemberEmployeeID, m.VoteDate
-            ORDER BY CAST(s.[СотрудникиДанныеПоЗарплате Период] AS datetime2(0)) DESC
-          )
-    FROM #members m
-    LEFT JOIN [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] s
-      ON s.[СотрудникиДанныеПоЗарплате Сотрудник ID] = m.MemberEmployeeID
-     AND m.VoteDate IS NOT NULL
-     AND CAST(s.[СотрудникиДанныеПоЗарплате Период] AS datetime2(0)) <= m.VoteDate
-)
-SELECT CerereOnlineID, VoteDate, MemberEmployeeID, MemberName, PosID
+SELECT
+      m.CerereOnlineID
+    , m.VoteDate
+    , m.MemberEmployeeID
+    , m.MemberName
+    , PosID = ep.PositionID
 INTO #m_pos
-FROM s
-WHERE rn = 1;
+FROM #members m
+LEFT JOIN #proto_last pl
+  ON pl.CerereOnlineID = m.CerereOnlineID
+OUTER APPLY
+(
+    SELECT TOP (1) s.PositionID
+    FROM [ATK].[mis].[dev_Silver_EmployeesPosition_SCD] s
+    WHERE s.EmployeeID = m.MemberEmployeeID
+      AND COALESCE(m.VoteDate, pl.ProtocolDate) >= s.ValidFrom
+      AND COALESCE(m.VoteDate, pl.ProtocolDate) <  ISNULL(s.ValidTo, '9999-12-31')
+    ORDER BY s.ValidFrom DESC
+) ep;
 
 CREATE INDEX IX_mpos_ID ON #m_pos(CerereOnlineID);
 
--- pick FIRST vote prefer TargetPos; fallback chair if none
+-- pick FIRST vote: prefer TargetPos, else first among all; if none -> chair (ProtocolDate)
 IF OBJECT_ID('tempdb..#vote_final') IS NOT NULL DROP TABLE #vote_final;
 
 ;WITH ranked AS
@@ -2172,8 +2155,8 @@ IF OBJECT_ID('tempdb..#vote_final') IS NOT NULL DROP TABLE #vote_final;
     SELECT
           CerereOnlineID
         , VoteDate
-        , [Autor Votare]    = MemberName
-        , [AutorVotare ID]  = MemberEmployeeID
+        , [Autor Votare]   = MemberName
+        , [AutorVotare ID] = MemberEmployeeID
         , rn = ROW_NUMBER() OVER
           (
             PARTITION BY CerereOnlineID
@@ -2201,7 +2184,26 @@ WHERE NOT EXISTS (SELECT 1 FROM #vote_final v WHERE v.CerereOnlineID = pl.Cerere
 
 CREATE UNIQUE CLUSTERED INDEX CIX_vote_ID ON #vote_final(CerereOnlineID);
 
--- credits_dim
+-- Autor Votare Position (PositionID) for chosen autor (SCD by VoteDate)
+IF OBJECT_ID('tempdb..#vote_pos') IS NOT NULL DROP TABLE #vote_pos;
+SELECT
+      v.CerereOnlineID
+    , PositionID = ep.PositionID
+INTO #vote_pos
+FROM #vote_final v
+OUTER APPLY
+(
+    SELECT TOP (1) s.PositionID
+    FROM [ATK].[mis].[dev_Silver_EmployeesPosition_SCD] s
+    WHERE s.EmployeeID = v.[AutorVotare ID]
+      AND v.VoteDate   >= s.ValidFrom
+      AND v.VoteDate   <  ISNULL(s.ValidTo, '9999-12-31')
+    ORDER BY s.ValidFrom DESC
+) ep;
+
+CREATE UNIQUE CLUSTERED INDEX CIX_vote_pos ON #vote_pos(CerereOnlineID);
+
+-- credits_dim only for needed CreditID
 IF OBJECT_ID('tempdb..#credits_dim') IS NOT NULL DROP TABLE #credits_dim;
 SELECT c.[Кредиты ID] AS CreditID, MAX(c.[Кредиты Сегмент Доходов]) AS IncomeSeg
 INTO #credits_dim
@@ -2210,7 +2212,7 @@ JOIN (SELECT DISTINCT CreditID FROM #t) x ON x.CreditID = c.[Кредиты ID]
 GROUP BY c.[Кредиты ID];
 CREATE UNIQUE CLUSTERED INDEX CIX_cr ON #credits_dim(CreditID);
 
--- users_dim
+-- users_dim only for needed AuthorID
 IF OBJECT_ID('tempdb..#users_dim') IS NOT NULL DROP TABLE #users_dim;
 SELECT u.[Пользователи ID] AS AuthorID,
        MAX(u.[Пользователи Сотрудник ID]) AS AutorDecizieID,
@@ -2221,7 +2223,7 @@ JOIN (SELECT DISTINCT AuthorID FROM #t) x ON x.AuthorID = u.[Пользоват�
 GROUP BY u.[Пользователи ID];
 CREATE UNIQUE CLUSTERED INDEX CIX_usr ON #users_dim(AuthorID);
 
--- pay_last
+-- pay_last only for needed CreditID
 IF OBJECT_ID('tempdb..#pay_last') IS NOT NULL DROP TABLE #pay_last;
 ;WITH p AS
 (
@@ -2246,18 +2248,20 @@ WHERE rn = 1;
 CREATE UNIQUE CLUSTERED INDEX CIX_pay ON #pay_last(CreditID);
 
 --------------------------------------------------------------------------------
--- FINAL UPDATE
+-- FINAL UPDATE (minutes computed ONCE and reused)
 --------------------------------------------------------------------------------
 UPDATE t
 SET
-      t.[Autor Votare]            = v.[Autor Votare]
-    , t.[AutorVotare ID]          = v.[AutorVotare ID]
-    , t.[Data depunerii cererii]  = d.Dep
-    , t.[Data votarii]            = v.VoteDate
-    , t.[Autor decizie]           = u.[AutorDecizie]
-    , t.[AutorDecizie ID]         = u.[AutorDecizieID]
-    , t.[Кредиты Сегмент Доходов] = cr.IncomeSeg
-    , t.[Data autorizarii]        = pay.DataAut
+      t.[Autor Votare]             = v.[Autor Votare]
+    , t.[AutorVotare ID]           = v.[AutorVotare ID]
+    , t.[Autor Votare Position]    = vp.PositionID
+    , t.[Data depunerii cererii]   = d.Dep
+    , t.[Data votarii]             = v.VoteDate
+    , t.[Autor decizie]            = u.[AutorDecizie]
+    , t.[AutorDecizie ID]          = u.[AutorDecizieID]
+    , t.[Кредиты Сегмент Доходов]  = cr.IncomeSeg
+    , t.[Data autorizarii]         = pay.DataAut
+
     , t.[Tip Рассмотрения Заявки RO] =
         CASE
             WHEN v.[AutorVotare ID] = '813100155D65040111ED171A45F42146' THEN N'Fara sunet'
@@ -2265,14 +2269,21 @@ SET
             WHEN d.Tip = N'Стандартный' THEN N'Standart'
             ELSE NULL
         END
+
+    -- OLD speeds (ALL DAYS 08-20)
     , t.[Viteza de decizie] =
         mis.fn_WorkMinutesSigned(d.Dep, t.[CommitteeDecisionDate], 8*60, 20*60)
+
     , t.[Viteza de votare] =
         mx.Minutes_DepVote_08_20
+
     , t.[Viteza de procesare] =
         mis.fn_WorkMinutesSigned(d.ProcDttm, v.VoteDate, 8*60, 20*60)
+
+    -- NEW formulas: Mon-Fri only
     , t.[Analyse] =
         mis.fn_WorkMinutesSigned_MonFri(d.Dep, d.InCC, 8*60, 18*60)
+
     , t.[Viteza de votare CC] =
         CASE
             WHEN t.[BranchID] IN
@@ -2286,20 +2297,29 @@ SET
             THEN mis.fn_WorkMinutesSigned_MonFri(d.InCC, v.VoteDate, 9*60, 18*60)
             ELSE mis.fn_WorkMinutesSigned_MonFri(d.InCC, v.VoteDate, 8*60, 17*60)
         END
+
     , t.[CC] =
         mis.fn_WorkMinutesSigned_MonFri(d.InCC, t.[CommitteeDecisionDate], 8*60, 18*60)
+
     , t.[Disbusement speed] =
         mis.fn_WorkMinutesSigned_MonFri(t.[CommitteeDecisionDate], pay.DataAut, 8*60, 18*60)
+
     , t.[Total speed] =
         mis.fn_WorkMinutesSigned_MonFri(d.Dep, pay.DataAut, 8*60, 18*60)
+
     , t.[Timpul de asteptare] =
         mis.fn_WorkMinutesSigned_MonFri(d.Dep, d.ProcDttm, 9*60, 18*60)
+
     , t.[Viteza de decizie CC] =
         mis.fn_WorkMinutesSigned_MonFri(d.Dep, t.[CommitteeDecisionDate], 8*60, 18*60)
+
     , t.[Viteza debursare(dupa procesare)] =
         mis.fn_WorkMinutesSigned_MonFri(d.ProcDttm, pay.DataAut, 8*60, 18*60)
+
     , t.[Viteza debursare(dupa Decizie)] =
         mis.fn_WorkMinutesSigned_MonFri(t.[CommitteeDecisionDate], pay.DataAut, 8*60, 18*60)
+
+    -- Depasire norma viteza (ALL DAYS 08-20) - reuse minutes
     , t.[Depasire norma viteza] =
         CASE
             WHEN mx.Minutes_DepVote_08_20 IS NULL THEN NULL
@@ -2319,14 +2339,16 @@ SET
                  AND mx.Minutes_DepVote_08_20 > 120 THEN 1
             ELSE 0
         END
+
     , t.[LoadDttm_Ext] = GETDATE()
 FROM mis.Gold_Fact_CerereOnline t
-JOIN #t tt               ON tt.[ID] = t.[ID]
-LEFT JOIN #d_last d       ON d.CerereOnlineID = t.[ID]
-LEFT JOIN #vote_final v   ON v.CerereOnlineID = t.[ID]
-LEFT JOIN #credits_dim cr ON cr.CreditID      = t.[CreditID]
-LEFT JOIN #users_dim u    ON u.AuthorID       = t.[AuthorID]
-LEFT JOIN #pay_last pay   ON pay.CreditID     = t.[CreditID]
+JOIN #t tt                  ON tt.[ID] = t.[ID]
+LEFT JOIN #d_last d         ON d.CerereOnlineID = t.[ID]
+LEFT JOIN #vote_final v     ON v.CerereOnlineID = t.[ID]
+LEFT JOIN #vote_pos vp      ON vp.CerereOnlineID = t.[ID]
+LEFT JOIN #credits_dim cr   ON cr.CreditID      = t.[CreditID]
+LEFT JOIN #users_dim u      ON u.AuthorID       = t.[AuthorID]
+LEFT JOIN #pay_last pay     ON pay.CreditID     = t.[CreditID]
 OUTER APPLY
 (
     SELECT Minutes_DepVote_08_20 =

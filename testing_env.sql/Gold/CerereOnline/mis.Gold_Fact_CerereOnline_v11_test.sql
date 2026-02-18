@@ -1,3 +1,63 @@
+USE [ATK];
+GO
+SET NOCOUNT ON;
+
+IF OBJECT_ID('mis.[Gold_Fact_CerereOnline]', 'U') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_CerereOnline];
+GO
+
+CREATE TABLE mis.[Gold_Fact_CerereOnline] 
+(
+    [ID]                    VARCHAR(36)    NULL,
+    [Date]                  DATETIME       NULL,
+    [Status]                NVARCHAR(256)  NULL,
+    [Posted]                VARCHAR(36)    NULL,
+    [BusinessSector]        NVARCHAR(150)  NULL,
+    [Type]                  NVARCHAR(100)  NULL,
+    [HistoryType]           NVARCHAR(256)  NULL,
+    [CreditID]              VARCHAR(36)    NULL,
+    [AuthorID]              VARCHAR(36)    NULL,
+    [Author]                NVARCHAR(100)  NULL,
+    [Purpose]               NVARCHAR(150)  NULL,
+    [IsGreen]               NVARCHAR(36)   NULL,
+    [ClientID]              VARCHAR(36)    NULL,
+    [CreditAmount]          DECIMAL(15,2)  NULL,
+    [CurrencyType]          NVARCHAR(36)   NULL,
+    [CreditAmountInMDL]     DECIMAL(18,2)  NULL,
+    [NewExisting_Client]    NVARCHAR(20)   NULL,
+    [RefusalReason]         NVARCHAR(200)  NULL,
+    [CreditProduct]         NVARCHAR(150)  NULL,
+    [ProductID]             VARCHAR(36)    NULL,
+    [CreditProductID]       VARCHAR(36)    NULL,
+    [InternetID]            VARCHAR(36)    NULL,
+    [EmployeeID]            VARCHAR(36)    NULL,
+    [BranchID]              VARCHAR(36)    NULL,
+    [PartnerID]             VARCHAR(36)    NULL,
+    [Partner]               NVARCHAR(150)  NULL,
+    [WebDate]               DATETIME       NULL,
+    [WebNr]                 NVARCHAR(50)   NULL,
+    [WebPosted]             VARCHAR(36)    NULL,
+    [WebIncomeTypeOnline]   NVARCHAR(200)  NULL,
+    [WebAge]                INT            NULL,
+    [WebSubmissionDate]     DATETIME       NULL,
+    [WebCredit]             NVARCHAR(100)  NULL,
+    [WebIdentifier]         NVARCHAR(50)   NULL,
+    [WebCreditEmployee]     NVARCHAR(50)   NULL,
+    [WebMobilePhone]        NVARCHAR(20)   NULL,
+    [WebSentForReview]      NVARCHAR(36)   NULL,
+    [WebGender]             NVARCHAR(256)  NULL,
+    [WebStatus]             NVARCHAR(256)  NULL,
+    [WebCreditTerm]         INT            NULL,
+    [WebBranchID]           VARCHAR(36)    NULL,
+	[ContactPerson]         NVARCHAR(100)  NULL,
+	[ContactPersonPhone]     NVARCHAR(50)   NULL,
+    [CommitteeDecisionDate] DATETIME       NULL,
+	[CommitteeDecision]     NVARCHAR(256)  NULL,
+	
+     
+
+
+
 --------------------------------------------------------------------------------
 -- 0) Setup & variables
 --------------------------------------------------------------------------------
@@ -36,7 +96,7 @@ CREATE TABLE #Dim_WorkCalendar_MonFri_08_18
     , CumWorkMinutes    bigint      NOT NULL
 );
 
-DECLARE @CalStart date = '2015-01-01';
+DECLARE @CalStart date = '2023-01-01';
 DECLARE @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
 
 ;WITH N AS

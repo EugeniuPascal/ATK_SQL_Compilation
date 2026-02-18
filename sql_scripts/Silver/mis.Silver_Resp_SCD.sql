@@ -17,29 +17,31 @@ VALUES
   ('80FE00155D01451511EA2246DC87677D');
 
 ------------------------------------------------------------
--- 1) Пересоздаём таблицу назначения
+-- 1) Создание/очистка целевой таблицы
 ------------------------------------------------------------
-IF OBJECT_ID('mis.Silver_Resp_SCD', 'U') IS NOT NULL
-    DROP TABLE mis.Silver_Resp_SCD;
-
-CREATE TABLE mis.Silver_Resp_SCD 
-(
-    CreditID        VARCHAR(36) NOT NULL,
-    ValidFrom       DATE        NOT NULL,
-    ValidTo         DATE        NOT NULL,
-    BranchID        VARCHAR(36) NULL,
-    ExpertID        VARCHAR(36) NULL,
-    IsSpecialBranch BIT         NOT NULL,
-    FinalBranchID   VARCHAR(36) NULL,
-    FinalExpertID   VARCHAR(36) NULL,
-    CONSTRAINT PK_Resp_SCD PRIMARY KEY (CreditID, ValidFrom)
-);
+IF OBJECT_ID('mis.Silver_Resp_SCD', 'U') IS NULL
+BEGIN
+    CREATE TABLE mis.Silver_Resp_SCD 
+    (
+        CreditID        VARCHAR(36) NOT NULL,
+        ValidFrom       DATE        NOT NULL,
+        ValidTo         DATE        NOT NULL,
+        BranchID        VARCHAR(36) NULL,
+        ExpertID        VARCHAR(36) NULL,
+        IsSpecialBranch BIT         NOT NULL,
+        FinalBranchID   VARCHAR(36) NULL,
+        FinalExpertID   VARCHAR(36) NULL,
+        CONSTRAINT PK_Resp_SCD PRIMARY KEY (CreditID, ValidFrom)
+    );
+END
+ELSE
+BEGIN
+    TRUNCATE TABLE mis.Silver_Resp_SCD;
+END;
 
 ------------------------------------------------------------
--- 2) База по регистру: одна запись на дату (снимаем дубли)
+-- 2) Deduplicate base register per credit per date
 ------------------------------------------------------------
-DECLARE @DateFrom DATE = '2015-01-01';
-
 IF OBJECT_ID('tempdb..#RespBaseRaw') IS NOT NULL DROP TABLE #RespBaseRaw;
 IF OBJECT_ID('tempdb..#RespBase') IS NOT NULL DROP TABLE #RespBase;
 
@@ -57,7 +59,7 @@ SELECT
 INTO #RespBaseRaw
 FROM mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] r
 WHERE r.[ОтветственныеПоКредитамВыданным Активность] = 1
-  AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) >= @DateFrom;
+  AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) >= '2015-01-01';
 
 SELECT CreditID, PeriodDate, BranchID, ExpertID
 INTO #RespBase
@@ -67,7 +69,7 @@ WHERE rn = 1;
 DROP TABLE #RespBaseRaw;
 
 ------------------------------------------------------------
--- 3) Интервалы + протяжка с последним нормальным филиалом
+-- 3) Build SCD intervals + propagate last non-special branch
 ------------------------------------------------------------
 ;WITH stage AS (
     SELECT
@@ -93,7 +95,7 @@ SELECT
     s.BranchID,
     s.ExpertID,
     s.IsSpecialBranch,
-    -- FinalBranchID: pick last non-special branch using OUTER APPLY
+    -- FinalBranchID: pick last non-special branch
     COALESCE(nsb.LastBranchID, s.BranchID) AS FinalBranchID,
     COALESCE(nsb.LastExpertID, s.ExpertID) AS FinalExpertID
 FROM stage s
@@ -102,7 +104,7 @@ OUTER APPLY
     SELECT TOP 1 r.BranchID AS LastBranchID, r.ExpertID AS LastExpertID
     FROM #RespBase r
     WHERE r.CreditID = s.CreditID
-      AND r.BranchID NOT IN (SELECT BranchID FROM @SpecialBranches)
+      AND NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = r.BranchID)
       AND r.PeriodDate <= s.ValidFrom
     ORDER BY r.PeriodDate DESC
 ) nsb;

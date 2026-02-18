@@ -36,7 +36,7 @@ CREATE TABLE #Dim_WorkCalendar_MonFri_08_18
     , CumWorkMinutes    bigint      NOT NULL
 );
 
-DECLARE @CalStart date = '2023-01-01';
+DECLARE @CalStart date = '2015-01-01';
 DECLARE @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
 
 ;WITH N AS

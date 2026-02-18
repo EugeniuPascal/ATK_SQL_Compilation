@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-17 14:24:29
+-- Generated: 2026-02-18 09:29:02
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (14):
 --   mis.Silver_Employee_User.sql
@@ -676,7 +676,7 @@ END;
 ------------------------------------------------------------
 -- 1) Prepare parameters
 ------------------------------------------------------------
-DECLARE @DateFrom date = '2023-09-01';
+DECLARE @DateFrom date = '2015-01-01';
 DECLARE @DateTo   date = '2026-12-31';
 DECLARE @Today    date = CAST(GETDATE() AS date);
 IF (@DateTo > @Today) SET @DateTo = @Today;
@@ -771,7 +771,7 @@ CREATE TABLE mis.Silver_Resp_SCD
 ------------------------------------------------------------
 -- 2) База по регистру: одна запись на дату (снимаем дубли)
 ------------------------------------------------------------
-DECLARE @DateFrom DATE = '2023-09-01';
+DECLARE @DateFrom DATE = '2015-01-01';
 
 IF OBJECT_ID('tempdb..#RespBaseRaw') IS NOT NULL DROP TABLE #RespBaseRaw;
 IF OBJECT_ID('tempdb..#RespBase') IS NOT NULL DROP TABLE #RespBase;

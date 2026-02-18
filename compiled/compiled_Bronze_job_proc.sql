@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent
--- Generated: 2026-02-17 14:24:34.217214
+-- Generated: 2026-02-18 09:29:13.245108
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files included: 28
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -907,7 +907,7 @@ INSERT INTO mis.[Bronze_Документы.ПротоколКомитета]
 
 )
 SELECT
-       [ПротоколКомитета ID],
+    [ПротоколКомитета ID],
     [ПротоколКомитета Пометка Удаления],
     [ПротоколКомитета Дата],
     [ПротоколКомитета Номер],

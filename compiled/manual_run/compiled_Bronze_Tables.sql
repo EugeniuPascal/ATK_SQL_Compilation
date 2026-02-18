@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze)
--- Generated: 2026-02-17 14:24:26
+-- Generated: 2026-02-18 09:28:59
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (28):
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -925,7 +925,7 @@ INSERT INTO mis.[Bronze_Документы.ПротоколКомитета]
 
 )
 SELECT
-       [ПротоколКомитета ID],
+    [ПротоколКомитета ID],
     [ПротоколКомитета Пометка Удаления],
     [ПротоколКомитета Дата],
     [ПротоколКомитета Номер],

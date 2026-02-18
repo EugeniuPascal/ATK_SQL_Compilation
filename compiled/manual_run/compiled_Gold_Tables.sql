@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-17 14:24:31
+-- Generated: 2026-02-18 09:29:05
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1850,12 +1850,17 @@ GO
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_CerereOnline.sql
 ----------------------------------------------------------------------------------------------------
-USE [ATK];
+--------------------------------------------------------------------------------
+-- 0) Setup & variables
+--------------------------------------------------------------------------------
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-DECLARE @TargetPosID varchar(36) = '812b00155d65040111ed03ac01bd0d94';
-DECLARE @FromDate    datetime   = '2015-01-01T00:00:00';  -- поменяй при необходимости
+DECLARE @TargetPosID varchar(36);
+DECLARE @FromDate    datetime;
+
+SET @TargetPosID = '812b00155d65040111ed03ac01bd0d94';
+SET @FromDate    = '2015-01-01T00:00:00';
 
 --------------------------------------------------------------------------------
 -- 0A) Calendars (temp) - NO named constraints (avoid PK name collisions)
@@ -1883,7 +1888,7 @@ CREATE TABLE #Dim_WorkCalendar_MonFri_08_18
     , CumWorkMinutes    bigint      NOT NULL
 );
 
-DECLARE @CalStart date = '2023-01-01';
+DECLARE @CalStart date = '2015-01-01';
 DECLARE @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
 
 ;WITH N AS

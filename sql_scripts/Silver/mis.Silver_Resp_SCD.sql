@@ -38,7 +38,7 @@ CREATE TABLE mis.Silver_Resp_SCD
 ------------------------------------------------------------
 -- 2) База по регистру: одна запись на дату (снимаем дубли)
 ------------------------------------------------------------
-DECLARE @DateFrom DATE = '2023-09-01';
+DECLARE @DateFrom DATE = '2015-01-01';
 
 IF OBJECT_ID('tempdb..#RespBaseRaw') IS NOT NULL DROP TABLE #RespBaseRaw;
 IF OBJECT_ID('tempdb..#RespBase') IS NOT NULL DROP TABLE #RespBase;

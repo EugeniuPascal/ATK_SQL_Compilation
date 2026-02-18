@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-02-18 13:52:56.248361
+-- Generated: 2026-02-18 15:08:32.962567
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 14
 --   mis.Silver_Employee_User.sql
@@ -637,30 +637,20 @@ END;';
     -- Start of: mis.Silver_Client_UnhealedFlag.sql
     SET @sql = N'SET NOCOUNT ON;
 
-IF OBJECT_ID(''mis.Silver_Client_UnhealedFlag'', ''U'') IS NULL
+IF OBJECT_ID(''mis.Silver_Client_UnhealedFlag'', ''U'') IS NOT NULL
+    TRUNCATE TABLE mis.Silver_Client_UnhealedFlag;
+ELSE
 BEGIN
     CREATE TABLE mis.Silver_Client_UnhealedFlag 
-	(
+    (
         ClientID    VARCHAR(36) NOT NULL,
         SoldDate    DATE        NOT NULL,
         HasUnhealed BIT         NOT NULL,
-        CONSTRAINT PK_Silver_Client_UnhealedFlag1 PRIMARY KEY (ClientID, SoldDate)
+        CONSTRAINT PK_Silver_Client_UnhealedFlag1 
+            PRIMARY KEY (ClientID, SoldDate)
     );
 END;
 
-
-
-
-DECLARE @DateFrom date = ''2015-01-01'';
-DECLARE @DateTo   date = ''2026-12-31'';
-DECLARE @Today    date = CAST(GETDATE() AS date);
-IF (@DateTo > @Today) SET @DateTo = @Today;
-
-
-
-
-DELETE FROM mis.Silver_Client_UnhealedFlag
-WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
 
 
 
@@ -668,11 +658,12 @@ WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
 IF OBJECT_ID(''tempdb..#Dates'',''U'') IS NOT NULL DROP TABLE #Dates;
 
 ;WITH N AS (
-    SELECT TOP (DATEDIFF(day,@DateFrom,@DateTo)+1)
+    SELECT TOP (DATEDIFF(day, ''2015-01-01'', CAST(GETDATE() AS date)) + 1)
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n
-    FROM sys.all_objects a CROSS JOIN sys.all_objects b
+    FROM sys.all_objects a 
+    CROSS JOIN sys.all_objects b
 )
-SELECT DATEADD(day,n,@DateFrom) AS SoldDate
+SELECT DATEADD(day, n, ''2015-01-01'') AS SoldDate
 INTO #Dates
 FROM N;
 
@@ -681,21 +672,18 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Dates ON #Dates(SoldDate);
 
 
 
+
 INSERT INTO mis.Silver_Client_UnhealedFlag 
            (ClientID, SoldDate, HasUnhealed)
 SELECT m.ClientID, d.SoldDate, CAST(1 AS bit)
 FROM #Dates d
-JOIN (
-    SELECT DISTINCT ClientID
-    FROM mis.Silver_Restruct_Merged_SCD
-    WHERE ClientID IS NOT NULL AND ClientID <> ''''
-) c ON 1=1
 JOIN mis.Silver_Restruct_Merged_SCD m
-  ON m.ClientID = c.ClientID
- AND d.SoldDate BETWEEN m.ValidFrom AND m.ValidTo
+  ON d.SoldDate BETWEEN m.ValidFrom AND m.ValidTo
  AND m.TypeName_Sticky IS NOT NULL
  AND m.StateName = N''НеИзлеченный''
  AND LTRIM(RTRIM(m.CreditStatus)) IN (N''Выдан'', N''Активен'', N''Открыт'')
+WHERE m.ClientID IS NOT NULL
+  AND m.ClientID <> ''''
 GROUP BY m.ClientID, d.SoldDate;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
@@ -723,26 +711,28 @@ VALUES
 
 
 
-IF OBJECT_ID(''mis.Silver_Resp_SCD'', ''U'') IS NOT NULL
-    DROP TABLE mis.Silver_Resp_SCD;
+IF OBJECT_ID(''mis.Silver_Resp_SCD'', ''U'') IS NULL
+BEGIN
+    CREATE TABLE mis.Silver_Resp_SCD 
+    (
+        CreditID        VARCHAR(36) NOT NULL,
+        ValidFrom       DATE        NOT NULL,
+        ValidTo         DATE        NOT NULL,
+        BranchID        VARCHAR(36) NULL,
+        ExpertID        VARCHAR(36) NULL,
+        IsSpecialBranch BIT         NOT NULL,
+        FinalBranchID   VARCHAR(36) NULL,
+        FinalExpertID   VARCHAR(36) NULL,
+        CONSTRAINT PK_Resp_SCD PRIMARY KEY (CreditID, ValidFrom)
+    );
+END
+ELSE
+BEGIN
+    TRUNCATE TABLE mis.Silver_Resp_SCD;
+END;
 
-CREATE TABLE mis.Silver_Resp_SCD 
-(
-    CreditID        VARCHAR(36) NOT NULL,
-    ValidFrom       DATE        NOT NULL,
-    ValidTo         DATE        NOT NULL,
-    BranchID        VARCHAR(36) NULL,
-    ExpertID        VARCHAR(36) NULL,
-    IsSpecialBranch BIT         NOT NULL,
-    FinalBranchID   VARCHAR(36) NULL,
-    FinalExpertID   VARCHAR(36) NULL,
-    CONSTRAINT PK_Resp_SCD PRIMARY KEY (CreditID, ValidFrom)
-);
 
 
-
-
-DECLARE @DateFrom DATE = ''2015-01-01'';
 
 IF OBJECT_ID(''tempdb..#RespBaseRaw'') IS NOT NULL DROP TABLE #RespBaseRaw;
 IF OBJECT_ID(''tempdb..#RespBase'') IS NOT NULL DROP TABLE #RespBase;
@@ -761,7 +751,7 @@ SELECT
 INTO #RespBaseRaw
 FROM mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] r
 WHERE r.[ОтветственныеПоКредитамВыданным Активность] = 1
-  AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) >= @DateFrom;
+  AND CAST(r.[ОтветственныеПоКредитамВыданным Период] AS DATE) >= ''2015-01-01'';
 
 SELECT CreditID, PeriodDate, BranchID, ExpertID
 INTO #RespBase
@@ -806,7 +796,7 @@ OUTER APPLY
     SELECT TOP 1 r.BranchID AS LastBranchID, r.ExpertID AS LastExpertID
     FROM #RespBase r
     WHERE r.CreditID = s.CreditID
-      AND r.BranchID NOT IN (SELECT BranchID FROM @SpecialBranches)
+      AND NOT EXISTS (SELECT 1 FROM @SpecialBranches sb WHERE sb.BranchID = r.BranchID)
       AND r.PeriodDate <= s.ValidFrom
     ORDER BY r.PeriodDate DESC
 ) nsb;

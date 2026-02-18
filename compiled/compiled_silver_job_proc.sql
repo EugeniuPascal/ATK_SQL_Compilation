@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-02-18 15:08:32.962567
+-- Generated: 2026-02-18 16:17:47.583963
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 14
 --   mis.Silver_Employee_User.sql
@@ -514,10 +514,13 @@ FROM rng;';
     -- Start of: mis.Silver_Restruct_Merged_SCD.sql
     SET @sql = N'SET NOCOUNT ON;
 
+
+
+
 IF OBJECT_ID(''mis.Silver_Restruct_Merged_SCD'',''U'') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Restruct_Merged_SCD 
-	(
+    (
         CreditID        VARCHAR(36)   NOT NULL,
         ValidFrom       DATE          NOT NULL,
         ValidTo         DATE          NOT NULL,
@@ -532,14 +535,10 @@ BEGIN
 END
 ELSE
 BEGIN
-    IF COL_LENGTH(''mis.Silver_Restruct_Merged_SCD'', ''ClientID'') IS NULL
-        ALTER TABLE mis.Silver_Restruct_Merged_SCD ADD ClientID varchar(64) NULL;
-
-    IF COL_LENGTH(''mis.Silver_Restruct_Merged_SCD'', ''CreditStatus'') IS NULL
-        ALTER TABLE mis.Silver_Restruct_Merged_SCD ADD CreditStatus nvarchar(200) NULL;
-
     TRUNCATE TABLE mis.Silver_Restruct_Merged_SCD;
 END;
+
+
 
 ;WITH borders AS (
     SELECT CreditID, CAST(ValidFrom AS DATE) AS ValidFrom
@@ -698,19 +697,6 @@ GROUP BY m.ClientID, d.SoldDate;';
 
 
 
-DECLARE @SpecialBranches TABLE (BranchID VARCHAR(36) PRIMARY KEY);
-
-INSERT INTO @SpecialBranches (BranchID)
-VALUES
-  (''B73A00155D65140C11EDCF8EFC5B26C5''),
-  (''B8934CC39235AB0B41675ED45E7EE551''),
-  (''B7D800155D65140C11F0316FD846B283''),
-  (''80FE00155D65040111EB7DB987EF3B3A''),
-  (''80FE00155D01451511EA2246DC87677D'');
-
-
-
-
 IF OBJECT_ID(''mis.Silver_Resp_SCD'', ''U'') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Resp_SCD 
@@ -731,6 +717,18 @@ BEGIN
     TRUNCATE TABLE mis.Silver_Resp_SCD;
 END;
 
+
+
+
+DECLARE @SpecialBranches TABLE (BranchID VARCHAR(36) PRIMARY KEY);
+
+INSERT INTO @SpecialBranches (BranchID)
+VALUES
+  (''B73A00155D65140C11EDCF8EFC5B26C5''),
+  (''B8934CC39235AB0B41675ED45E7EE551''),
+  (''B7D800155D65140C11F0316FD846B283''),
+  (''80FE00155D65040111EB7DB987EF3B3A''),
+  (''80FE00155D01451511EA2246DC87677D'');
 
 
 

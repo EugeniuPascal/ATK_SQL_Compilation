@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-18 15:08:19
+-- Generated: 2026-02-18 16:17:38
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (14):
 --   mis.Silver_Employee_User.sql
@@ -532,13 +532,15 @@ GO
 ----------------------------------------------------------------------------------------------------
 USE ATK;
 GO
-
 SET NOCOUNT ON;
 
+------------------------------------------------------------
+-- 0) Ensure table exists
+------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_Restruct_Merged_SCD','U') IS NULL
 BEGIN
     CREATE TABLE mis.Silver_Restruct_Merged_SCD 
-	(
+    (
         CreditID        VARCHAR(36)   NOT NULL,
         ValidFrom       DATE          NOT NULL,
         ValidTo         DATE          NOT NULL,
@@ -553,15 +555,11 @@ BEGIN
 END
 ELSE
 BEGIN
-    IF COL_LENGTH('mis.Silver_Restruct_Merged_SCD', 'ClientID') IS NULL
-        ALTER TABLE mis.Silver_Restruct_Merged_SCD ADD ClientID varchar(64) NULL;
-
-    IF COL_LENGTH('mis.Silver_Restruct_Merged_SCD', 'CreditStatus') IS NULL
-        ALTER TABLE mis.Silver_Restruct_Merged_SCD ADD CreditStatus nvarchar(200) NULL;
-
     TRUNCATE TABLE mis.Silver_Restruct_Merged_SCD;
 END;
-
+------------------------------------------------------------
+-- 1) Build SCD intervals
+------------------------------------------------------------
 ;WITH borders AS (
     SELECT CreditID, CAST(ValidFrom AS DATE) AS ValidFrom
     FROM   mis.Silver_Restruct_SCD
@@ -721,24 +719,10 @@ GO
 ----------------------------------------------------------------------------------------------------
 USE ATK;
 GO
-
 SET NOCOUNT ON;
 
 ------------------------------------------------------------
--- 0) Набор спец-филиалов
-------------------------------------------------------------
-DECLARE @SpecialBranches TABLE (BranchID VARCHAR(36) PRIMARY KEY);
-
-INSERT INTO @SpecialBranches (BranchID)
-VALUES
-  ('B73A00155D65140C11EDCF8EFC5B26C5'),
-  ('B8934CC39235AB0B41675ED45E7EE551'),
-  ('B7D800155D65140C11F0316FD846B283'),
-  ('80FE00155D65040111EB7DB987EF3B3A'),
-  ('80FE00155D01451511EA2246DC87677D');
-
-------------------------------------------------------------
--- 1) Создание/очистка целевой таблицы
+-- 0) Create / truncate target table
 ------------------------------------------------------------
 IF OBJECT_ID('mis.Silver_Resp_SCD', 'U') IS NULL
 BEGIN
@@ -760,6 +744,18 @@ BEGIN
     TRUNCATE TABLE mis.Silver_Resp_SCD;
 END;
 
+------------------------------------------------------------
+-- 1) Declare special branches
+------------------------------------------------------------
+DECLARE @SpecialBranches TABLE (BranchID VARCHAR(36) PRIMARY KEY);
+
+INSERT INTO @SpecialBranches (BranchID)
+VALUES
+  ('B73A00155D65140C11EDCF8EFC5B26C5'),
+  ('B8934CC39235AB0B41675ED45E7EE551'),
+  ('B7D800155D65140C11F0316FD846B283'),
+  ('80FE00155D65040111EB7DB987EF3B3A'),
+  ('80FE00155D01451511EA2246DC87677D');
 ------------------------------------------------------------
 -- 2) Deduplicate base register per credit per date
 ------------------------------------------------------------

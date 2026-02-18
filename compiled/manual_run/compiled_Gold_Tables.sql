@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-18 09:29:05
+-- Generated: 2026-02-18 13:52:50
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1888,7 +1888,7 @@ CREATE TABLE #Dim_WorkCalendar_MonFri_08_18
     , CumWorkMinutes    bigint      NOT NULL
 );
 
-DECLARE @CalStart date = '2015-01-01';
+DECLARE @CalStart date = '2023-01-01';
 DECLARE @CalEnd   date = DATEADD(year, 5, CONVERT(date, GETDATE()));
 
 ;WITH N AS

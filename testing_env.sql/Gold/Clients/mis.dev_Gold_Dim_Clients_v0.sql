@@ -7,11 +7,11 @@ GO
 /*==============================================================
   DROP + CREATE TABLE
 ==============================================================*/
-IF OBJECT_ID(N'mis.Gold_Dim_Clients', 'U') IS NOT NULL
-    DROP TABLE mis.Gold_Dim_Clients;
+IF OBJECT_ID(N'mis.dev_Gold_Dim_Clients_v0', 'U') IS NOT NULL
+    DROP TABLE mis.dev_Gold_Dim_Clients_v0;
 GO
 
-CREATE TABLE mis.Gold_Dim_Clients
+CREATE TABLE mis.dev_Gold_Dim_Clients_v0
 (
     ClientID                VARCHAR(36)  NOT NULL,
     ParentID                VARCHAR(36)  NOT NULL,
@@ -43,6 +43,7 @@ CREATE TABLE mis.Gold_Dim_Clients
     NoEmailNotifications    VARCHAR(36)  NULL,
     NoPromoSMS              VARCHAR(36)  NULL,
     EconomicSector          NVARCHAR(200) NULL,
+	EmployeeID              VARCHAR(36)   NULL,
     OrganizationType        NVARCHAR(52)  NULL,
     IsGroupOwner            BIT           NULL,
     GroupID                 NVARCHAR(20)  NULL,
@@ -55,7 +56,7 @@ CREATE TABLE mis.Gold_Dim_Clients
     ANK_LegalAddress        NVARCHAR(150) NULL,
     ANK_ActualAddress       NVARCHAR(150) NULL,
 
-    CONSTRAINT PK_Gold_Dim_Clients
+    CONSTRAINT PK_Gold_Dim_Clients_v0
         PRIMARY KEY CLUSTERED (ClientID)
 );
 GO
@@ -109,6 +110,7 @@ BaseData AS
         s.[Контрагенты Не Уведомлять Письмом]   AS NoEmailNotifications,
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
         s.[Контрагенты Сектор Экономики]        AS EconomicSector,
+		s.[Контрагенты Кредитный Эксперт ID]    AS EmployeeID,
         fp.[ФормыПредприятия Наименование]      AS OrganizationType,
 
         CASE WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID]
@@ -199,13 +201,13 @@ Final AS
 )
 
 -- Insert final data
-INSERT INTO mis.[Gold_Dim_Clients]
+INSERT INTO mis.[dev_Gold_Dim_Clients_v0]
 SELECT
     f.ClientID, f.ParentID, f.BranchID, f.IsDeleted, f.IsGroup, f.ClientCode, f.ClientName, f.IsBlocked,
     f.Visibility, f.Age, f.AgeGroup, f.City, f.CreatedDate, f.PartnerCode, f.FullName, f.IsNonResident,
     f.NoPaymentNotification, f.GenderClean, f.PostalAddress, f.Country, f.MobilePhone1, f.MobilePhone2,
     f.Phones, f.FiscalCode, f.LegalAddress, f.RegistrationDate, f.LanguageClean,
-    f.NoEmailNotifications, f.NoPromoSMS, f.EconomicSector, f.OrganizationType,
+    f.NoEmailNotifications, f.NoPromoSMS, f.EconomicSector, f.EmployeeID, f.OrganizationType,
     f.IsGroupOwner, f.GroupID, f.CRM_Region_Address, f.CRM_City_Address,
     f.CRM_Status, f.CRM_ClientType, f.CRM_Employee,
     f.Phone, 
@@ -217,9 +219,26 @@ GO
 -- ===========================
 -- Indexes
 -- ===========================
-CREATE NONCLUSTERED INDEX IX_Clients_Branch    ON mis.[Gold_Dim_Clients](BranchID)   INCLUDE (ClientName, IsBlocked);
-CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup  ON mis.[Gold_Dim_Clients](AgeGroup)  INCLUDE (City, Country);
-CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
-CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[Gold_Dim_Clients](IsGroupOwner, GroupID);
-CREATE NONCLUSTERED INDEX IX_Clients_Phone2    ON mis.[Gold_Dim_Clients](Phone);
+CREATE NONCLUSTERED INDEX IX_Clients_Branch_v0
+ON mis.dev_Gold_Dim_Clients_v0 (BranchID)
+INCLUDE (ClientName, IsBlocked);
+
+CREATE NONCLUSTERED INDEX IX_Clients_AgeGroup_v0
+ON mis.dev_Gold_Dim_Clients_v0 (AgeGroup)
+INCLUDE (City, Country);
+
+CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted_v0
+ON mis.dev_Gold_Dim_Clients_v0 (IsDeleted)
+INCLUDE (ClientName);
+
+CREATE NONCLUSTERED INDEX IX_Clients_Group_v0
+ON mis.dev_Gold_Dim_Clients_v0 (IsGroupOwner, GroupID);
+
+CREATE NONCLUSTERED INDEX IX_Clients_Phone2_v0
+ON mis.dev_Gold_Dim_Clients_v0 (Phone);
 GO
+
+
+
+
+

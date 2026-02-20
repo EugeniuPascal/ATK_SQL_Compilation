@@ -1,5 +1,5 @@
 -- Compiled SQL bundle
--- Generated: 2026-02-19 16:56:16
+-- Generated: 2026-02-20 09:39:22
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -1095,6 +1095,37 @@ CREATE TABLE mis.[Gold_Dim_Events]
 );
 GO
 
+;WITH EventData AS
+(
+    SELECT
+        e.[СведенияОСобытиях Период]                   AS Event_Period,
+        e.[СведенияОСобытиях ID]                       AS Event_ID,
+        e.[СведенияОСобытиях Контрагент ID]            AS Event_ClientID,
+        e.[СведенияОСобытиях Состояние События]        AS Event_Status,
+        e.[СведенияОСобытиях Вид События]              AS Event_Kind,
+        e.[СведенияОСобытиях Тип События]              AS Event_Type,
+        e.[СведенияОСобытиях Проект]                   AS Event_Project,
+        e.[СведенияОСобытиях Содержание События]       AS Event_Content,
+        e.[СведенияОСобытиях Ответственный ID]         AS Event_ResponsibleID,
+        e.[СведенияОСобытиях Ответственный]            AS Event_Responsible,
+        e.[СведенияОСобытиях Дата Следующего События]  AS Event_NextDateEvent,
+        e.[СведенияОСобытиях Вид Следующего События]   AS Event_NextKindEvent,
+        e.[СведенияОСобытиях Филиал ID]                AS Event_BranchID,
+        e.[СведенияОСобытиях Филиал]                   AS Event_Branch_Name,
+        s.[СотрудникиДанныеПоЗарплате Должность]       AS EmployeePosition,
+        s.[СотрудникиДанныеПоЗарплате Филиал]          AS EmployeeBranch
+    FROM [ATK].[dbo].[РегистрыСведений.СведенияОСобытиях] e
+    OUTER APPLY
+    (
+        SELECT TOP 1
+               p.[СотрудникиДанныеПоЗарплате Должность],
+               p.[СотрудникиДанныеПоЗарплате Филиал]
+        FROM mis.[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] p
+        WHERE p.[СотрудникиДанныеПоЗарплате Сотрудник ID] = e.[СведенияОСобытиях Ответственный ID]
+          AND p.[СотрудникиДанныеПоЗарплате Период] <= e.[СведенияОСобытиях Период]
+        ORDER BY p.[СотрудникиДанныеПоЗарплате Период] DESC
+    ) s
+)
 INSERT INTO mis.[Gold_Dim_Events]
 (
     Event_Period,
@@ -1112,42 +1143,15 @@ INSERT INTO mis.[Gold_Dim_Events]
     Event_BranchID,
     Event_Branch_Name,
     EmployeePosition,
-	EmployeeBranch
+    EmployeeBranch
 )
-SELECT
-    e.[СведенияОСобытиях Период]                   AS Event_Period,
-    e.[СведенияОСобытиях ID]                       AS Event_ID,
-    e.[СведенияОСобытиях Контрагент ID]            AS Event_ClientID,
-    e.[СведенияОСобытиях Состояние События]        AS Event_Status,
-    e.[СведенияОСобытиях Вид События]              AS Event_Kind,
-    e.[СведенияОСобытиях Тип События]              AS Event_Type,
-    e.[СведенияОСобытиях Проект]                   AS Event_Project,
-    e.[СведенияОСобытиях Содержание События]       AS Event_Content,
-    e.[СведенияОСобытиях Ответственный ID]         AS Event_ResponsibleID,
-    e.[СведенияОСобытиях Ответственный]            AS Event_Responsible,
-    e.[СведенияОСобытиях Дата Следующего События]  AS Event_NextDateEvent,
-    e.[СведенияОСобытиях Вид Следующего События]   AS Event_NextKindEvent,
-    e.[СведенияОСобытиях Филиал ID]                AS Event_BranchID,
-    e.[СведенияОСобытиях Филиал]                   AS Event_Branch_Name,
-    s.[СотрудникиДанныеПоЗарплате Должность]      AS EmployeePosition,
-	s.[СотрудникиДанныеПоЗарплате Филиал]         AS EmployeeBranch
-FROM [ATK].[dbo].[РегистрыСведений.СведенияОСобытиях] e
-OUTER APPLY
-(
-    SELECT TOP 1
-           p.[СотрудникиДанныеПоЗарплате Должность],
-           p.[СотрудникиДанныеПоЗарплате Филиал]
-    FROM mis.[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] p
-    WHERE p.[СотрудникиДанныеПоЗарплате Сотрудник ID] = e.[СведенияОСобытиях Ответственный ID]
-      AND p.[СотрудникиДанныеПоЗарплате Период] <= e.[СведенияОСобытиях Период]
-    ORDER BY p.[СотрудникиДанныеПоЗарплате Период] DESC
-) s
+SELECT *
+FROM EventData ed
 WHERE NOT EXISTS (
     SELECT 1
     FROM mis.[Gold_Dim_Events] g
-    WHERE g.Event_ID = e.[СведенияОСобытиях ID]
+    WHERE g.Event_ID = ed.Event_ID
 );
-GO
 ----------------------------------------------------------------------------------------------------
 -- End of:   mis.Gold_Dim_Events.sql
 ----------------------------------------------------------------------------------------------------

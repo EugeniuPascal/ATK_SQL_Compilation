@@ -1079,3 +1079,120 @@ SELECT TOP (1000) [SoldDate]
   FROM [ATK].[mis].[Gold_Fact_Sold_Par]
     WHERE CreditID = 'B75C00155D65140C11EE6E5FB1250276'
   ORDER BY SoldDate DESC
+  
+  
+  
+  
+  
+  
+  USE [ATK];
+GO
+SET NOCOUNT ON;
+
+IF OBJECT_ID('mis.[dev_Gold_Fact_CerereOnline_v0]', 'U') IS NOT NULL
+    DROP TABLE mis.[dev_Gold_Fact_CerereOnline_v0];
+GO
+
+CREATE TABLE mis.[dev_Gold_Fact_CerereOnline_v0] 
+(
+    [ID]                     VARCHAR(36)    NULL,
+    [Date]                   DATETIME       NULL,
+    [Status]                 NVARCHAR(256)  NULL,
+    [Posted]                 VARCHAR(36)    NULL,
+    [BusinessSector]         NVARCHAR(150)  NULL,
+    [Type]                   NVARCHAR(100)  NULL,
+    [HistoryType]            NVARCHAR(256)  NULL,
+    [CreditID]               VARCHAR(36)    NULL,
+    [AuthorID]               VARCHAR(36)    NULL,
+    [Author]                 NVARCHAR(100)  NULL,
+    [Purpose]                NVARCHAR(150)  NULL,
+    [IsGreen]                NVARCHAR(36)   NULL,
+    [ClientID]               VARCHAR(36)    NULL,
+    [CreditAmount]           DECIMAL(15,2)  NULL,
+    [CurrencyType]           NVARCHAR(36)   NULL,
+    [CreditAmountInMDL]      DECIMAL(18,2)  NULL,
+    [NewExisting_Client]     NVARCHAR(20)   NULL,
+    [RefusalReason]          NVARCHAR(200)  NULL,
+    [CreditProduct]          NVARCHAR(150)  NULL,
+    [ProductID]              VARCHAR(36)    NULL,
+    [CreditProductID]        VARCHAR(36)    NULL,
+    [InternetID]             VARCHAR(36)    NULL,
+    [EmployeeID]             VARCHAR(36)    NULL,
+    [BranchID]               VARCHAR(36)    NULL,
+    [PartnerID]              VARCHAR(36)    NULL,
+    [Partner]                NVARCHAR(150)  NULL,
+    [WebDate]                DATETIME       NULL,
+    [WebNr]                  NVARCHAR(50)   NULL,
+    [WebPosted]              VARCHAR(36)    NULL,
+    [WebIncomeTypeOnline]    NVARCHAR(200)  NULL,
+    [WebAge]                 INT            NULL,
+    [WebSubmissionDate]      DATETIME       NULL,
+    [WebCredit]              NVARCHAR(100)  NULL,
+    [WebIdentifier]          NVARCHAR(50)   NULL,
+    [WebCreditEmployee]      NVARCHAR(50)   NULL,
+    [WebMobilePhone]         NVARCHAR(20)   NULL,
+    [WebSentForReview]       NVARCHAR(36)   NULL,
+    [WebGender]              NVARCHAR(256)  NULL,
+    [WebStatus]              NVARCHAR(256)  NULL,
+    [WebCreditTerm]          INT            NULL,
+    [WebBranchID]            VARCHAR(36)    NULL,
+	[ContactPerson]          NVARCHAR(100)  NULL,
+	[ContactPersonPhone]     NVARCHAR(50)   NULL,
+    [CommitteeDecisionDate]  DATETIME       NULL,
+	[CommitteeDecision]      NVARCHAR(256)  NULL,
+	[Data autorizarii]       DATETIME       NULL,
+    [Data depunerii cererii] DATETIME       NULL,
+    [Data votarii]           DATETIME       NULL,
+    [Autor Votare]           NVARCHAR(256)  NULL,
+    [AutorVotare ID]         VARCHAR(36)    NULL,
+    [Autor Votare Position]  VARCHAR(36)    NULL,
+    [Autor decizie]          NVARCHAR(256)  NULL,
+    [AutorDecizie ID]        VARCHAR(36)    NULL,
+    [Кредиты Сегмент Доходов] NVARCHAR(256)  NULL,
+    [Tip Рассмотрения Заявки RO] NVARCHAR(56)  NULL,
+    [Viteza de decizie]          DECIMAL(18,2) NULL,
+    [Viteza de votare]           DECIMAL(18,2) NULL,
+    [Viteza de procesare]        DECIMAL(18,2) NULL,
+    [Analyse]                    DECIMAL(18,2) NULL,
+    [Viteza de votare CC]        DECIMAL(18,2) NULL,
+    [CC]                         DECIMAL(18,2) NULL,
+    [Disbusement speed]          DECIMAL(18,2) NULL,
+    [Total speed]                DECIMAL(18,2) NULL,
+    [Timpul de asteptare]        DECIMAL(18,2) NULL,
+    [Viteza de decizie CC]       DECIMAL(18,2) NULL,
+    [Viteza debursare(dupa procesare)] DECIMAL(18,2) NULL,
+    [Viteza debursare(dupa Decizie)]   DECIMAL(18,2) NULL,
+    [Depasire norma viteza]            BIT           NULL,
+    [LoadDttm_Ext]                     DATETIME      NULL
+ );
+GO   
+
+
+
+
+
+
+
+        "mis.Gold_Fact_Disbursement.sql",
+        "mis.Gold_Fact_CerereOnline.sql",   
+        "mis.Gold_Dim_Branch.sql",
+        "mis.Gold_Dim_Clients.sql",
+        "mis.Gold_Dim_Credits.sql",
+        "mis.Gold_Dim_EmployeePayrollData.sql",
+        "mis.Gold_Dim_Employees.sql",
+        "mis.Gold_Dim_EmployeesHistory.sql",       
+        "mis.Gold_Dim_GroupMembershipPeriods.sql",
+        "mis.Gold_Dim_PartnersBranch.sql",
+        "mis.Gold_Fact_AdminTasks.sql",
+        "mis.Gold_Fact_ArchiveDocument.sql",
+        "mis.Gold_Fact_BudgetEmployees.sql",
+        "mis.Gold_Fact_Comments.sql",
+        "mis.Gold_Fact_CPD.sql",
+        "mis.Gold_Fact_CreditsInShadowBranches.sql",
+        "mis.Gold_Fact_WriteOffCredits.sql",
+        "mis.Gold_Fact_Restruct_Daily_Min.sql",   
+        "mis.Gold_Fact_Sold_Par.sql",
+        "V2__inc_Gold_Dim_Event_InProgress.sql",
+        "V2__inc_Gold_Dim_Event_Responsible.sql",
+        "V2__inc_Gold_Dim_Limits.sql",
+        "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"

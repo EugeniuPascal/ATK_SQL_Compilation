@@ -1,4 +1,4 @@
-# compile_gold_tables_folder.py
+# compile_gold_tables_folder_strict.py
 from pathlib import Path
 from datetime import datetime
 
@@ -9,7 +9,7 @@ OUTPUT    = Path(r"C:\ATK_Project\compiled\manual_run\compiled_Gold_Tables.sql")
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
-# ---- list your files in the specific order you want first ----
+# ---- list your files in the specific order you want ----
 SQL_ORDER = [
     "mis.Gold_Dim_AppUsers.sql",
     "mis.Gold_Dim_Branch.sql",
@@ -47,50 +47,30 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
-def compile_sql():
-    # ---- 1) all .sql files in the folder
-    all_files = sorted([f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
-
-    # ---- 2) compute extra files not in SQL_ORDER
-    extra_files = [f for f in all_files if f.name not in SQL_ORDER]
-    if extra_files:
-        print(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER:")
-        for f in extra_files:
-            print(f"   {f.name}")
-
-    # ---- 3) build final processing list: SQL_ORDER first, then extras
+def compile_sql_strict():
+    # ---- build final processing list strictly from SQL_ORDER ----
     sql_files = []
-    processed_names = set()
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
         if fpath.exists():
             sql_files.append(fpath)
-            processed_names.add(fname)
         else:
-            print(f"⚠ Warning: file listed but not found -> {fpath}")
+            print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
-    sql_files.extend(extra_files)
-
-    # ---- 4) header for compiled file
+    # ---- header for compiled file ----
     header = (
-        f"-- Compiled SQL bundle\n"
+        f"-- Compiled SQL bundle (strict order)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join([f.name for f in sql_files]) + "\n"
         f"{DIV}\n\nSET NOCOUNT ON;\n\n"
     )
 
-    processed = set()  # track absolute paths to avoid duplicates
-
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT.open("w", encoding="utf-8", newline="\n") as out:
         out.write(header)
 
         for f in sql_files:
-            if f.resolve() in processed:
-                continue
-            processed.add(f.resolve())
-
             content = read_text_with_fallback(f)
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
             out.write((content.rstrip() if content else "-- Could not decode file") + "\n")
@@ -100,4 +80,4 @@ def compile_sql():
     print(f"✅ Compiled SQL file created at: {OUTPUT}")
 
 if __name__ == "__main__":
-    compile_sql()
+    compile_sql_strict()

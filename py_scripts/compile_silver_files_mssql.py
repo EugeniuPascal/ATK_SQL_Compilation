@@ -69,62 +69,47 @@ def make_idempotent(sql: str) -> str:
         return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
 
     return CREATE_TABLE_RE.sub(table_repl, sql).strip()
-
 # --------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------
 try:
     SQL_ORDER = [
-    #independent
-    "mis.Silver_Employee_User.sql",
-    "mis.Silver_CommiteeProtocol.sql",
-    
-    # creates Gold_Fact_CerereOnline
-    "mis.Silver_CerereOnline_base.sql",
-    
-    # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
-    "mis.Silver_Restruct_SCD.sql",    
-    "mis.Silver_RestructState_SCD.sql",
-    "mis.Silver_Restruct_Merged_SCD.sql",
-    "mis.Silver_Client_UnhealedFlag.sql",
-    "mis.Silver_Resp_SCD.sql",
-    "mis.Silver_Stages_SCD.sql",
-    
-    # below table execution order to create mis.Gold_Fact_CPD_Sold 
-    "mis.Silver_SCD_GroupMembershipPeriods.sql", 
-    "mis.Silver_Sold_Owner.sql",
-    "mis.Silver_Limits.sql",
-    "mis.Silver_Conditions_After_Disb.sql",
-    "mis.Silver_CPD_TaskDays.sql",
+        # independent
+        "mis.Silver_Employee_User.sql",
+        "mis.Silver_CommiteeProtocol.sql",
+
+        # creates Gold_Fact_CerereOnline
+        "mis.Silver_CerereOnline_base.sql",
+
+        # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
+        "mis.Silver_Restruct_SCD.sql",    
+        "mis.Silver_RestructState_SCD.sql",
+        "mis.Silver_Restruct_Merged_SCD.sql",
+        "mis.Silver_Client_UnhealedFlag.sql",
+        "mis.Silver_Resp_SCD.sql",
+        "mis.Silver_Stages_SCD.sql",
+
+        # below table execution order to create mis.Gold_Fact_CPD_Sold 
+        "mis.Silver_SCD_GroupMembershipPeriods.sql", 
+        "mis.Silver_Sold_Owner.sql",
+        "mis.Silver_Limits.sql",
+        "mis.Silver_Conditions_After_Disb.sql",
+        "mis.Silver_CPD_TaskDays.sql",
     ]
 
-    # 1) List all SQL files
-    all_files = sorted([f.name for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
-
-    # 2) Identify extra files
-    extra_files = [f for f in all_files if f not in SQL_ORDER]
-    if extra_files:
-        logging.info(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER:")
-        for f in extra_files:
-            logging.info(f"   {f}")
-            print(f"ℹ Extra file appended: {f}")
-
-    # 3) Build final ordered list
+    # ---- Build final ordered list strictly from SQL_ORDER ----
     sql_files = []
-    processed_names = set()
     for fname in SQL_ORDER:
         fpath = SOURCE_FOLDER / fname
         if fpath.exists():
             sql_files.append(fpath)
-            processed_names.add(fname)
         else:
             logging.warning(f"⚠ File listed in SQL_ORDER but not found: {fpath}")
             print(f"⚠ Warning: file listed but not found -> {fpath}")
 
-    sql_files.extend([SOURCE_FOLDER / f for f in extra_files])
     logging.info(f"Total SQL files to process: {len(sql_files)}")
 
-    # 4) Generate stored procedure
+    # ---- Generate stored procedure ----
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
         f_out.write("-- =============================================\n")
@@ -144,6 +129,7 @@ try:
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 
+        # process each file strictly in order
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf.name}")

@@ -1,4 +1,4 @@
-# compile_silver_tables_folder.py
+# compile_silver_tables_folder_strict.py
 from pathlib import Path
 from datetime import datetime
 
@@ -9,8 +9,9 @@ OUTPUT    = Path(r"C:\ATK_Project\compiled\manual_run\compiled_Silver_Tables.sql
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
+# ---- strictly ordered files ----
 SQL_ORDER = [
-    #independent
+    # independent
     "mis.Silver_Employee_User.sql",
     "mis.Silver_CommiteeProtocol.sql",
     
@@ -33,6 +34,7 @@ SQL_ORDER = [
     "mis.Silver_CPD_TaskDays.sql",
 ]
 
+# ---- helper to read files with fallback encodings ----
 def read_text_with_fallback(p: Path) -> str | None:
     for enc in FALLBACK_ENCODINGS:
         try:
@@ -41,51 +43,30 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
-def compile_sql():
-    # 1) Build full paths in the desired order
+def compile_sql_strict():
+    # ---- 1) Build final list strictly from SQL_ORDER ----
     sql_files = []
-    processed_names = set()
-
-    # Add files from SQL_ORDER first
-    for f in SQL_ORDER:
-        full_path = MAIN_DIR / f
-        if full_path.exists():
-            sql_files.append(full_path)
-            processed_names.add(full_path.name)
+    for fname in SQL_ORDER:
+        fpath = MAIN_DIR / fname
+        if fpath.exists():
+            sql_files.append(fpath)
         else:
-            print(f"⚠ Warning: file listed but not found -> {full_path}")
+            print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
-    # 2) Find any extra .sql files not in SQL_ORDER
-    all_files = sorted([f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
-    extra_files = [f for f in all_files if f.name not in processed_names]
-
-    if extra_files:
-        print(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER:")
-        for f in extra_files:
-            print(f"   {f.name}")
-
-    sql_files.extend(extra_files)
-
-    # 3) build header
+    # ---- 2) header for compiled file ----
     header = (
-        f"-- Compiled SQL bundle\n"
+        f"-- Compiled SQL bundle (strict order)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join([f.name for f in sql_files]) + "\n"
         f"{DIV}\n\nSET NOCOUNT ON;\n\n"
     )
 
-    processed = set()  # keep absolute paths to avoid duplicates
-
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT.open("w", encoding="utf-8", newline="\n") as out:
         out.write(header)
 
-        # 4) write all files
         for f in sql_files:
-            if f.resolve() in processed:
-                continue
-            processed.add(f.resolve())
-
             content = read_text_with_fallback(f)
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
             out.write((content.rstrip() if content else "-- Could not decode file") + "\n")
@@ -95,4 +76,4 @@ def compile_sql():
     print(f"✅ Compiled SQL file created at: {OUTPUT}")
 
 if __name__ == "__main__":
-    compile_sql()
+    compile_sql_strict()

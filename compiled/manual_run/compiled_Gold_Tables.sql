@@ -1,5 +1,5 @@
--- Compiled SQL bundle
--- Generated: 2026-02-20 10:09:58
+-- Compiled SQL bundle (strict order)
+-- Generated: 2026-02-20 10:33:20
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql

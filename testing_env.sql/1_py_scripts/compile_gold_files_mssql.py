@@ -70,6 +70,7 @@ def make_idempotent(sql: str) -> str:
         return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
 
     return CREATE_TABLE_RE.sub(table_repl, sql).strip()
+
 # --------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------
@@ -77,22 +78,62 @@ try:
     # ---- Ordered list of Gold files ----
     SQL_ORDER = [
         "mis.Gold_Dim_AppUsers.sql",
-        "mis.Gold_Dim_Events.sql"
+        "mis.Gold_Dim_Events.sql",
+        "mis.Gold_Fact_Disbursement.sql",
+        "mis.Gold_Fact_CerereOnline.sql",   
+        "mis.Gold_Dim_Branch.sql",
+        "mis.Gold_Dim_Clients.sql",
+        "mis.Gold_Dim_Credits.sql",
+        "mis.Gold_Dim_EmployeePayrollData.sql",
+        "mis.Gold_Dim_Employees.sql",
+        "mis.Gold_Dim_EmployeesHistory.sql",       
+        "mis.Gold_Dim_GroupMembershipPeriods.sql",
+        "mis.Gold_Dim_PartnersBranch.sql",
+        "mis.Gold_Fact_AdminTasks.sql",
+        "mis.Gold_Fact_ArchiveDocument.sql",
+        "mis.Gold_Fact_BudgetEmployees.sql",
+        "mis.Gold_Fact_Comments.sql",
+        "mis.Gold_Fact_CPD.sql",
+        "mis.Gold_Fact_CreditsInShadowBranches.sql",
+        "mis.Gold_Fact_WriteOffCredits.sql",
+        "mis.Gold_Fact_Restruct_Daily_Min.sql",   
+        "mis.Gold_Fact_Sold_Par.sql",
+        "V2__inc_Gold_Dim_Event_InProgress.sql",
+        "V2__inc_Gold_Dim_Event_Responsible.sql",
+        "V2__inc_Gold_Dim_Limits.sql",
+        "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
     ]
 
-    # ---- Build final ordered list strictly from SQL_ORDER ----
+    # ---- 1) List all SQL files in folder ----
+    all_files = sorted([f.name for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
+
+    # ---- 2) Identify extra files not in SQL_ORDER ----
+    extra_files = [f for f in all_files if f not in SQL_ORDER]
+    if extra_files:
+        logging.info(f"ℹ Adding {len(extra_files)} extra files not listed in SQL_ORDER:")
+        for f in extra_files:
+            logging.info(f"   {f}")
+            print(f"ℹ Extra file appended: {f}")
+
+    # ---- 3) Build final ordered list ----
     sql_files = []
+    processed_names = set()
+
     for fname in SQL_ORDER:
         fpath = SOURCE_FOLDER / fname
         if fpath.exists():
             sql_files.append(fpath)
+            processed_names.add(fname)
         else:
             logging.warning(f"File listed in SQL_ORDER but not found: {fpath}")
             print(f"⚠ Warning: file listed but not found -> {fpath}")
 
+    # Append extra files
+    sql_files.extend([SOURCE_FOLDER / f for f in extra_files])
+
     logging.info(f"Total SQL files to process: {len(sql_files)}")
 
-    # ---- Generate stored procedure ----
+    # ---- 4) Generate stored procedure
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
         # header

@@ -1695,3 +1695,10 @@
 2026-02-20 10:10:09,692 [INFO] Processing file: V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
 2026-02-20 10:10:09,693 [INFO] Finished file: V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
 2026-02-20 10:10:09,694 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql
+2026-02-20 10:17:07,401 [INFO] === Starting Gold SQL Compilation Job ===
+2026-02-20 10:17:07,402 [INFO] Total SQL files to process: 2
+2026-02-20 10:17:07,402 [INFO] Processing file: mis.Gold_Dim_AppUsers.sql
+2026-02-20 10:17:07,403 [INFO] Finished file: mis.Gold_Dim_AppUsers.sql
+2026-02-20 10:17:07,403 [INFO] Processing file: mis.Gold_Dim_Events.sql
+2026-02-20 10:17:07,403 [INFO] Finished file: mis.Gold_Dim_Events.sql
+2026-02-20 10:17:07,404 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql

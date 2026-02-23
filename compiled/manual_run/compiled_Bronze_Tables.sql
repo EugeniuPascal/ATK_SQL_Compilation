@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze) with Logging
--- Generated: 2026-02-23 11:37:50
+-- Generated: 2026-02-23 11:43:19
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (28):
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -41,6 +41,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -227,13 +228,18 @@ SELECT
     [ЗаявкаНаКредит Финансовый Продукт]
 	
 FROM [ATK].[dbo].[Документы.ЗаявкаНаКредит];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Документы.ЗаявкаНаКредит', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Документы.ЗаявкаНаКредит.sql
+-- End of: mis.Bronze_Документы.ЗаявкаНаКредит.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -245,6 +251,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -337,13 +344,18 @@ FROM LastValid lv
 LEFT JOIN CreditLine cl
     ON cl.CreditID = lv.[НаправлениеНаВыплату Кредит ID]
 WHERE lv.rn = 1;
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Документы.НаправлениеНаВыплату', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Документы.НаправлениеНаВыплату.sql
+-- End of: mis.Bronze_Документы.НаправлениеНаВыплату.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -355,6 +367,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -486,13 +499,18 @@ SELECT
 	[ОбъединеннаяИнтернетЗаявка Пометка Удаления]
 	
 FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗаявка];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql
+-- End of: mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -504,6 +522,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -540,13 +559,18 @@ SELECT
     [ОбъединеннаяИнтернетЗаявка.РискФакторы Риск Фактор]
 	
 FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql
+-- End of: mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -558,6 +582,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1162,13 +1187,18 @@ SELECT
 
 	
 FROM [ATK].[dbo].[Документы.ПротоколКомитета];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Документы.ПротоколКомитета', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Документы.ПротоколКомитета.sql
+-- End of: mis.Bronze_Документы.ПротоколКомитета.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1180,6 +1210,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1211,13 +1242,18 @@ SELECT
 	
 FROM [ATK].[dbo].[Документы.УстановкаДанныхКредита]
 WHERE [УстановкаДанныхКредита Проведен] = 01;
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Документы.УстановкаДанныхКредита', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Документы.УстановкаДанныхКредита.sql
+-- End of: mis.Bronze_Документы.УстановкаДанныхКредита.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1229,6 +1265,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1349,13 +1386,18 @@ SELECT
     [ЗадачаАдминистратораКредитов Приоритет Задачи ID],
     [ЗадачаАдминистратораКредитов Исполнитель]
 FROM [ATK].[dbo].[Задачи.ЗадачаАдминистратораКредитов];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Задачи.ЗадачаАдминистратораКредитов', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.sql
+-- End of: mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1367,6 +1409,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1416,13 +1459,18 @@ SELECT
     [ЗадачаАдминистратораКредитов.ИсторияСтатусов Время в Секундах]
 	
 FROM [ATK].[dbo].[Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов.sql
+-- End of: mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1434,6 +1482,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1465,13 +1514,18 @@ SELECT
     [АнулированныеКредитыПартнеров Кредит Восстановлен]
 	
 FROM [ATK].[dbo].[РегистрыСведений.АнулированныеКредитыПартнеров];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров.sql
+-- End of: mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1483,6 +1537,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1519,13 +1574,18 @@ SELECT
 	[Валюта Средний Курс]
 	
 FROM [ATK].[dbo].[РегистрыСведений.Валюта];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.Валюта', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.Валюта.sql
+-- End of: mis.Bronze_РегистрыСведений.Валюта.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1537,6 +1597,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1576,13 +1637,18 @@ SELECT
 	[ДанныеКредитовВыданных Кредитный Продукт]
 	
 FROM [ATK].[dbo].[РегистрыСведений.ДанныеКредитовВыданных];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных.sql
+-- End of: mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1594,6 +1660,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1642,13 +1709,18 @@ SELECT
 	[КредитыВТеневыхФилиалах Кредитный Эксперт]
 	
 FROM [ATK].[dbo].[РегистрыСведений.КредитыВТеневыхФилиалах];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах.sql
+-- End of: mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1660,6 +1732,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1708,13 +1781,18 @@ SELECT
 	[ОтветственныеПоКредитамВыданным Кредитный Эксперт]	
 	
 FROM [ATK].[dbo].[РегистрыСведений.ОтветственныеПоКредитамВыданным];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным.sql
+-- End of: mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1726,6 +1804,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1756,13 +1835,18 @@ SELECT
     [РеструктурированныеКредиты Причина Реструктуризации]   
  
 FROM [ATK].[dbo].[РегистрыСведений.РеструктурированныеКредиты];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.РеструктурированныеКредиты', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.РеструктурированныеКредиты.sql
+-- End of: mis.Bronze_РегистрыСведений.РеструктурированныеКредиты.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1774,6 +1858,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1822,13 +1907,18 @@ SELECT
     [СведенияОНаправленияхНаВыплату Тип Направления на Выплату]
 	
 FROM [ATK].[dbo].[РегистрыСведений.СведенияОНаправленияхНаВыплату];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату.sql
+-- End of: mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1840,6 +1930,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1874,13 +1965,18 @@ SELECT
     [СведенияОПользователяхМобильногоПриложения Клиент]
 
 FROM [ATK].[dbo].[РегистрыСведений.СведенияОПользователяхМобильногоПриложения];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения.sql
+-- End of: mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1892,6 +1988,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1920,13 +2017,18 @@ SELECT
 	[СостоянияРеструктурированныхКредитов Состояние Реструктурированного Кредита]        
  
 FROM [ATK].[dbo].[РегистрыСведений.СостоянияРеструктурированныхКредитов];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов.sql
+-- End of: mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1938,6 +2040,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -1971,13 +2074,18 @@ SELECT
 	[СотрудникиДанныеПоЗарплате Филиал]
 	
 FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате.sql
+-- End of: mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -1989,6 +2097,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2025,13 +2134,18 @@ SELECT
     [СтатусыКредитовВыданных Статус]
 	
 FROM [ATK].[dbo].[РегистрыСведений.СтатусыКредитовВыданных];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных.sql
+-- End of: mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2043,6 +2157,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2084,13 +2199,18 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
 WHERE [СуммыЗадолженностиПоПериодамПросрочки Дата] >= '2022-01-01'
 AND [СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] <> 0.0;
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки.sql
+-- End of: mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2102,6 +2222,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2188,13 +2309,18 @@ SELECT
     [УсловияПослеВыдачиКредита Ответственный]
 	
 FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВыдачиКредита];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита.sql
+-- End of: mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2206,6 +2332,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2259,13 +2386,18 @@ SELECT
 	[Дилеры Вид Кабинета]
 	
 FROM [ATK].[dbo].[Справочники.Дилеры];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Справочники.Дилеры', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Справочники.Дилеры.sql
+-- End of: mis.Bronze_Справочники.Дилеры.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2277,6 +2409,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2394,13 +2527,18 @@ SELECT
 	[Контрагенты Тестовый Контрагент]
 	
 FROM [ATK].[dbo].[Справочники.Контрагенты];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Справочники.Контрагенты', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Справочники.Контрагенты.sql
+-- End of: mis.Bronze_Справочники.Контрагенты.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2412,6 +2550,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2512,13 +2651,18 @@ SELECT
     [Кредиты Сфера Использования Кредита]
 	
 FROM [ATK].[dbo].[Справочники.Кредиты];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Справочники.Кредиты', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Справочники.Кредиты.sql
+-- End of: mis.Bronze_Справочники.Кредиты.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2530,6 +2674,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2583,13 +2728,18 @@ SELECT
     [ТипыЗадачАдминистратораКредитов Максимальное Время Выполнения]
 
 FROM dbo.[Справочники.ТипыЗадачАдминистратораКредитов];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов.sql
+-- End of: mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2601,6 +2751,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2638,13 +2789,18 @@ SELECT
     [ТипыЗадачАдминистратораКредитов_ИсторияПоказателей Максимальное Время Выполнения]
 
 FROM dbo.[Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей.sql
+-- End of: mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2656,6 +2812,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2694,13 +2851,18 @@ SELECT
     [ФилиалыКонтрагентов Адрес]
 	
 FROM [ATK].[dbo].[Справочники.ФилиалыКонтрагентов];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Справочники.ФилиалыКонтрагентов', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Справочники.ФилиалыКонтрагентов.sql
+-- End of: mis.Bronze_Справочники.ФилиалыКонтрагентов.sql
 ----------------------------------------------------------------------------------------------------
 
 GO
@@ -2712,6 +2874,7 @@ DECLARE @StartTime DATETIME = GETDATE();
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50) = 'Running';
 
+BEGIN TRY
 USE [ATK];
 GO
 
@@ -2736,13 +2899,18 @@ SELECT
     [ФинансовыеПродукты Основная Группа]
 	
 FROM [ATK].[dbo].[Справочники.ФинансовыеПродукты];
+    SET @Status = 'Success';
+END TRY
+BEGIN CATCH
+    SET @Status = 'Failed';
+END CATCH;
 
 SET @EndTime = GETDATE();
 INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
 VALUES ('mis.Bronze_Справочники.ФинансовыеПродукты', @StartTime, @EndTime, @Status);
 
 ----------------------------------------------------------------------------------------------------
--- End of:   mis.Bronze_Справочники.ФинансовыеПродукты.sql
+-- End of: mis.Bronze_Справочники.ФинансовыеПродукты.sql
 ----------------------------------------------------------------------------------------------------
 
 GO

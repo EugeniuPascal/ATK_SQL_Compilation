@@ -1,6 +1,6 @@
 ﻿-- =============================================
--- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent
--- Generated: 2026-02-23 10:05:30.619083
+-- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
+-- Generated: 2026-02-23 12:15:33.236093
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -43,8 +43,14 @@ AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @sql NVARCHAR(MAX);
+    DECLARE @StartTime DATETIME;
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50);
 
     -- Start of: mis.Gold_Dim_AppUsers.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_AppUsers]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_AppUsers];
 
@@ -75,12 +81,20 @@ SELECT
 FROM [ATK].[mis].[Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_AppUsers', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_Branch.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(N''mis.[Gold_Dim_Branch]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Branch];
 
@@ -159,12 +173,20 @@ LEFT JOIN LastSvedeniya s
     AND s.rn = 1;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_Branch', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_Clients.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
@@ -375,12 +397,20 @@ CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[Gold_Dim_Clients](IsGroup
 CREATE NONCLUSTERED INDEX IX_Clients_Phone2    ON mis.[Gold_Dim_Clients](Phone);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_Clients', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_Credits.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(N''mis.[Gold_Dim_Credits]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Credits];
 
@@ -738,12 +768,20 @@ FROM FinalData
 ;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_Credits', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_EmployeePayrollData.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_EmployeePayrollData]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_EmployeePayrollData];
 
@@ -766,12 +804,20 @@ SELECT
 FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_EmployeePayrollData', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_Employees.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_Employees]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Employees];
 
@@ -951,12 +997,20 @@ OUTER APPLY (
 ) AS firstAssigned;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_Employees', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_EmployeesHistory.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_EmployeesHistory]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_EmployeesHistory];
 
@@ -1010,12 +1064,20 @@ SELECT
 FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_EmployeesHistory', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_Events.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_Events]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_Events];
 
@@ -1098,12 +1160,20 @@ WHERE NOT EXISTS (
 );';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_Events', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_GroupMembershipPeriods.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_GroupMembershipPeriods]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_GroupMembershipPeriods];
 
@@ -1202,12 +1272,20 @@ WHERE EventType = ''Included''
 ORDER BY GroupID, PersonID, PeriodOriginal;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_GroupMembershipPeriods', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Dim_PartnersBranch.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Dim_PartnersBranch]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Dim_PartnersBranch];
 
@@ -1300,12 +1378,20 @@ LEFT JOIN ContactInfoRanked ci
       AND ci.rn = 1;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Dim_PartnersBranch', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_AdminTasks.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Fact_AdminTasks]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_AdminTasks];
 
@@ -1567,12 +1653,20 @@ FROM AllTasks
 WHERE rn = 1;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_AdminTasks', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_ArchiveDocument.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'USE [ATK]
 
 IF OBJECT_ID(''mis.[Gold_Fact_ArchiveDocument]'', ''U'') IS NOT NULL
@@ -1692,12 +1786,20 @@ LEFT JOIN [ATK].[dbo].[РегистрыСведений.Ответственны
 WHERE r.[АктыПередачиКредитныхДел Период] >= ''2023-09-01'';';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_ArchiveDocument', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_BudgetEmployees.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Fact_BudgetEmployees]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_BudgetEmployees];
 
@@ -1759,12 +1861,20 @@ LEFT JOIN [ATK].[dbo].[Документы.БюджетПоСотрудникам
 WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_BudgetEmployees', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_CerereOnline.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
@@ -2276,12 +2386,20 @@ OUTER APPLY
 ) mx;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_CerereOnline', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_Comments.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Fact_Comments]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_Comments];
 
@@ -2319,12 +2437,20 @@ FROM (SELECT DISTINCT CommentID FROM #FilteredComments) fc1;
 DROP TABLE #FilteredComments;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_Comments', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_CPD.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Fact_CPD]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_CPD];
 
@@ -2445,12 +2571,20 @@ SELECT
 FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВыдачиКредита];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_CPD', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_CreditsInShadowBranches.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_CreditsInShadowBranches]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_CreditsInShadowBranches];
 
@@ -2531,12 +2665,20 @@ SELECT
 FROM calc;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_CreditsInShadowBranches', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_WriteOffCredits.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Gold_Fact_WriteOffCredits]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Gold_Fact_WriteOffCredits];
 
@@ -2652,12 +2794,20 @@ CREATE INDEX IX_WriteOff_Final
     ON [ATK].[mis].[Gold_Fact_WriteOffCredits] ([FinalBranchID], [FinalExpertID]);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_WriteOffCredits', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_Restruct_Daily_Min.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
                                                      
@@ -2938,12 +3088,20 @@ PRINT N''🏁 Готово. Строк: '' + CONVERT(varchar(30), @cnt);
 COMMIT TRAN;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_Restruct_Daily_Min', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_Disbursement.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''tempdb..#Base'')   IS NOT NULL DROP TABLE #Base;
 IF OBJECT_ID(''tempdb..#Status'') IS NOT NULL DROP TABLE #Status;
 IF OBJECT_ID(''tempdb..#Final'')  IS NOT NULL DROP TABLE #Final;
@@ -3214,12 +3372,20 @@ DROP TABLE #Final;
 DROP TABLE #FirstDisbursementPerClient;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_Disbursement', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Gold_Fact_Sold_Par.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 DECLARE @DateFrom DATE = ''2024-01-01'';
@@ -3424,12 +3590,20 @@ ON mis.[Gold_Fact_Sold_Par];
 DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR, #MaxDays;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Gold_Fact_Sold_Par', @StartTime, @EndTime, @Status);
 
     -- Start of: V2__inc_Gold_Dim_Event_InProgress.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'INSERT INTO mis.[Gold_Dim_Event_InProgress]
 (
     EventDate,
@@ -3495,12 +3669,20 @@ WHERE NOT EXISTS (
       );';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('V2__inc_Gold_Dim_Event_InProgress', @StartTime, @EndTime, @Status);
 
     -- Start of: V2__inc_Gold_Dim_Event_Responsible.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'INSERT INTO mis.[Gold_Dim_Event_Responsible]
 (
     EventDocumentID,
@@ -3545,12 +3727,20 @@ WHERE NOT EXISTS (
 );';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('V2__inc_Gold_Dim_Event_Responsible', @StartTime, @EndTime, @Status);
 
     -- Start of: V2__inc_Gold_Dim_Limits.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N';WITH LatestGroups AS
 (
     SELECT
@@ -3693,12 +3883,20 @@ WHERE d.[РегистрацияЛимита Проведен] = ''01''
   );';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('V2__inc_Gold_Dim_Limits', @StartTime, @EndTime, @Status);
 
     -- Start of: V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
@@ -3941,10 +4139,15 @@ FROM #Joined j;
 PRINT N''🏁 Incremental load completed successfully'';';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('V3__inc_Gold_Fact_Restruct_Daily_Sold_Par', @StartTime, @EndTime, @Status);
 
 END
 GO

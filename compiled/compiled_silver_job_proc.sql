@@ -1,6 +1,6 @@
 ﻿-- =============================================
--- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent
--- Generated: 2026-02-23 10:05:28.316303
+-- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent with Logging
+-- Generated: 2026-02-23 12:15:31.396256
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 14
 --   mis.Silver_Employee_User.sql
@@ -32,8 +32,14 @@ AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @sql NVARCHAR(MAX);
+    DECLARE @StartTime DATETIME;
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50);
 
     -- Start of: mis.Silver_Employee_User.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Silver_Employee_User]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Silver_Employee_User];
 
@@ -107,12 +113,20 @@ LEFT JOIN [ATK].[dbo].[Справочники.Пользователи] u
 WHERE u.[Пользователи Пометка Удаления] <> ''01'';';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Employee_User', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_CommiteeProtocol.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Silver_CommiteeProtocol]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Silver_CommiteeProtocol];
 
@@ -165,12 +179,20 @@ SELECT
 FROM [ATK].[mis].[Bronze_Документы.ПротоколКомитета];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_CommiteeProtocol', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_CerereOnline_base.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 IF OBJECT_ID(''mis.[Silver_CerereOnline_base]'', ''U'') IS NOT NULL
@@ -377,12 +399,20 @@ OUTER APPLY (
 WHERE c.[Контрагенты Тестовый Контрагент] = 0;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_CerereOnline_base', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_Restruct_SCD.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 IF OBJECT_ID(''mis.Silver_Restruct_SCD'',''U'') IS NULL
@@ -446,12 +476,20 @@ SELECT
 FROM rng;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Restruct_SCD', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_RestructState_SCD.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 IF OBJECT_ID(''mis.Silver_RestructState_SCD'',''U'') IS NULL
@@ -506,12 +544,20 @@ SELECT
 FROM rng;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_RestructState_SCD', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_Restruct_Merged_SCD.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 
@@ -628,12 +674,20 @@ BEGIN
 END;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Restruct_Merged_SCD', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_Client_UnhealedFlag.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 IF OBJECT_ID(''mis.Silver_Client_UnhealedFlag'', ''U'') IS NOT NULL
@@ -686,12 +740,20 @@ WHERE m.ClientID IS NOT NULL
 GROUP BY m.ClientID, d.SoldDate;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Client_UnhealedFlag', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_Resp_SCD.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 
@@ -802,12 +864,20 @@ OUTER APPLY
 DROP TABLE #RespBase;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Resp_SCD', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_Stages_SCD.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 
@@ -915,12 +985,20 @@ BEGIN
 END;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Stages_SCD', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_SCD_GroupMembershipPeriods.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'IF OBJECT_ID(''mis.[Silver_SCD_GroupMembershipPeriods]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Silver_SCD_GroupMembershipPeriods];
 
@@ -1010,12 +1088,20 @@ WHERE EventType = ''Included''
 ORDER BY GroupID, PersonName, PeriodOriginal;';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_SCD_GroupMembershipPeriods', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_Sold_Owner.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 IF OBJECT_ID(''mis.[Silver_Sold_Owner]'', ''U'') IS NOT NULL
@@ -1073,12 +1159,20 @@ ON [mis].[Silver_Sold_Owner] (CreditID, SoldDate)
 INCLUDE (ClientID, SoldAmount, GroupOwner, BranchID);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Sold_Owner', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_Limits.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 IF OBJECT_ID(N''mis.[Silver_Limits]'', ''U'') IS NOT NULL
@@ -1209,12 +1303,20 @@ CREATE UNIQUE CLUSTERED INDEX CX_Silver_Limits
 ON mis.[Silver_Limits] ([Limit ID]);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Limits', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_Conditions_After_Disb.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 
 IF OBJECT_ID(''mis.[Silver_Conditions_After_Disb]'', ''U'') IS NOT NULL
@@ -1436,12 +1538,20 @@ CREATE INDEX IX_ConditionsAfterDisb_Last_ClientID
 ON mis.[Silver_Conditions_After_Disb] ([Client ID]);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_Conditions_After_Disb', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Silver_CPD_TaskDays.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
@@ -1617,10 +1727,15 @@ SELECT ISNULL(@ClientIDFilter,''(ALL)'') AS ClientIDFilter, COUNT(*) AS CntTaskD
 FROM [mis].[Silver_CPD_TaskDays];';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
     END TRY
     BEGIN CATCH
+        SET @Status = 'Failed';
         THROW;
     END CATCH;
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Silver_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Silver_CPD_TaskDays', @StartTime, @EndTime, @Status);
 
 END
 GO

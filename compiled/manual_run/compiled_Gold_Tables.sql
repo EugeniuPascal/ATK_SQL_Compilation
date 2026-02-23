@@ -1,5 +1,5 @@
--- Compiled SQL bundle (Gold) with Logging (Safe Version)
--- Generated: 2026-02-23 16:25:15
+-- Compiled SQL bundle (Gold) with Logging (Safe EXEC version)
+-- Generated: 2026-02-23 16:28:16
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -34,13 +34,10 @@ SET NOCOUNT ON;
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_AppUsers.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -73,17 +70,17 @@ BEGIN
             [СведенияОПользователяхМобильногоПриложения Клиент]          AS App_User_ClientName
         
         FROM [ATK].[mis].[Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения];
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_AppUsers', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_AppUsers'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_AppUsers.sql
@@ -92,13 +89,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_Branch.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -179,17 +173,17 @@ BEGIN
         LEFT JOIN LastSvedeniya s
             ON f.[Филиалы ID] = s.[СведенияОФилиалах Филиал ID]
             AND s.rn = 1;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Branch', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_Branch'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_Branch.sql
@@ -198,13 +192,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_Clients.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -427,17 +418,17 @@ BEGIN
         CREATE NONCLUSTERED INDEX IX_Clients_IsDeleted ON mis.[Gold_Dim_Clients](IsDeleted) INCLUDE (ClientName);
         CREATE NONCLUSTERED INDEX IX_Clients_Group     ON mis.[Gold_Dim_Clients](IsGroupOwner, GroupID);
         CREATE NONCLUSTERED INDEX IX_Clients_Phone2    ON mis.[Gold_Dim_Clients](Phone);
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Clients', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_Clients'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_Clients.sql
@@ -446,13 +437,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_Credits.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -813,17 +801,17 @@ BEGIN
         SELECT *
         FROM FinalData
         ;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Credits', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_Credits'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_Credits.sql
@@ -832,13 +820,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_EmployeePayrollData.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -863,17 +848,17 @@ BEGIN
             
         
         FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате];
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_EmployeePayrollData', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_EmployeePayrollData'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_EmployeePayrollData.sql
@@ -882,13 +867,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_Employees.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -1070,17 +1052,17 @@ BEGIN
             WHERE b.[СотрудникиДанныеПоЗарплате Сотрудник ID] = e.[Сотрудники ID]
               AND b.[СотрудникиДанныеПоЗарплате Вид Должности ID] = lastPos.[СотрудникиДанныеПоЗарплате Вид Должности ID]
         ) AS firstAssigned;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Employees', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_Employees'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_Employees.sql
@@ -1089,13 +1071,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_EmployeesHistory.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -1151,17 +1130,17 @@ BEGIN
                 CONVERT(DATETIME, '2222-01-01', 120)
             )                                                           AS DateTo
         FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным];
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_EmployeesHistory', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_EmployeesHistory'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_EmployeesHistory.sql
@@ -1170,13 +1149,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_Events.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -1261,17 +1237,17 @@ BEGIN
             FROM mis.[Gold_Dim_Events] g
             WHERE g.Event_ID = ed.Event_ID
         );
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Events', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_Events'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_Events.sql
@@ -1280,13 +1256,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_GroupMembershipPeriods.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -1387,17 +1360,17 @@ BEGIN
         WHERE EventType = 'Included'
           AND DeletionFlag = '00'
         ORDER BY GroupID, PersonID, PeriodOriginal;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_GroupMembershipPeriods', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_GroupMembershipPeriods'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_GroupMembershipPeriods.sql
@@ -1406,13 +1379,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_PartnersBranch.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -1507,17 +1477,17 @@ BEGIN
         LEFT JOIN ContactInfoRanked ci
                ON ci.ObjectID = k.[Контрагенты ID]
               AND ci.rn = 1;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_PartnersBranch', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Dim_PartnersBranch'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_PartnersBranch.sql
@@ -1526,13 +1496,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_AdminTasks.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -1796,17 +1763,17 @@ BEGIN
             [НаправлениеНаВыплату ID], [НаправлениеНаВыплату Категория Риска AML]
         FROM AllTasks
         WHERE rn = 1;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_AdminTasks', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_AdminTasks'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_AdminTasks.sql
@@ -1815,13 +1782,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_ArchiveDocument.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK]
@@ -1941,17 +1905,17 @@ BEGIN
                ON o.[ОтветственныеПоКредитнымДелам ID] = r.[АктыПередачиКредитныхДел ID]
                AND o.[ОтветственныеПоКредитнымДелам Кредит ID] = r.[АктыПередачиКредитныхДел Кредит ID]
         WHERE r.[АктыПередачиКредитныхДел Период] >= '2023-09-01';
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_ArchiveDocument', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_ArchiveDocument'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_ArchiveDocument.sql
@@ -1960,13 +1924,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_BudgetEmployees.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -2030,17 +1991,17 @@ BEGIN
         LEFT JOIN [ATK].[dbo].[Документы.БюджетПоСотрудникам] d
             ON s.[БюджетПоСотрудникам ID] = d.[БюджетПоСотрудникам ID]
         WHERE d.[БюджетПоСотрудникам Дата] >= '2023-09-01';
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_BudgetEmployees', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_BudgetEmployees'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_BudgetEmployees.sql
@@ -2049,13 +2010,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_CerereOnline.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         --------------------------------------------------------------------------------
@@ -2570,17 +2528,17 @@ BEGIN
                      ELSE mis.fn_WorkMinutesSigned(d.Dep, v.VoteDate, 8*60, 20*60)
                 END
         ) mx;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_CerereOnline', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_CerereOnline'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_CerereOnline.sql
@@ -2589,13 +2547,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_Comments.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -2635,17 +2590,17 @@ BEGIN
         FROM (SELECT DISTINCT CommentID FROM #FilteredComments) fc1;
         
         DROP TABLE #FilteredComments;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_Comments', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_Comments'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_Comments.sql
@@ -2654,13 +2609,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_CPD.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -2783,17 +2735,17 @@ BEGIN
             [УсловияПослеВыдачиКредита Ответственный]
         	
         FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВыдачиКредита];
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_CPD', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_CPD'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_CPD.sql
@@ -2802,13 +2754,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_CreditsInShadowBranches.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -2891,17 +2840,17 @@ BEGIN
               CreditEmployee,
               DateTo
         FROM calc;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_CreditsInShadowBranches', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_CreditsInShadowBranches'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_CreditsInShadowBranches.sql
@@ -2910,13 +2859,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_WriteOffCredits.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -3034,17 +2980,17 @@ BEGIN
         
         CREATE INDEX IX_WriteOff_Final 
             ON [ATK].[mis].[Gold_Fact_WriteOffCredits] ([FinalBranchID], [FinalExpertID]);
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_WriteOffCredits', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_WriteOffCredits'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_WriteOffCredits.sql
@@ -3053,13 +2999,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_Restruct_Daily_Min.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -3341,17 +3284,17 @@ BEGIN
         PRINT N'🏁 Готово. Строк: ' + CONVERT(varchar(30), @cnt);
         
         COMMIT TRAN;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_Restruct_Daily_Min', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_Restruct_Daily_Min'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_Restruct_Daily_Min.sql
@@ -3360,13 +3303,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_Disbursement.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -3660,17 +3600,17 @@ BEGIN
         DROP TABLE #Status;
         DROP TABLE #Final;
         DROP TABLE #FirstDisbursementPerClient;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_Disbursement', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_Disbursement'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_Disbursement.sql
@@ -3679,13 +3619,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Fact_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -3891,17 +3828,17 @@ BEGIN
         
         -- Drop temp tables
         DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR, #MaxDays;
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_Sold_Par', @StartTime, @EndTime, @Status);
-END
+    VALUES (''mis.Gold_Fact_Sold_Par'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Fact_Sold_Par.sql
@@ -3910,13 +3847,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: V2__inc_Gold_Dim_Event_InProgress.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         INSERT INTO mis.[Gold_Dim_Event_InProgress]
@@ -3982,17 +3916,17 @@ BEGIN
               AND g.EventDate = e.[СведенияОСобытияхВРаботе Дата События]
               AND g.ResponsibleID = e.[СведенияОСобытияхВРаботе Ответственный ID]
               );
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('V2__inc_Gold_Dim_Event_InProgress', @StartTime, @EndTime, @Status);
-END
+    VALUES (''V2__inc_Gold_Dim_Event_InProgress'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: V2__inc_Gold_Dim_Event_InProgress.sql
@@ -4001,13 +3935,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: V2__inc_Gold_Dim_Event_Responsible.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         INSERT INTO mis.[Gold_Dim_Event_Responsible]
@@ -4052,17 +3983,17 @@ BEGIN
             WHERE g.EventDocumentID = e.[УстановкаОтветственныхПоКредитамИКлиентам ID]
               AND g.EventRowNumber  = e.[УстановкаОтветственныхПоКредитамИКлиентам.События Номер Строки]
         );
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('V2__inc_Gold_Dim_Event_Responsible', @StartTime, @EndTime, @Status);
-END
+    VALUES (''V2__inc_Gold_Dim_Event_Responsible'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: V2__inc_Gold_Dim_Event_Responsible.sql
@@ -4071,13 +4002,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: V2__inc_Gold_Dim_Limits.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         ;WITH LatestGroups AS
@@ -4220,17 +4148,17 @@ BEGIN
               FROM mis.[Gold_Dim_Limits] gl
               WHERE gl.LimitRegistrationID = d.[РегистрацияЛимита ID]
           );
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('V2__inc_Gold_Dim_Limits', @StartTime, @EndTime, @Status);
-END
+    VALUES (''V2__inc_Gold_Dim_Limits'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: V2__inc_Gold_Dim_Limits.sql
@@ -4239,13 +4167,10 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
-BEGIN
+EXEC(N'
     DECLARE @StartTime DATETIME = GETDATE();
     DECLARE @EndTime DATETIME;
-    DECLARE @Status NVARCHAR(50) = 'Running';
-
-    -- Drop temp tables if they exist
-    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
+    DECLARE @Status NVARCHAR(50) = ''Running'';
 
     BEGIN TRY
         USE [ATK];
@@ -4490,17 +4415,17 @@ BEGIN
         FROM #Joined j;
         
         PRINT N'🏁 Incremental load completed successfully';
-        SET @Status = 'Success';
+        SET @Status = ''Success'';
     END TRY
     BEGIN CATCH
-        SET @Status = 'Failed';
+        SET @Status = ''Failed'';
         THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('V3__inc_Gold_Fact_Restruct_Daily_Sold_Par', @StartTime, @EndTime, @Status);
-END
+    VALUES (''V3__inc_Gold_Fact_Restruct_Daily_Sold_Par'', @StartTime, @EndTime, @Status);
+');
 
 ----------------------------------------------------------------------------------------------------
 -- End of: V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql

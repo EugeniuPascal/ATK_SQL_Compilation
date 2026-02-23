@@ -1,4 +1,4 @@
-# compile_gold_tables_folder_with_log_final_safe.py
+# compile_gold_tables_folder_with_log_final_safe_exec.py
 from pathlib import Path
 from datetime import datetime
 import re
@@ -55,7 +55,7 @@ def read_text_with_fallback(p: Path) -> str | None:
 # --------------------------------------------------------------------
 # Main compilation
 # --------------------------------------------------------------------
-def compile_sql_strict_safe():
+def compile_sql_strict_safe_exec():
     sql_files = []
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
@@ -64,8 +64,9 @@ def compile_sql_strict_safe():
         else:
             print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
+    # ---- header for compiled file ----
     header = (
-        f"-- Compiled SQL bundle (Gold) with Logging (Safe Version)\n"
+        f"-- Compiled SQL bundle (Gold) with Logging (Safe EXEC version)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join([f.name for f in sql_files]) + "\n"
@@ -83,43 +84,37 @@ def compile_sql_strict_safe():
             if content:
                 # remove GO lines
                 content = GO_RE.sub("", content)
+                indented_content = "\n        ".join(content.rstrip().splitlines())
+            else:
+                indented_content = "-- Could not decode file"
 
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
 
-            # BEGIN block per file to isolate variables
-            out.write("BEGIN\n")
-            out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
-            out.write("    DECLARE @EndTime DATETIME;\n")
-            out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n\n")
+            # ---- Wrap file in EXEC() to isolate variables ----
+            exec_sql = (
+                "EXEC(N'\n"
+                "    DECLARE @StartTime DATETIME = GETDATE();\n"
+                "    DECLARE @EndTime DATETIME;\n"
+                "    DECLARE @Status NVARCHAR(50) = ''Running'';\n\n"
+                "    BEGIN TRY\n"
+                f"        {indented_content}\n"
+                "        SET @Status = ''Success'';\n"
+                "    END TRY\n"
+                "    BEGIN CATCH\n"
+                "        SET @Status = ''Failed'';\n"
+                "        THROW;\n"
+                "    END CATCH;\n\n"
+                "    SET @EndTime = GETDATE();\n"
+                f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n"
+                f"    VALUES (''{table_name}'', @StartTime, @EndTime, @Status);\n"
+                "');\n\n"
+            )
 
-            # Drop temp tables to avoid conflicts
-            out.write("    -- Drop temp tables if they exist\n")
-            out.write("    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;\n\n")
-
-            # TRY/CATCH block
-            out.write("    BEGIN TRY\n")
-            if content:
-                indented_content = "\n        ".join(content.rstrip().splitlines())
-                out.write(f"        {indented_content}\n")
-            else:
-                out.write("        -- Could not decode file\n")
-            out.write("        SET @Status = 'Success';\n")
-            out.write("    END TRY\n")
-            out.write("    BEGIN CATCH\n")
-            out.write("        SET @Status = 'Failed';\n")
-            out.write("        THROW;\n")
-            out.write("    END CATCH;\n\n")
-
-            # Insert log
-            out.write("    SET @EndTime = GETDATE();\n")
-            out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
-            out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
-            out.write("END\n\n")  # end BEGIN
-
+            out.write(exec_sql)
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
 
     print(f"✅ Compiled Gold SQL file with logging created at: {OUTPUT}")
 
 
 if __name__ == "__main__":
-    compile_sql_strict_safe()
+    compile_sql_strict_safe_exec()

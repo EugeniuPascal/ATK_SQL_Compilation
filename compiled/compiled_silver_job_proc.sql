@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent with Logging
--- Generated: 2026-02-23 15:02:20.833882
+-- Generated: 2026-02-23 15:03:04.474563
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 2
 --   mis.Silver_Employee_User.sql

@@ -1,3 +1,4 @@
+# compile_gold_tables_job_proc_idempotent_with_logging_v2.py
 import re
 import logging
 from datetime import datetime
@@ -74,7 +75,6 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
-    # ---- Ordered list of Gold files ----
     SQL_ORDER = [
         "mis.Gold_Dim_AppUsers.sql",
         "mis.Gold_Dim_Branch.sql",
@@ -103,20 +103,12 @@ try:
         "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
     ]
 
-    # Build final ordered list
-    sql_files = []
-    for fname in SQL_ORDER:
-        fpath = SOURCE_FOLDER / fname
-        if fpath.exists():
-            sql_files.append(fpath)
-        else:
-            logging.warning(f"File listed in SQL_ORDER but not found: {fpath}")
-            print(f"⚠ Warning: file listed but not found -> {fpath}")
-
+    sql_files = [SOURCE_FOLDER / f for f in SQL_ORDER if (SOURCE_FOLDER / f).exists()]
     logging.info(f"Total SQL files to process: {len(sql_files)}")
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
+        # Header
         f_out.write("-- =============================================\n")
         f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
@@ -127,26 +119,28 @@ try:
         f_out.write("-- Requires: SQL Server 2016 SP1+ for CREATE OR ALTER\n")
         f_out.write("-- =============================================\n\n")
 
+        # Procedure header
         f_out.write(f"USE [{DB_NAME}];\nGO\n\n")
         f_out.write(f"IF OBJECT_ID('{DEFAULT_SCHEMA}.usp_GoldTables', 'P') IS NOT NULL\n")
         f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_GoldTables;\nGO\n\n")
         f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_GoldTables\nAS\nBEGIN\n")
         f_out.write("    SET NOCOUNT ON;\n")
-        f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
+        f_out.write("    DECLARE @sql NVARCHAR(MAX);\n")
+        f_out.write("    DECLARE @StartTime DATETIME;\n")
+        f_out.write("    DECLARE @EndTime DATETIME;\n")
+        f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
 
-        # ---- Process each file with logging ----
         for sf in sql_files:
             logging.info(f"Processing file: {sf.name}")
-            f_out.write(f"    -- Start of: {sf.name}\n")
-            f_out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
-            f_out.write("    DECLARE @EndTime DATETIME;\n")
-            f_out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n")
-
             with sf.open("r", encoding="utf-8-sig") as f_in:
                 content = f_in.read()
                 transformed = make_idempotent(content)
                 safe = transformed.replace("'", "''")
                 if safe.strip():
+                    f_out.write(f"    -- Start of: {sf.name}\n")
+                    f_out.write("    SET @StartTime = GETDATE();\n")
+                    f_out.write("    SET @EndTime = NULL;\n")
+                    f_out.write("    SET @Status = 'Running';\n")
                     f_out.write("    SET @sql = N'" + safe + "';\n")
                     f_out.write("    BEGIN TRY\n")
                     f_out.write("        EXEC sys.sp_executesql @sql;\n")
@@ -154,11 +148,11 @@ try:
                     f_out.write("    END TRY\n")
                     f_out.write("    BEGIN CATCH\n")
                     f_out.write("        SET @Status = 'Failed';\n")
+                    f_out.write("        THROW;\n")
                     f_out.write("    END CATCH;\n")
                     f_out.write("    SET @EndTime = GETDATE();\n")
-                    f_out.write(f"    INSERT INTO {LOG_TABLE} (ProcedureName, TableName, StartTime, EndTime, Status)\n")
-                    f_out.write(f"    VALUES ('usp_GoldTables', '{sf.stem}', @StartTime, @EndTime, @Status);\n")
-                    f_out.write("    IF @Status = 'Failed' THROW;\n\n")
+                    f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
+                    f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
 
         f_out.write("END\nGO\n")
 

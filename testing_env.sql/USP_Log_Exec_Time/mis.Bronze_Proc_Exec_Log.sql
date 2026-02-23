@@ -1,4 +1,4 @@
-CREATE TABLE mis.[Silver_Proc_Exec_Log]
+CREATE TABLE mis.[Bronze_Proc_Exec_Log]
 (
     TableName NVARCHAR(255),
     StartTime DATETIME,

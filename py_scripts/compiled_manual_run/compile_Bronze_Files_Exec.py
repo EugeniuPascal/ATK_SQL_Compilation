@@ -1,7 +1,8 @@
-# compile_bronze_tables_folder_with_log.py
+# compile_bronze_tables_folder_with_log_fixed.py
 from pathlib import Path
 from datetime import datetime
 
+# ---- Settings ----
 MAIN_DIR = Path(r"C:\ATK_Project\sql_scripts\Bronze")
 OUTPUT   = Path(r"C:\ATK_Project\compiled\manual_run\compiled_Bronze_Tables.sql")
 LOG_TABLE = "mis.Bronze_Proc_Exec_Log"
@@ -9,6 +10,9 @@ LOG_TABLE = "mis.Bronze_Proc_Exec_Log"
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
+# --------------------------------------------------------------------
+# Helpers
+# --------------------------------------------------------------------
 def read_text_with_fallback(p: Path) -> str | None:
     """Try multiple encodings to safely read SQL text files."""
     for enc in FALLBACK_ENCODINGS:
@@ -18,8 +22,11 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
+# --------------------------------------------------------------------
+# Main compilation
+# --------------------------------------------------------------------
 def compile_sql():
-    """Compile all .sql files in MAIN_DIR into one bundle, sorted alphabetically, with logging."""
+    """Compile all .sql files in MAIN_DIR into one bundle, sorted alphabetically, with logging into Bronze table."""
     sql_files = sorted(
         [f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"],
         key=lambda p: p.name.lower()
@@ -40,22 +47,29 @@ def compile_sql():
         for f in sql_files:
             content = read_text_with_fallback(f)
             table_name = f.stem
+
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
-            
-            # Start logging variables in SQL
+
+            # Declare logging variables per file
             out.write("DECLARE @StartTime DATETIME = GETDATE();\n")
             out.write("DECLARE @EndTime DATETIME;\n")
             out.write("DECLARE @Status NVARCHAR(50) = 'Running';\n\n")
 
-            # Insert actual SQL file content
-            out.write((content.rstrip() if content else "-- Could not decode file") + "\n\n")
+            # Wrap actual SQL execution in TRY/CATCH to log success/failure
+            out.write("BEGIN TRY\n")
+            out.write((content.rstrip() if content else "-- Could not decode file") + "\n")
+            out.write("    SET @Status = 'Success';\n")
+            out.write("END TRY\n")
+            out.write("BEGIN CATCH\n")
+            out.write("    SET @Status = 'Failed';\n")
+            out.write("END CATCH;\n\n")
 
-            # End time and logging insert
+            # Capture end time and insert log
             out.write("SET @EndTime = GETDATE();\n")
             out.write(f"INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
             out.write(f"VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n\n")
 
-            out.write(f"{DIV}\n-- End of:   {f.name}\n{DIV}\n\nGO\n\n")
+            out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\nGO\n\n")
 
     print(f"✅ Compiled SQL file with logging created at: {OUTPUT}")
 

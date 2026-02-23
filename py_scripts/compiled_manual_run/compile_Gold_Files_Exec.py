@@ -1,7 +1,6 @@
-# compile_gold_tables_folder_with_log_final_safe_exec.py
+# compile_gold_tables_folder_strict_with_log.py
 from pathlib import Path
 from datetime import datetime
-import re
 
 # ---- configure your folder ----
 MAIN_DIR  = Path(r"C:\ATK_Project\sql_scripts\Gold")
@@ -40,9 +39,6 @@ SQL_ORDER = [
     "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
 ]
 
-# ---- remove GO lines ----
-GO_RE = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
-
 # ---- helper to read files with fallback encodings ----
 def read_text_with_fallback(p: Path) -> str | None:
     for enc in FALLBACK_ENCODINGS:
@@ -52,10 +48,7 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
-# --------------------------------------------------------------------
-# Main compilation
-# --------------------------------------------------------------------
-def compile_sql_strict_safe_exec():
+def compile_sql_with_logging():
     sql_files = []
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
@@ -64,9 +57,8 @@ def compile_sql_strict_safe_exec():
         else:
             print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
-    # ---- header for compiled file ----
     header = (
-        f"-- Compiled SQL bundle (Gold) with Logging (Safe EXEC version)\n"
+        f"-- Compiled Gold SQL bundle (strict order + logging)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join([f.name for f in sql_files]) + "\n"
@@ -81,40 +73,31 @@ def compile_sql_strict_safe_exec():
             content = read_text_with_fallback(f)
             table_name = f.stem
 
-            if content:
-                # remove GO lines
-                content = GO_RE.sub("", content)
-                indented_content = "\n        ".join(content.rstrip().splitlines())
-            else:
-                indented_content = "-- Could not decode file"
-
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
 
-            # ---- Wrap file in EXEC() to isolate variables ----
-            exec_sql = (
-                "EXEC(N'\n"
-                "    DECLARE @StartTime DATETIME = GETDATE();\n"
-                "    DECLARE @EndTime DATETIME;\n"
-                "    DECLARE @Status NVARCHAR(50) = ''Running'';\n\n"
-                "    BEGIN TRY\n"
-                f"        {indented_content}\n"
-                "        SET @Status = ''Success'';\n"
-                "    END TRY\n"
-                "    BEGIN CATCH\n"
-                "        SET @Status = ''Failed'';\n"
-                "        THROW;\n"
-                "    END CATCH;\n\n"
-                "    SET @EndTime = GETDATE();\n"
-                f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n"
-                f"    VALUES (''{table_name}'', @StartTime, @EndTime, @Status);\n"
-                "');\n\n"
-            )
+            # Wrap in BEGIN/TRY/CATCH with logging
+            out.write("BEGIN\n")
+            out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
+            out.write("    DECLARE @EndTime DATETIME;\n")
+            out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n\n")
+            out.write("    BEGIN TRY\n")
+            out.write((content.rstrip() if content else "        -- Could not decode file") + "\n")
+            out.write("        SET @Status = 'Success';\n")
+            out.write("    END TRY\n")
+            out.write("    BEGIN CATCH\n")
+            out.write("        SET @Status = 'Failed';\n")
+            out.write("        THROW;\n")
+            out.write("    END CATCH;\n\n")
+            out.write("    SET @EndTime = GETDATE();\n")
+            out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
+            out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
+            out.write("END\n\n")
 
-            out.write(exec_sql)
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
+            out.write("GO\n\n")  # batch separator
 
     print(f"✅ Compiled Gold SQL file with logging created at: {OUTPUT}")
 
 
 if __name__ == "__main__":
-    compile_sql_strict_safe_exec()
+    compile_sql_with_logging()

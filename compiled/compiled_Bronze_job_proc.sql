@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent with Logging
--- Generated: 2026-02-23 09:16:18.753383
+-- Generated: 2026-02-23 10:05:24.493604
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files included: 28
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -238,12 +238,14 @@ FROM [ATK].[dbo].[Документы.ЗаявкаНаКредит];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.ЗаявкаНаКредит', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.ЗаявкаНаКредит', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Документы.НаправлениеНаВыплату.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -343,12 +345,14 @@ WHERE lv.rn = 1;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.НаправлениеНаВыплату', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.НаправлениеНаВыплату', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -486,12 +490,14 @@ FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗ�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -534,12 +540,14 @@ FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗ�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Документы.ПротоколКомитета.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1149,12 +1157,14 @@ FROM [ATK].[dbo].[Документы.ПротоколКомитета];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.ПротоколКомитета', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.ПротоколКомитета', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Документы.УстановкаДанныхКредита.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1192,12 +1202,14 @@ WHERE [УстановкаДанныхКредита Проведен] = 01;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.УстановкаДанныхКредита', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Документы.УстановкаДанныхКредита', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1324,12 +1336,14 @@ FROM [ATK].[dbo].[Задачи.ЗадачаАдминистратораКред�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Задачи.ЗадачаАдминистратораКредитов', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Задачи.ЗадачаАдминистратораКредитов', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1384,12 +1398,14 @@ FROM [ATK].[dbo].[Задачи.ЗадачаАдминистратораКред�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1427,12 +1443,14 @@ FROM [ATK].[dbo].[РегистрыСведений.АнулированныеК�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.Валюта.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1475,12 +1493,14 @@ FROM [ATK].[dbo].[РегистрыСведений.Валюта];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.Валюта', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.Валюта', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1526,12 +1546,14 @@ FROM [ATK].[dbo].[РегистрыСведений.ДанныеКредитов�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1586,12 +1608,14 @@ FROM [ATK].[dbo].[РегистрыСведений.КредитыВТеневы�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1646,12 +1670,14 @@ FROM [ATK].[dbo].[РегистрыСведений.ОтветственныеП�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.РеструктурированныеКредиты.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1688,12 +1714,14 @@ FROM [ATK].[dbo].[РегистрыСведений.Реструктуриров�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.РеструктурированныеКредиты', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.РеструктурированныеКредиты', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1748,12 +1776,14 @@ FROM [ATK].[dbo].[РегистрыСведений.СведенияОНапра�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1794,12 +1824,14 @@ FROM [ATK].[dbo].[РегистрыСведений.СведенияОПольз�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1834,12 +1866,14 @@ FROM [ATK].[dbo].[РегистрыСведений.СостоянияРестр�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1879,12 +1913,14 @@ FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанн�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1927,12 +1963,14 @@ FROM [ATK].[dbo].[РегистрыСведений.СтатусыКредито�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -1980,12 +2018,14 @@ AND [СуммыЗадолженностиПоПериодамПросрочки 
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -2078,12 +2118,14 @@ FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВы�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Справочники.Дилеры.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -2143,12 +2185,14 @@ FROM [ATK].[dbo].[Справочники.Дилеры];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.Дилеры', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.Дилеры', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Справочники.Контрагенты.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -2272,12 +2316,14 @@ FROM [ATK].[dbo].[Справочники.Контрагенты];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.Контрагенты', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.Контрагенты', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Справочники.Кредиты.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -2383,12 +2429,14 @@ FROM [ATK].[dbo].[Справочники.Кредиты];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.Кредиты', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.Кредиты', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -2447,12 +2495,14 @@ FROM dbo.[Справочники.ТипыЗадачАдминистратора�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -2495,12 +2545,14 @@ FROM dbo.[Справочники.ТипыЗадачАдминистратора�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Справочники.ФилиалыКонтрагентов.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -2545,12 +2597,14 @@ FROM [ATK].[dbo].[Справочники.ФилиалыКонтрагентов]
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.ФилиалыКонтрагентов', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.ФилиалыКонтрагентов', @StartTime, @EndTime, @Status);
 
     -- Start of: mis.Bronze_Справочники.ФинансовыеПродукты.sql
     DECLARE @StartTime DATETIME = GETDATE();
@@ -2581,12 +2635,14 @@ FROM [ATK].[dbo].[Справочники.ФинансовыеПродукты];'
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
+    VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.ФинансовыеПродукты', @StartTime, @EndTime, @Status);
+
+    IF @Status = 'Failed'
         THROW;
-    END CATCH
-    FINALLY
-        SET @EndTime = GETDATE();
-        INSERT INTO mis.Bronze_Proc_Exec_Log (ProcedureName, TableName, StartTime, EndTime, Status)
-        VALUES ('usp_BronzeTables', 'mis.Bronze_Справочники.ФинансовыеПродукты', @StartTime, @EndTime, @Status);
 
 END
 GO

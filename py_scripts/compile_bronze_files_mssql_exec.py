@@ -1,4 +1,4 @@
-# compile_bronze_tables_job_proc_idempotent_with_logging_fixed_v2.py
+# compile_bronze_tables_job_proc_idempotent_with_logging_fixed_v3.py
 import re
 import logging
 from datetime import datetime
@@ -130,8 +130,8 @@ try:
 
                         # Logging always runs
                         f_out.write("    SET @EndTime = GETDATE();\n")
-                        f_out.write(f"    INSERT INTO {LOG_TABLE} (ProcedureName, TableName, StartTime, EndTime, Status)\n")
-                        f_out.write(f"    VALUES ('usp_BronzeTables', '{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
+                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
 
                 logging.info(f"Finished file: {sf.name}")
             except Exception as e:

@@ -1,11 +1,8 @@
 CREATE TABLE mis.[Bronze_Proc_Exec_Log]
 (
-    ProcedureName NVARCHAR(255),
     TableName NVARCHAR(255),
     StartTime DATETIME,
     EndTime DATETIME,
-    Status NVARCHAR(50), -- 'Running', 'Success', 'Failed'
-
     -- Computed column for execution duration in h, min, sec
     Duration AS (
         CASE 
@@ -20,7 +17,6 @@ CREATE TABLE mis.[Bronze_Proc_Exec_Log]
                 CAST(DATEDIFF(SECOND, StartTime, EndTime) % 60 AS NVARCHAR(10)) + 'sec'
         END
     ) PERSISTED,
+	Status NVARCHAR(50) -- 'Running', 'Success', 'Failed'
 
-    -- Automatic insertion timestamp
-    CreatedAt DATETIME NOT NULL DEFAULT GETDATE()
 );

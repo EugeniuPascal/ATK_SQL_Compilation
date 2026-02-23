@@ -40,9 +40,6 @@ SQL_ORDER = [
     "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
 ]
 
-# ---- remove GO lines ----
-GO_RE = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
-
 # ---- helper to read files with fallback encodings ----
 def read_text_with_fallback(p: Path) -> str | None:
     for enc in FALLBACK_ENCODINGS:
@@ -52,11 +49,8 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
-# --------------------------------------------------------------------
-# Main compilation
-# --------------------------------------------------------------------
 def compile_sql_strict():
-    # Build final list strictly from SQL_ORDER
+    # ---- build final processing list strictly from SQL_ORDER ----
     sql_files = []
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
@@ -65,16 +59,13 @@ def compile_sql_strict():
         else:
             print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
+    # ---- header for compiled file ----
     header = (
-        f"-- Compiled SQL bundle (Gold) with Logging\n"
+        f"-- Compiled SQL bundle (strict order)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join([f.name for f in sql_files]) + "\n"
         f"{DIV}\n\nSET NOCOUNT ON;\n\n"
-        f"DECLARE @StartTime DATETIME;\n"
-        f"DECLARE @EndTime DATETIME;\n"
-        f"DECLARE @Status NVARCHAR(50);\n"
-        f"DECLARE @sql NVARCHAR(MAX);\n\n"
     )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

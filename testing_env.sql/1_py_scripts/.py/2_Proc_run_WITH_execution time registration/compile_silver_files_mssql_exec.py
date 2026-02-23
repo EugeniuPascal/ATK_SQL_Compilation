@@ -31,7 +31,6 @@ BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 NAME_PART        = r'(?:\[[^\]]+\]|"[^"]+"|[^\s\(\[\]"\.]+)'
 NAME_PATTERN     = rf"{NAME_PART}(?:\.{NAME_PART})*"
 CREATE_VIEW_RE   = re.compile(rf"(?im)\bCREATE\s+VIEW\s+({NAME_PATTERN})")
-CREATE_PROC_RE   = re.compile(rf"(?im)\bCREATE\s+PROCEDURE\s+({NAME_PATTERN})")
 CREATE_FUNC_RE   = re.compile(rf"(?im)\bCREATE\s+FUNCTION\s+({NAME_PATTERN})")
 CREATE_TABLE_RE  = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(?=\()")
 
@@ -39,32 +38,31 @@ CREATE_TABLE_RE  = re.compile(rf"(?im)\bCREATE\s+TABLE\s+({NAME_PATTERN})[ \t]*(
 # Helpers
 # --------------------------------------------------------------------
 def strip_sql_comments(sql: str) -> str:
+    """Remove block and line comments safely (preserving newlines)."""
     def _block_repl(m): return re.sub(r"[^\r\n]", " ", m.group(0))
     sql = BLOCK_COMMENT_RE.sub(_block_repl, sql)
     sql = LINE_COMMENT_RE.sub("", sql)
     return sql
 
 def normalize_object_name(name: str, default_schema: str) -> str:
-    n = name.strip()
-    if '"' in n:
-        return n
-    if '.' not in n:
-        part = n if (n.startswith('[') and n.endswith(']')) else f'[{n}]'
-        return f'[{default_schema}].{part}'
-    parts = [p.strip() for p in n.split('.')]
-    return '.'.join([p if p.startswith('[') and p.endswith(']') else f'[{p}]' for p in parts])
+    n = name.strip().strip('"')
+    if n.startswith('#'):
+        return n  # temp table
+    n = n.strip('[]')
+    obj_name = n.split('.', 1)[-1] if '.' in n else n
+    return f'[{default_schema}].[{obj_name}]'
 
 def make_idempotent(sql: str) -> str:
+    """Clean SQL and make CREATE statements idempotent for tables/views/functions."""
     sql = strip_sql_comments(sql)
     sql = GO_LINE_RE.sub("", sql)
     sql = USE_RE.sub("", sql)
     sql = CREATE_VIEW_RE.sub(lambda m: f"CREATE OR ALTER VIEW {m.group(1)}", sql)
-    sql = CREATE_PROC_RE.sub(lambda m: f"CREATE OR ALTER PROCEDURE {m.group(1)}", sql)
     sql = CREATE_FUNC_RE.sub(lambda m: f"CREATE OR ALTER FUNCTION {m.group(1)}", sql)
 
     def table_repl(m):
         raw = m.group(1).strip()
-        if raw.lstrip().startswith('#'):
+        if raw.startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
         return f"IF OBJECT_ID(N'{norm}','U') IS NOT NULL DROP TABLE {norm};\nCREATE TABLE {norm}"
@@ -126,30 +124,41 @@ try:
         f_out.write("    DECLARE @EndTime DATETIME;\n")
         f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
 
+        # 3) Process each file with logging
         for sf in sql_files:
-            logging.info(f"Processing file: {sf.name}")
-            with sf.open("r", encoding="utf-8-sig") as f_in:
-                content = f_in.read()
-                transformed = make_idempotent(content)
-                safe = transformed.replace("'", "''")
-                if safe.strip():
-                    f_out.write(f"    -- Start of: {sf.name}\n")
-                    f_out.write("    SET @StartTime = GETDATE();\n")
-                    f_out.write("    SET @EndTime = NULL;\n")
-                    f_out.write("    SET @Status = 'Running';\n")
-                    f_out.write("    SET @sql = N'" + safe + "';\n")
-                    f_out.write("    BEGIN TRY\n")
-                    f_out.write("        EXEC sys.sp_executesql @sql;\n")
-                    f_out.write("        SET @Status = 'Success';\n")
-                    f_out.write("    END TRY\n")
-                    f_out.write("    BEGIN CATCH\n")
-                    f_out.write("        SET @Status = 'Failed';\n")
-                    f_out.write("        THROW;\n")
-                    f_out.write("    END CATCH;\n")
-                    f_out.write("    SET @EndTime = GETDATE();\n")
-                    f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
-                    f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+            try:
+                logging.info(f"Processing file: {sf.name}")
+                with sf.open("r", encoding="utf-8-sig") as f_in:
+                    content = f_in.read()
+                    transformed = make_idempotent(content)
+                    safe = transformed.replace("'", "''")
+                    if safe.strip():  # skip empty files
+                        f_out.write(f"    -- Start of: {sf.name}\n")
+                        f_out.write("    SET @StartTime = GETDATE();\n")
+                        f_out.write("    SET @EndTime = NULL;\n")
+                        f_out.write("    SET @Status = 'Running';\n")
+                        f_out.write("    SET @sql = N'" + safe + "';\n")
 
+                        f_out.write("    BEGIN TRY\n")
+                        f_out.write("        EXEC sys.sp_executesql @sql;\n")
+                        f_out.write("        SET @Status = 'Success';\n")
+                        f_out.write("    END TRY\n")
+                        f_out.write("    BEGIN CATCH\n")
+                        f_out.write("        SET @Status = 'Failed';\n")
+                        f_out.write("        THROW;\n")  # must be inside CATCH
+                        f_out.write("    END CATCH;\n\n")
+
+                        # Logging always runs
+                        f_out.write("    SET @EndTime = GETDATE();\n")
+                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
+                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+
+                logging.info(f"Finished file: {sf.name}")
+            except Exception as e:
+                logging.error(f"Error processing {sf.name}: {e}")
+                raise
+
+        # Procedure end
         f_out.write("END\nGO\n")
 
     logging.info(f"✅ Stored procedure script generated successfully: {OUTPUT_FILE}")

@@ -1,6 +1,7 @@
-# compile_bronze_tables_folder_with_log_final.py
+# compile_bronze_tables_folder_with_log_fixed.py
 from pathlib import Path
 from datetime import datetime
+import re
 
 # ---- Settings ----
 MAIN_DIR = Path(r"C:\ATK_Project\sql_scripts\Bronze")
@@ -9,6 +10,9 @@ LOG_TABLE = "mis.Bronze_Proc_Exec_Log"
 
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
+
+# Remove GO lines from content
+GO_RE = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
 
 # --------------------------------------------------------------------
 # Helpers
@@ -26,7 +30,6 @@ def read_text_with_fallback(p: Path) -> str | None:
 # Main compilation
 # --------------------------------------------------------------------
 def compile_sql():
-    """Compile all .sql files in MAIN_DIR into one bundle with logging into Bronze table."""
     sql_files = sorted(
         [f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"],
         key=lambda p: p.name.lower()
@@ -38,6 +41,9 @@ def compile_sql():
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join(f.name for f in sql_files) + "\n"
         f"{DIV}\n\nSET NOCOUNT ON;\n\n"
+        f"DECLARE @StartTime DATETIME;\n"
+        f"DECLARE @EndTime DATETIME;\n"
+        f"DECLARE @Status NVARCHAR(50);\n\n"
     )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
@@ -48,35 +54,34 @@ def compile_sql():
             content = read_text_with_fallback(f)
             table_name = f.stem
 
+            # Remove GO from content
+            if content:
+                content = GO_RE.sub("", content)
+
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
 
-            # Wrap each file in BEGIN...END block to ensure variable scope
-            out.write("BEGIN\n")
-            out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
-            out.write("    DECLARE @EndTime DATETIME;\n")
-            out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n\n")
+            # Set start time and status
+            out.write(f"SET @StartTime = GETDATE();\n")
+            out.write(f"SET @Status = 'Running';\n\n")
 
-            # Wrap actual SQL in TRY/CATCH
-            out.write("    BEGIN TRY\n")
+            # Wrap file SQL in TRY/CATCH
+            out.write("BEGIN TRY\n")
             if content:
-                # Indent content for readability
-                indented_content = "\n        ".join(content.rstrip().splitlines())
-                out.write(f"        {indented_content}\n")
+                indented_content = "\n    ".join(content.rstrip().splitlines())
+                out.write(f"    {indented_content}\n")
             else:
-                out.write("        -- Could not decode file\n")
-            out.write("        SET @Status = 'Success';\n")
-            out.write("    END TRY\n")
-            out.write("    BEGIN CATCH\n")
-            out.write("        SET @Status = 'Failed';\n")
-            out.write("    END CATCH;\n\n")
+                out.write("    -- Could not decode file\n")
+            out.write("    SET @Status = 'Success';\n")
+            out.write("END TRY\n")
+            out.write("BEGIN CATCH\n")
+            out.write("    SET @Status = 'Failed';\n")
+            out.write("END CATCH;\n\n")
 
             # Capture end time and insert log
-            out.write("    SET @EndTime = GETDATE();\n")
-            out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
-            out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
-            out.write("END\n\n")  # End of BEGIN block
+            out.write("SET @EndTime = GETDATE();\n")
+            out.write(f"INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
+            out.write(f"VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n\n")
 
-            # No GO here — ensures all variables are contained in the block
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
 
     print(f"✅ Compiled SQL file with logging created at: {OUTPUT}")

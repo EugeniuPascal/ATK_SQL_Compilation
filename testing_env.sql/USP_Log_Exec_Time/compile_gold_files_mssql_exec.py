@@ -1,5 +1,3 @@
-# compile_gold_tables_job_proc_idempotent_with_logging.py
-import os
 import re
 import logging
 from datetime import datetime
@@ -11,7 +9,7 @@ DEFAULT_SCHEMA = "mis"
 SOURCE_FOLDER  = Path(r"C:\ATK_Project\sql_scripts\Gold")
 OUTPUT_FILE    = Path(r"C:\ATK_Project\compiled\compiled_gold_job_proc.sql")
 LOG_FILE       = Path(r"C:\ATK_Project\logs\compile_gold.log")
-LOG_TABLE      = f"{DEFAULT_SCHEMA}.Gold_Proc_Exec_Log"  # log table
+LOG_TABLE      = f"{DEFAULT_SCHEMA}.Gold_Proc_Exec_Log"
 
 # ---- Logging ----
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -105,6 +103,7 @@ try:
         "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
     ]
 
+    # Build final ordered list
     sql_files = []
     for fname in SQL_ORDER:
         fpath = SOURCE_FOLDER / fname
@@ -138,15 +137,16 @@ try:
         # ---- Process each file with logging ----
         for sf in sql_files:
             logging.info(f"Processing file: {sf.name}")
+            f_out.write(f"    -- Start of: {sf.name}\n")
+            f_out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
+            f_out.write("    DECLARE @EndTime DATETIME;\n")
+            f_out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n")
+
             with sf.open("r", encoding="utf-8-sig") as f_in:
                 content = f_in.read()
                 transformed = make_idempotent(content)
                 safe = transformed.replace("'", "''")
                 if safe.strip():
-                    f_out.write(f"    -- Start of: {sf.name}\n")
-                    f_out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
-                    f_out.write("    DECLARE @EndTime DATETIME;\n")
-                    f_out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n")
                     f_out.write("    SET @sql = N'" + safe + "';\n")
                     f_out.write("    BEGIN TRY\n")
                     f_out.write("        EXEC sys.sp_executesql @sql;\n")
@@ -154,12 +154,11 @@ try:
                     f_out.write("    END TRY\n")
                     f_out.write("    BEGIN CATCH\n")
                     f_out.write("        SET @Status = 'Failed';\n")
-                    f_out.write("        THROW;\n")
-                    f_out.write("    END CATCH\n")
-                    f_out.write("    FINALLY\n")
-                    f_out.write("        SET @EndTime = GETDATE();\n")
-                    f_out.write(f"        INSERT INTO {LOG_TABLE} (ProcedureName, TableName, StartTime, EndTime, Status)\n")
-                    f_out.write(f"        VALUES ('usp_GoldTables', '{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+                    f_out.write("    END CATCH;\n")
+                    f_out.write("    SET @EndTime = GETDATE();\n")
+                    f_out.write(f"    INSERT INTO {LOG_TABLE} (ProcedureName, TableName, StartTime, EndTime, Status)\n")
+                    f_out.write(f"    VALUES ('usp_GoldTables', '{sf.stem}', @StartTime, @EndTime, @Status);\n")
+                    f_out.write("    IF @Status = 'Failed' THROW;\n\n")
 
         f_out.write("END\nGO\n")
 

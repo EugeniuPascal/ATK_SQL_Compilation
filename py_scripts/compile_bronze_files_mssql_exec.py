@@ -1,4 +1,4 @@
-# compile_bronze_tables_job_proc_idempotent_with_logging.py
+# compile_bronze_tables_job_proc_idempotent_with_logging_fixed.py
 import re
 import logging
 from datetime import datetime
@@ -10,7 +10,7 @@ DEFAULT_SCHEMA = "mis"
 SOURCE_FOLDER  = Path(r"C:\ATK_Project\sql_scripts\Bronze")
 OUTPUT_FILE    = Path(r"C:\ATK_Project\compiled\compiled_bronze_job_proc.sql")
 LOG_FILE       = Path(r"C:\ATK_Project\logs\compile_bronze.log")
-LOG_TABLE      = f"{DEFAULT_SCHEMA}.Bronze_Proc_Exec_Log"  # log table for execution
+LOG_TABLE      = f"{DEFAULT_SCHEMA}.Bronze_Proc_Exec_Log"
 
 # ---- Logging ----
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -73,13 +73,13 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
-    # ---- 1) Collect all SQL files alphabetically ----
+    # 1) Collect all SQL files alphabetically
     sql_files = sorted([f for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
     logging.info(f"Found {len(sql_files)} SQL files to compile.")
     if not sql_files:
         raise FileNotFoundError(f"No .sql files found in {SOURCE_FOLDER}")
 
-    # ---- 2) Generate stored procedure ----
+    # 2) Generate stored procedure
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
         # Header
@@ -101,7 +101,7 @@ try:
         f_out.write("    SET NOCOUNT ON;\n")
         f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
 
-        # ---- 3) Process each file with logging ----
+        # 3) Process each file with logging
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf.name}")
@@ -115,18 +115,25 @@ try:
                         f_out.write("    DECLARE @EndTime DATETIME;\n")
                         f_out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n")
                         f_out.write("    SET @sql = N'" + safe + "';\n")
+                        
+                        # Correct TRY/CATCH with logging after
                         f_out.write("    BEGIN TRY\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("        SET @Status = 'Success';\n")
                         f_out.write("    END TRY\n")
                         f_out.write("    BEGIN CATCH\n")
                         f_out.write("        SET @Status = 'Failed';\n")
-                        f_out.write("        THROW;\n")
-                        f_out.write("    END CATCH\n")
-                        f_out.write("    FINALLY\n")
-                        f_out.write("        SET @EndTime = GETDATE();\n")
-                        f_out.write(f"        INSERT INTO {LOG_TABLE} (ProcedureName, TableName, StartTime, EndTime, Status)\n")
-                        f_out.write(f"        VALUES ('usp_BronzeTables', '{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+                        f_out.write("    END CATCH;\n\n")
+                        
+                        # Logging always runs
+                        f_out.write("    SET @EndTime = GETDATE();\n")
+                        f_out.write(f"    INSERT INTO {LOG_TABLE} (ProcedureName, TableName, StartTime, EndTime, Status)\n")
+                        f_out.write(f"    VALUES ('usp_BronzeTables', '{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+                        
+                        # Optional: propagate error
+                        f_out.write("    IF @Status = 'Failed'\n")
+                        f_out.write("        THROW;\n\n")
+                        
                 logging.info(f"Finished file: {sf.name}")
             except Exception as e:
                 logging.error(f"Error processing {sf.name}: {e}")

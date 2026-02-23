@@ -1,4 +1,4 @@
-# compile_bronze_tables_job_proc_idempotent.py
+# compile_bronze_tables_job_proc_idempotent_with_logging_fixed_v3.py
 import re
 import logging
 from datetime import datetime
@@ -10,6 +10,7 @@ DEFAULT_SCHEMA = "mis"
 SOURCE_FOLDER  = Path(r"C:\ATK_Project\sql_scripts\Bronze")
 OUTPUT_FILE    = Path(r"C:\ATK_Project\compiled\compiled_bronze_job_proc.sql")
 LOG_FILE       = Path(r"C:\ATK_Project\logs\compile_bronze.log")
+LOG_TABLE      = f"{DEFAULT_SCHEMA}.Bronze_Proc_Exec_Log"
 
 # ---- Logging ----
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -44,19 +45,11 @@ def strip_sql_comments(sql: str) -> str:
     return sql
 
 def normalize_object_name(name: str, default_schema: str) -> str:
-
     n = name.strip().strip('"')
-
     if n.startswith('#'):
         return n  # temp table
-
-    # Remove any outer brackets from input
     n = n.strip('[]')
-
-    # Only last part is treated as object, everything else stays in object name
     obj_name = n.split('.', 1)[-1] if '.' in n else n
-
-    # Wrap schema and object in single brackets
     return f'[{default_schema}].[{obj_name}]'
 
 def make_idempotent(sql: str) -> str:
@@ -69,7 +62,6 @@ def make_idempotent(sql: str) -> str:
 
     def table_repl(m):
         raw = m.group(1).strip()
-        # Keep temp tables (#temp) untouched
         if raw.startswith('#'):
             return f"CREATE TABLE {raw}"
         norm = normalize_object_name(raw, DEFAULT_SCHEMA)
@@ -81,18 +73,18 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
-    # ---- 1) Collect all SQL files alphabetically ----
+    # 1) Collect all SQL files alphabetically
     sql_files = sorted([f for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
     logging.info(f"Found {len(sql_files)} SQL files to compile.")
     if not sql_files:
         raise FileNotFoundError(f"No .sql files found in {SOURCE_FOLDER}")
 
-    # ---- 2) Generate stored procedure ----
+    # 2) Generate stored procedure
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8-sig") as f_out:
         # Header
         f_out.write("-- =============================================\n")
-        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent\n")
+        f_out.write("-- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent with Logging\n")
         f_out.write(f"-- Generated: {datetime.now()}\n")
         f_out.write(f"-- Source folder: {SOURCE_FOLDER}\n")
         f_out.write(f"-- Files included: {len(sql_files)}\n")
@@ -107,9 +99,12 @@ try:
         f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables;\nGO\n\n")
         f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables\nAS\nBEGIN\n")
         f_out.write("    SET NOCOUNT ON;\n")
-        f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
+        f_out.write("    DECLARE @sql NVARCHAR(MAX);\n")
+        f_out.write("    DECLARE @StartTime DATETIME;\n")
+        f_out.write("    DECLARE @EndTime DATETIME;\n")
+        f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
 
-        # ---- 3) Process each file ----
+        # 3) Process each file with logging
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf.name}")
@@ -119,13 +114,25 @@ try:
                     safe = transformed.replace("'", "''")
                     if safe.strip():  # skip empty files
                         f_out.write(f"    -- Start of: {sf.name}\n")
+                        f_out.write("    SET @StartTime = GETDATE();\n")
+                        f_out.write("    SET @EndTime = NULL;\n")
+                        f_out.write("    SET @Status = 'Running';\n")
                         f_out.write("    SET @sql = N'" + safe + "';\n")
+
                         f_out.write("    BEGIN TRY\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
+                        f_out.write("        SET @Status = 'Success';\n")
                         f_out.write("    END TRY\n")
                         f_out.write("    BEGIN CATCH\n")
-                        f_out.write("        THROW;\n")
+                        f_out.write("        SET @Status = 'Failed';\n")
+                        f_out.write("        THROW;\n")  # must be inside CATCH
                         f_out.write("    END CATCH;\n\n")
+
+                        # Logging always runs
+                        f_out.write("    SET @EndTime = GETDATE();\n")
+                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
+                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+
                 logging.info(f"Finished file: {sf.name}")
             except Exception as e:
                 logging.error(f"Error processing {sf.name}: {e}")

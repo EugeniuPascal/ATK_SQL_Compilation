@@ -1,4 +1,4 @@
-# compile_gold_tables_folder_with_log_final.py
+# compile_gold_tables_folder_with_log_final_safe.py
 from pathlib import Path
 from datetime import datetime
 import re
@@ -11,7 +11,7 @@ LOG_TABLE = "mis.Gold_Proc_Exec_Log"
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
-# ---- strictly ordered files with comments ----
+# ---- strictly ordered files ----
 SQL_ORDER = [
     "mis.Gold_Dim_AppUsers.sql",
     "mis.Gold_Dim_Branch.sql",
@@ -40,6 +40,9 @@ SQL_ORDER = [
     "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
 ]
 
+# ---- remove GO lines ----
+GO_RE = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
+
 # ---- helper to read files with fallback encodings ----
 def read_text_with_fallback(p: Path) -> str | None:
     for enc in FALLBACK_ENCODINGS:
@@ -49,8 +52,10 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
-def compile_sql_strict():
-    # ---- build final processing list strictly from SQL_ORDER ----
+# --------------------------------------------------------------------
+# Main compilation
+# --------------------------------------------------------------------
+def compile_sql_strict_safe():
     sql_files = []
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
@@ -59,9 +64,8 @@ def compile_sql_strict():
         else:
             print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
-    # ---- header for compiled file ----
     header = (
-        f"-- Compiled SQL bundle (strict order)\n"
+        f"-- Compiled SQL bundle (Gold) with Logging (Safe Version)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join([f.name for f in sql_files]) + "\n"
@@ -76,18 +80,23 @@ def compile_sql_strict():
             content = read_text_with_fallback(f)
             table_name = f.stem
 
-            # remove GO from content
             if content:
+                # remove GO lines
                 content = GO_RE.sub("", content)
 
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
 
-            # Wrap each file in BEGIN...END to contain variables
+            # BEGIN block per file to isolate variables
             out.write("BEGIN\n")
-            out.write("    SET @StartTime = GETDATE();\n")
-            out.write("    SET @Status = 'Running';\n\n")
+            out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
+            out.write("    DECLARE @EndTime DATETIME;\n")
+            out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n\n")
 
-            # Wrap SQL in TRY/CATCH
+            # Drop temp tables to avoid conflicts
+            out.write("    -- Drop temp tables if they exist\n")
+            out.write("    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;\n\n")
+
+            # TRY/CATCH block
             out.write("    BEGIN TRY\n")
             if content:
                 indented_content = "\n        ".join(content.rstrip().splitlines())
@@ -98,13 +107,14 @@ def compile_sql_strict():
             out.write("    END TRY\n")
             out.write("    BEGIN CATCH\n")
             out.write("        SET @Status = 'Failed';\n")
+            out.write("        THROW;\n")
             out.write("    END CATCH;\n\n")
 
-            # Capture end time and insert log
+            # Insert log
             out.write("    SET @EndTime = GETDATE();\n")
             out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
             out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
-            out.write("END\n\n")  # end BEGIN block
+            out.write("END\n\n")  # end BEGIN
 
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
 
@@ -112,4 +122,4 @@ def compile_sql_strict():
 
 
 if __name__ == "__main__":
-    compile_sql_strict()
+    compile_sql_strict_safe()

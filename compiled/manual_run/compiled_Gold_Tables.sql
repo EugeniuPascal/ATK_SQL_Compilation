@@ -1,5 +1,5 @@
--- Compiled SQL bundle (Gold) with Logging
--- Generated: 2026-02-23 16:18:08
+-- Compiled SQL bundle (Gold) with Logging (Safe Version)
+-- Generated: 2026-02-23 16:25:15
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -31,17 +31,16 @@
 
 SET NOCOUNT ON;
 
-DECLARE @StartTime DATETIME;
-DECLARE @EndTime DATETIME;
-DECLARE @Status NVARCHAR(50);
-DECLARE @sql NVARCHAR(MAX);
-
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_AppUsers.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -78,6 +77,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -93,8 +93,12 @@ END
 -- Start of: mis.Gold_Dim_Branch.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -179,6 +183,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -194,8 +199,12 @@ END
 -- Start of: mis.Gold_Dim_Clients.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -422,6 +431,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -437,8 +447,12 @@ END
 -- Start of: mis.Gold_Dim_Credits.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -803,6 +817,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -818,8 +833,12 @@ END
 -- Start of: mis.Gold_Dim_EmployeePayrollData.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -848,6 +867,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -863,8 +883,12 @@ END
 -- Start of: mis.Gold_Dim_Employees.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -1050,6 +1074,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1065,8 +1090,12 @@ END
 -- Start of: mis.Gold_Dim_EmployeesHistory.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -1126,6 +1155,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1141,8 +1171,12 @@ END
 -- Start of: mis.Gold_Dim_Events.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -1231,6 +1265,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1246,8 +1281,12 @@ END
 -- Start of: mis.Gold_Dim_GroupMembershipPeriods.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -1352,6 +1391,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1367,8 +1407,12 @@ END
 -- Start of: mis.Gold_Dim_PartnersBranch.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -1467,6 +1511,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1482,8 +1527,12 @@ END
 -- Start of: mis.Gold_Fact_AdminTasks.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -1751,6 +1800,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1766,8 +1816,12 @@ END
 -- Start of: mis.Gold_Fact_ArchiveDocument.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK]
@@ -1891,6 +1945,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1906,8 +1961,12 @@ END
 -- Start of: mis.Gold_Fact_BudgetEmployees.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -1975,6 +2034,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1990,8 +2050,12 @@ END
 -- Start of: mis.Gold_Fact_CerereOnline.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         --------------------------------------------------------------------------------
@@ -2510,6 +2574,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2525,8 +2590,12 @@ END
 -- Start of: mis.Gold_Fact_Comments.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -2570,6 +2639,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2585,8 +2655,12 @@ END
 -- Start of: mis.Gold_Fact_CPD.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -2713,6 +2787,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2728,8 +2803,12 @@ END
 -- Start of: mis.Gold_Fact_CreditsInShadowBranches.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -2816,6 +2895,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2831,8 +2911,12 @@ END
 -- Start of: mis.Gold_Fact_WriteOffCredits.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -2954,6 +3038,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2969,8 +3054,12 @@ END
 -- Start of: mis.Gold_Fact_Restruct_Daily_Min.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -3256,6 +3345,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3271,8 +3361,12 @@ END
 -- Start of: mis.Gold_Fact_Disbursement.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -3570,6 +3664,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3585,8 +3680,12 @@ END
 -- Start of: mis.Gold_Fact_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -3796,6 +3895,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3811,8 +3911,12 @@ END
 -- Start of: V2__inc_Gold_Dim_Event_InProgress.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         INSERT INTO mis.[Gold_Dim_Event_InProgress]
@@ -3882,6 +3986,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3897,8 +4002,12 @@ END
 -- Start of: V2__inc_Gold_Dim_Event_Responsible.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         INSERT INTO mis.[Gold_Dim_Event_Responsible]
@@ -3947,6 +4056,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3962,8 +4072,12 @@ END
 -- Start of: V2__inc_Gold_Dim_Limits.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         ;WITH LatestGroups AS
@@ -4110,6 +4224,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -4125,8 +4240,12 @@ END
 -- Start of: V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
 ----------------------------------------------------------------------------------------------------
 BEGIN
-    SET @StartTime = GETDATE();
-    SET @Status = 'Running';
+    DECLARE @StartTime DATETIME = GETDATE();
+    DECLARE @EndTime DATETIME;
+    DECLARE @Status NVARCHAR(50) = 'Running';
+
+    -- Drop temp tables if they exist
+    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
 
     BEGIN TRY
         USE [ATK];
@@ -4375,6 +4494,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        THROW;
     END CATCH;
 
     SET @EndTime = GETDATE();

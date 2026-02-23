@@ -1,4 +1,4 @@
-# compile_bronze_tables_job_proc_idempotent_with_logging_fixed.py
+# compile_bronze_tables_job_proc_idempotent_with_logging_fixed_v2.py
 import re
 import logging
 from datetime import datetime
@@ -99,7 +99,10 @@ try:
         f_out.write(f"    DROP PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables;\nGO\n\n")
         f_out.write(f"CREATE PROCEDURE {DEFAULT_SCHEMA}.usp_BronzeTables\nAS\nBEGIN\n")
         f_out.write("    SET NOCOUNT ON;\n")
-        f_out.write("    DECLARE @sql NVARCHAR(MAX);\n\n")
+        f_out.write("    DECLARE @sql NVARCHAR(MAX);\n")
+        f_out.write("    DECLARE @StartTime DATETIME;\n")
+        f_out.write("    DECLARE @EndTime DATETIME;\n")
+        f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
 
         # 3) Process each file with logging
         for sf in sql_files:
@@ -111,29 +114,25 @@ try:
                     safe = transformed.replace("'", "''")
                     if safe.strip():  # skip empty files
                         f_out.write(f"    -- Start of: {sf.name}\n")
-                        f_out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
-                        f_out.write("    DECLARE @EndTime DATETIME;\n")
-                        f_out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n")
+                        f_out.write("    SET @StartTime = GETDATE();\n")
+                        f_out.write("    SET @EndTime = NULL;\n")
+                        f_out.write("    SET @Status = 'Running';\n")
                         f_out.write("    SET @sql = N'" + safe + "';\n")
-                        
-                        # Correct TRY/CATCH with logging after
+
                         f_out.write("    BEGIN TRY\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("        SET @Status = 'Success';\n")
                         f_out.write("    END TRY\n")
                         f_out.write("    BEGIN CATCH\n")
                         f_out.write("        SET @Status = 'Failed';\n")
+                        f_out.write("        THROW;\n")  # must be inside CATCH
                         f_out.write("    END CATCH;\n\n")
-                        
+
                         # Logging always runs
                         f_out.write("    SET @EndTime = GETDATE();\n")
                         f_out.write(f"    INSERT INTO {LOG_TABLE} (ProcedureName, TableName, StartTime, EndTime, Status)\n")
                         f_out.write(f"    VALUES ('usp_BronzeTables', '{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
-                        
-                        # Optional: propagate error
-                        f_out.write("    IF @Status = 'Failed'\n")
-                        f_out.write("        THROW;\n\n")
-                        
+
                 logging.info(f"Finished file: {sf.name}")
             except Exception as e:
                 logging.error(f"Error processing {sf.name}: {e}")

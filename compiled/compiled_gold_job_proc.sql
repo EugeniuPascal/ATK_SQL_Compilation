@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-02-23 15:14:18.275298
+-- Generated: 2026-02-23 15:37:20.843798
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -2601,10 +2601,10 @@ FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВы�
     SET @StartTime = GETDATE();
     SET @EndTime = NULL;
     SET @Status = 'Running';
-    SET @sql = N'IF OBJECT_ID(''mis.[Gold_CreditsInShadowBranches]'', ''U'') IS NOT NULL
-    DROP TABLE mis.[Gold_CreditsInShadowBranches];
+    SET @sql = N'IF OBJECT_ID(''mis.[Gold_Fact_CreditsInShadowBranches]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_CreditsInShadowBranches];
 
-CREATE TABLE mis.[Gold_CreditsInShadowBranches] 
+CREATE TABLE mis.[Gold_Fact_CreditsInShadowBranches] 
 (
     Period DATETIME NULL,
     ID VARCHAR(32) NOT NULL,
@@ -2652,7 +2652,7 @@ calc AS (
           ) AS DateTo
     FROM src
 )
-INSERT INTO mis.[Gold_CreditsInShadowBranches] 
+INSERT INTO mis.[Gold_Fact_CreditsInShadowBranches] 
 (
       Period,
       ID,

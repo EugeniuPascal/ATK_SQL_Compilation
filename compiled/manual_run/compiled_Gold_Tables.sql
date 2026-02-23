@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Gold) with Logging
--- Generated: 2026-02-23 12:15:26
+-- Generated: 2026-02-23 15:37:14
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -2733,10 +2733,10 @@ BEGIN
     BEGIN TRY
         USE [ATK];
         
-        IF OBJECT_ID('mis.[Gold_CreditsInShadowBranches]', 'U') IS NOT NULL
-            DROP TABLE mis.[Gold_CreditsInShadowBranches];
+        IF OBJECT_ID('mis.[Gold_Fact_CreditsInShadowBranches]', 'U') IS NOT NULL
+            DROP TABLE mis.[Gold_Fact_CreditsInShadowBranches];
         
-        CREATE TABLE mis.[Gold_CreditsInShadowBranches] 
+        CREATE TABLE mis.[Gold_Fact_CreditsInShadowBranches] 
         (
             Period DATETIME NULL,
             ID VARCHAR(32) NOT NULL,
@@ -2784,7 +2784,7 @@ BEGIN
                   ) AS DateTo
             FROM src
         )
-        INSERT INTO mis.[Gold_CreditsInShadowBranches] 
+        INSERT INTO mis.[Gold_Fact_CreditsInShadowBranches] 
         (
               Period,
               ID,

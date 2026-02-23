@@ -1,6 +1,7 @@
-# compile_gold_tables_folder_strict_with_log.py
+# compile_gold_tables_folder_with_log_safe.py
 from pathlib import Path
 from datetime import datetime
+import re
 
 # ---- configure your folder ----
 MAIN_DIR  = Path(r"C:\ATK_Project\sql_scripts\Gold")
@@ -39,6 +40,9 @@ SQL_ORDER = [
     "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
 ]
 
+# ---- remove GO lines ----
+GO_RE = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
+
 # ---- helper to read files with fallback encodings ----
 def read_text_with_fallback(p: Path) -> str | None:
     for enc in FALLBACK_ENCODINGS:
@@ -48,7 +52,10 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
-def compile_sql_with_logging():
+# --------------------------------------------------------------------
+# Main compilation
+# --------------------------------------------------------------------
+def compile_sql_safe():
     sql_files = []
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
@@ -58,7 +65,7 @@ def compile_sql_with_logging():
             print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
     header = (
-        f"-- Compiled Gold SQL bundle (strict order + logging)\n"
+        f"-- Compiled SQL bundle (Gold) with Logging (Safe Version)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join([f.name for f in sql_files]) + "\n"
@@ -73,31 +80,48 @@ def compile_sql_with_logging():
             content = read_text_with_fallback(f)
             table_name = f.stem
 
+            # remove GO lines
+            if content:
+                content = GO_RE.sub("", content)
+
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
 
-            # Wrap in BEGIN/TRY/CATCH with logging
+            # BEGIN block per file + independent batch
+            out.write("GO\n")  # start new batch
             out.write("BEGIN\n")
             out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
             out.write("    DECLARE @EndTime DATETIME;\n")
             out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n\n")
+
+            # Drop temp tables if necessary
+            out.write("    -- Drop temp tables if they exist\n")
+            out.write("    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;\n\n")
+
+            # TRY/CATCH block
             out.write("    BEGIN TRY\n")
-            out.write((content.rstrip() if content else "        -- Could not decode file") + "\n")
+            if content:
+                indented_content = "\n        ".join(content.rstrip().splitlines())
+                out.write(f"        {indented_content}\n")
+            else:
+                out.write("        -- Could not decode file\n")
             out.write("        SET @Status = 'Success';\n")
             out.write("    END TRY\n")
             out.write("    BEGIN CATCH\n")
             out.write("        SET @Status = 'Failed';\n")
             out.write("        THROW;\n")
             out.write("    END CATCH;\n\n")
+
+            # Insert log
             out.write("    SET @EndTime = GETDATE();\n")
             out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
             out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
-            out.write("END\n\n")
+            out.write("END\n")
+            out.write("GO\n\n")  # end batch
 
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
-            out.write("GO\n\n")  # batch separator
 
-    print(f"✅ Compiled Gold SQL file with logging created at: {OUTPUT}")
+    print(f"✅ Compiled Gold SQL file with safe logging created at: {OUTPUT}")
 
 
 if __name__ == "__main__":
-    compile_sql_with_logging()
+    compile_sql_safe()

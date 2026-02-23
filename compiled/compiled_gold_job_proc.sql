@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-02-23 15:05:02.615510
+-- Generated: 2026-02-23 15:14:18.275298
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -87,6 +87,7 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.СведенияОПо
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_AppUsers', @StartTime, @EndTime, @Status);
@@ -179,6 +180,7 @@ LEFT JOIN LastSvedeniya s
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_Branch', @StartTime, @EndTime, @Status);
@@ -403,6 +405,7 @@ CREATE NONCLUSTERED INDEX IX_Clients_Phone2    ON mis.[Gold_Dim_Clients](Phone);
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_Clients', @StartTime, @EndTime, @Status);
@@ -774,6 +777,7 @@ FROM FinalData
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_Credits', @StartTime, @EndTime, @Status);
@@ -810,6 +814,7 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиД
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_EmployeePayrollData', @StartTime, @EndTime, @Status);
@@ -1003,6 +1008,7 @@ OUTER APPLY (
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_Employees', @StartTime, @EndTime, @Status);
@@ -1070,6 +1076,7 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.Ответственн
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_EmployeesHistory', @StartTime, @EndTime, @Status);
@@ -1166,6 +1173,7 @@ WHERE NOT EXISTS (
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_Events', @StartTime, @EndTime, @Status);
@@ -1278,6 +1286,7 @@ ORDER BY GroupID, PersonID, PeriodOriginal;';
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_GroupMembershipPeriods', @StartTime, @EndTime, @Status);
@@ -1384,6 +1393,7 @@ LEFT JOIN ContactInfoRanked ci
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Dim_PartnersBranch', @StartTime, @EndTime, @Status);
@@ -1659,6 +1669,7 @@ WHERE rn = 1;';
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_AdminTasks', @StartTime, @EndTime, @Status);
@@ -1792,6 +1803,7 @@ WHERE r.[АктыПередачиКредитныхДел Период] >= ''202
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_ArchiveDocument', @StartTime, @EndTime, @Status);
@@ -1867,6 +1879,7 @@ WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';';
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_BudgetEmployees', @StartTime, @EndTime, @Status);
@@ -2392,6 +2405,7 @@ OUTER APPLY
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_CerereOnline', @StartTime, @EndTime, @Status);
@@ -2443,6 +2457,7 @@ DROP TABLE #FilteredComments;';
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_Comments', @StartTime, @EndTime, @Status);
@@ -2577,6 +2592,7 @@ FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВы�
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_CPD', @StartTime, @EndTime, @Status);
@@ -2671,6 +2687,7 @@ FROM calc;';
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_CreditsInShadowBranches', @StartTime, @EndTime, @Status);
@@ -2800,6 +2817,7 @@ CREATE INDEX IX_WriteOff_Final
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_WriteOffCredits', @StartTime, @EndTime, @Status);
@@ -3094,6 +3112,7 @@ COMMIT TRAN;';
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_Restruct_Daily_Min', @StartTime, @EndTime, @Status);
@@ -3378,6 +3397,7 @@ DROP TABLE #FirstDisbursementPerClient;';
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_Disbursement', @StartTime, @EndTime, @Status);
@@ -3596,6 +3616,7 @@ DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR, #MaxDays;'
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('mis.Gold_Fact_Sold_Par', @StartTime, @EndTime, @Status);
@@ -3675,6 +3696,7 @@ WHERE NOT EXISTS (
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('V2__inc_Gold_Dim_Event_InProgress', @StartTime, @EndTime, @Status);
@@ -3733,6 +3755,7 @@ WHERE NOT EXISTS (
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('V2__inc_Gold_Dim_Event_Responsible', @StartTime, @EndTime, @Status);
@@ -3889,6 +3912,7 @@ WHERE d.[РегистрацияЛимита Проведен] = ''01''
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('V2__inc_Gold_Dim_Limits', @StartTime, @EndTime, @Status);
@@ -4145,6 +4169,7 @@ PRINT N''🏁 Incremental load completed successfully'';';
         SET @Status = 'Failed';
         THROW;
     END CATCH;
+
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
     VALUES ('V3__inc_Gold_Fact_Restruct_Daily_Sold_Par', @StartTime, @EndTime, @Status);

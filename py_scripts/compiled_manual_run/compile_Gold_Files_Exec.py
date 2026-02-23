@@ -11,7 +11,7 @@ LOG_TABLE = "mis.Gold_Proc_Exec_Log"
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
-# ---- list your files in the specific order you want ----
+# ---- strictly ordered files with comments ----
 SQL_ORDER = [
     "mis.Gold_Dim_AppUsers.sql",
     "mis.Gold_Dim_Branch.sql",
@@ -73,7 +73,8 @@ def compile_sql_strict():
         f"{DIV}\n\nSET NOCOUNT ON;\n\n"
         f"DECLARE @StartTime DATETIME;\n"
         f"DECLARE @EndTime DATETIME;\n"
-        f"DECLARE @Status NVARCHAR(50);\n\n"
+        f"DECLARE @Status NVARCHAR(50);\n"
+        f"DECLARE @sql NVARCHAR(MAX);\n\n"
     )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
@@ -116,7 +117,8 @@ def compile_sql_strict():
 
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
 
-    print(f"✅ Compiled SQL file with logging created at: {OUTPUT}")
+    print(f"✅ Compiled Gold SQL file with logging created at: {OUTPUT}")
+
 
 if __name__ == "__main__":
     compile_sql_strict()

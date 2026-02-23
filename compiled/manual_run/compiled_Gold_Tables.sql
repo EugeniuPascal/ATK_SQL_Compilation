@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Gold) with Logging
--- Generated: 2026-02-23 15:37:14
+-- Generated: 2026-02-23 16:18:08
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (25):
 --   mis.Gold_Dim_AppUsers.sql
@@ -34,6 +34,7 @@ SET NOCOUNT ON;
 DECLARE @StartTime DATETIME;
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50);
+DECLARE @sql NVARCHAR(MAX);
 
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Gold_Dim_AppUsers.sql

@@ -200,7 +200,7 @@ SELECT
     , BranchID              = MAX(t.[BranchID])
     , CommitteeDecisionDate = MAX(t.[CommitteeDecisionDate])
 INTO #t
-FROM mis.Gold_Fact_CerereOnline t
+FROM mis.dev_Gold_Fact_CerereOnline_v0 t
 WHERE t.[ID] IS NOT NULL
 GROUP BY t.[ID];
 

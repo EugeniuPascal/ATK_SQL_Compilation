@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze) with Logging
--- Generated: 2026-02-24 14:02:28
+-- Generated: 2026-02-24 17:02:30
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (28):
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql

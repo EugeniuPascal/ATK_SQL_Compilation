@@ -74,7 +74,6 @@ GO
         z.[ЗаявкаНаКредит Клиент ID] AS [ClientID],
         z.[ЗаявкаНаКредит Сумма Кредита] AS [CreditAmount],
         z.[ЗаявкаНаКредит Валюта] AS [CurrencyType],
-        z.[ЗаявкаНаКредит Дата] AS [CreditAppDate],
         z.[ЗаявкаНаКредит Причина Отказа] AS [RefusalReason],
         z.[ЗаявкаНаКредит Кредитный Продукт] AS [CreditProduct],
         z.[ЗаявкаНаКредит Финансовый Продукт ID] AS [ProductID],
@@ -123,14 +122,10 @@ GO
     UNION ALL
 
     SELECT
-        NULL AS [ID], NULL AS [Date], NULL AS [Status], NULL AS [Posted],
-        NULL AS [BusinessSector], NULL AS [Type], NULL AS [HistoryType],
-        NULL AS [CreditID], NULL AS [AuthorID], NULL AS [Author], NULL AS [Purpose],
-        NULL AS [IsGreen], NULL AS [ClientID], NULL AS [CreditAmount],
-        NULL AS [CurrencyType], NULL AS [CreditAppDate],     
-        NULL AS [RefusalReason], NULL AS [CreditProduct], NULL AS [ProductID],
-        NULL AS [CreditProductID], NULL AS [InternetID], NULL AS [EmployeeID], NULL AS [BranchID],
-        NULL AS [PartnerID], NULL AS [Partner],
+        NULL AS [ID], NULL AS [Date], NULL AS [Status], NULL AS [Posted], NULL AS [BusinessSector], NULL AS [Type], NULL AS [HistoryType],
+        NULL AS [CreditID], NULL AS [AuthorID], NULL AS [Author], NULL AS [Purpose], NULL AS [IsGreen], NULL AS [ClientID], 
+		NULL AS [CreditAmount], NULL AS [CurrencyType], NULL AS [RefusalReason], NULL AS [CreditProduct], NULL AS [ProductID], 
+		NULL AS [CreditProductID], NULL AS [InternetID], NULL AS [EmployeeID], NULL AS [BranchID], NULL AS [PartnerID], NULL AS [Partner],
         o.[ОбъединеннаяИнтернетЗаявка Дата],
         o.[ОбъединеннаяИнтернетЗаявка Номер],
         o.[ОбъединеннаяИнтернетЗаявка Проведен],
@@ -167,16 +162,11 @@ GO
 )
 INSERT INTO mis.[Silver_CerereOnline_base] 
 (
-    [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType],
-    [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
-    [CreditAmount],[CurrencyType], [CreditAmountInMDL],[NewExisting_Client],
-    [RefusalReason],[CreditProduct],[ProductID],[CreditProductID],
-    [InternetID],[EmployeeID],[BranchID],[PartnerID],[Partner],
-    [WebDate],[WebNr],[WebPosted],[WebIncomeTypeOnline],[WebAge],
-    [WebSubmissionDate],[WebCredit],[WebIdentifier],[WebCreditEmployee],
-    [WebMobilePhone],[WebSentForReview],[WebGender],[WebStatus],
-    [WebCreditTerm],[WebBranchID],[ContactPerson],[ContactPersonPhone], 
-	[CommitteeDecisionDate], [CommitteeDecision]
+    [ID],[Date],[Status],[Posted],[BusinessSector],[Type],[HistoryType], [CreditID],[AuthorID],[Author],[Purpose],[IsGreen],[ClientID],
+    [CreditAmount],[CurrencyType], [CreditAmountInMDL],[NewExisting_Client], [RefusalReason],[CreditProduct],[ProductID],[CreditProductID],
+    [InternetID],[EmployeeID],[BranchID],[PartnerID],[Partner], [WebDate],[WebNr],[WebPosted],[WebIncomeTypeOnline],[WebAge],
+    [WebSubmissionDate],[WebCredit],[WebIdentifier],[WebCreditEmployee], [WebMobilePhone],[WebSentForReview],[WebGender],[WebStatus],
+    [WebCreditTerm],[WebBranchID],[ContactPerson],[ContactPersonPhone], [CommitteeDecisionDate], [CommitteeDecision]
 )
 SELECT
     b.[ID], b.[Date], b.[Status], b.[Posted],
@@ -203,7 +193,7 @@ OUTER APPLY (
     SELECT TOP 1 v.[Валюта Курс]
     FROM [ATK].[mis].[Bronze_РегистрыСведений.Валюта] v
     WHERE v.[Валюта Валюта] = b.[CurrencyType]
-      AND v.[Валюта Период] <= b.[CreditAppDate]
+      AND v.[Валюта Период] <= b.[Date]
     ORDER BY v.[Валюта Период] DESC
 ) AS v
 WHERE c.[Контрагенты Тестовый Контрагент] = 0;

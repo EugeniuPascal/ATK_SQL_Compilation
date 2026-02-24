@@ -17,7 +17,7 @@ BEGIN
         TypeName_Sticky_Final NVARCHAR(200) NULL,
         CreditStatus_Base     NVARCHAR(200) NULL,
         LastBranchID          VARCHAR(64)   NULL,
-        LastExpertID          VARCHAR(64)   NULL,
+        LastEmployeeID        VARCHAR(64)   NULL,
         BranchID              VARCHAR(36)   NULL,
         EmployeeID            VARCHAR(36)   NULL,
         IsSpecialBranch       BIT           NULL,

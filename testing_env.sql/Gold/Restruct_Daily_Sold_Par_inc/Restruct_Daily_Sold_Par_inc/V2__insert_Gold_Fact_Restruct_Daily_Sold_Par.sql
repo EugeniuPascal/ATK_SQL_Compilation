@@ -128,7 +128,7 @@ JOIN MinFrom m ON r.CreditID = m.CreditID AND r.ValidFrom = m.MinValidFrom;
 SELECT
     b.*,
     COALESCE(r_curr.FinalBranchID, e.FinalBranchID) AS LastBranchID,
-    COALESCE(r_curr.FinalExpertID, e.FinalExpertID) AS LastExpertID,
+    COALESCE(r_curr.FinalExpertID, e.FinalExpertID) AS LastEmployeeID,
     f.EmployeeID,
     f.BranchID,
     COALESCE(r_curr.IsSpecialBranch, e.IsSpecialBranch) AS IsSpecialBranch,
@@ -201,7 +201,7 @@ WITH FinalDedup AS (
         CASE WHEN f.ClientID IS NOT NULL THEN N'НекоммерческаяРеструктуризация' ELSE j.TypeName_Sticky_Final END AS TypeName_Sticky_Final,
         j.CreditStatus_Base,
         j.LastBranchID,
-        j.LastExpertID,
+        j.LastEmployeeID,
         j.BranchID,
         j.EmployeeID,
         j.IsSpecialBranch,
@@ -240,14 +240,14 @@ INSERT INTO [mis].[Gold_Fact_Restruct_Daily_Sold_Par] (
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
     StateName_Final, TypeName_Sticky_Final, CreditStatus_Base,
-    LastBranchID, LastExpertID, BranchID, EmployeeID,
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
     IsSpecialBranch, SegmentIFRS, ParIFRS, Par, StageName
 )
 SELECT
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
     StateName_Final, TypeName_Sticky_Final, CreditStatus_Base,
-    LastBranchID, LastExpertID, BranchID, EmployeeID,
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
     IsSpecialBranch, SegmentIFRS, ParIFRS, Par, StageName
 FROM FinalDedup
 WHERE rn = 1;

@@ -140,7 +140,7 @@ JOIN MinFrom m
 SELECT
     b.*,
     COALESCE(rc.FinalBranchID, e.FinalBranchID) AS LastBranchID,
-    COALESCE(rc.FinalExpertID, e.FinalExpertID) AS LastExpertID,
+    COALESCE(rc.FinalExpertID, e.FinalExpertID) AS LastEmployeeID,
     f.EmployeeID,
     f.BranchID,
     COALESCE(rc.IsSpecialBranch, e.IsSpecialBranch) AS IsSpecialBranch,
@@ -194,7 +194,7 @@ INSERT INTO mis.[Gold_Fact_Restruct_Daily_Sold_Par]
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
     StateName_Final, TypeName_Sticky_Final, CreditStatus_Base,
-    LastBranchID, LastExpertID, BranchID, EmployeeID,
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
     IsSpecialBranch, SegmentIFRS, ParIFRS, Par, StageName
 )
 SELECT
@@ -210,7 +210,7 @@ SELECT
     j.TypeName_Sticky_Final,
     j.CreditStatus_Base,
     j.LastBranchID,
-    j.LastExpertID,
+    j.LastEmployeeID,
     j.BranchID,
     j.EmployeeID,
     j.IsSpecialBranch,

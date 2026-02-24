@@ -34,6 +34,7 @@ SELECT *
 FROM [dbo].[РегистрыСведений.ОтправленныеСМС]
 WHERE [ОтправленныеСМС Период] >= '{start_date}'
   AND [ОтправленныеСМС Период] < '{end_date}'
+  ORDER BY [ОтправленныеСМС Период] ASC
 """
 
 # -------------------------
@@ -44,7 +45,7 @@ df = pd.read_sql(query, conn)
 # -------------------------
 # 5) Prepare output folder & file
 # -------------------------
-export_folder = r"\\MI-FSR01\General\CBO\Business Department\Retail Loan Advisor\Private\Sectie Digital\Digital - Cornelia Verdes\Statistica Push notification&SMS\Exports"
+export_folder = r"\\MI-FSR01\General\CBO\Business Department\Retail Loan Advisor\Private\Sectie Digital\Digital - Cornelia Verdes\Statistica Push notification&SMS\SMS_Reports"
 os.makedirs(export_folder, exist_ok=True)
 
 output_file = os.path.join(

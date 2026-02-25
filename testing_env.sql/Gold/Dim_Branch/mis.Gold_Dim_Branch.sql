@@ -14,7 +14,7 @@ CREATE TABLE mis.[Gold_Dim_Branch]
     ActivityType NVARCHAR(100) NULL,
     EFSERegion NVARCHAR(50) NULL,
     Address NVARCHAR(150) NULL,
-    Phones 
+    Phones NVARCHAR(150) NULL,
     Email NVARCHAR(150) NULL,
     PrintBranchName NVARCHAR(100) NULL,
     Latitude DECIMAL(12, 8) NULL,

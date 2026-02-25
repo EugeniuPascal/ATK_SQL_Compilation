@@ -1424,3 +1424,69 @@
 2026-02-25 15:55:44,652 [INFO] Processing file: mis.Silver_CPD_TaskDays.sql
 2026-02-25 15:55:44,653 [INFO] Finished file: mis.Silver_CPD_TaskDays.sql
 2026-02-25 15:55:44,664 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql
+2026-02-25 16:22:12,082 [INFO] === Starting Silver SQL Compilation Job ===
+2026-02-25 16:22:12,083 [INFO] Total SQL files to process: 15
+2026-02-25 16:22:12,083 [INFO] Processing file: mis.Silver_Employee_User.sql
+2026-02-25 16:22:12,084 [INFO] Finished file: mis.Silver_Employee_User.sql
+2026-02-25 16:22:12,084 [INFO] Processing file: mis.Silver_CommiteeProtocol.sql
+2026-02-25 16:22:12,084 [INFO] Finished file: mis.Silver_CommiteeProtocol.sql
+2026-02-25 16:22:12,084 [INFO] Processing file: mis.Silver_EmployeesPosition_SCD.sql
+2026-02-25 16:22:12,085 [INFO] Finished file: mis.Silver_EmployeesPosition_SCD.sql
+2026-02-25 16:22:12,085 [INFO] Processing file: mis.Silver_CerereOnline_base.sql
+2026-02-25 16:22:12,086 [INFO] Finished file: mis.Silver_CerereOnline_base.sql
+2026-02-25 16:22:12,086 [INFO] Processing file: mis.Silver_Restruct_SCD.sql
+2026-02-25 16:22:12,087 [INFO] Finished file: mis.Silver_Restruct_SCD.sql
+2026-02-25 16:22:12,087 [INFO] Processing file: mis.Silver_RestructState_SCD.sql
+2026-02-25 16:22:12,087 [INFO] Finished file: mis.Silver_RestructState_SCD.sql
+2026-02-25 16:22:12,087 [INFO] Processing file: mis.Silver_Restruct_Merged_SCD.sql
+2026-02-25 16:22:12,088 [INFO] Finished file: mis.Silver_Restruct_Merged_SCD.sql
+2026-02-25 16:22:12,088 [INFO] Processing file: mis.Silver_Client_UnhealedFlag.sql
+2026-02-25 16:22:12,088 [INFO] Finished file: mis.Silver_Client_UnhealedFlag.sql
+2026-02-25 16:22:12,088 [INFO] Processing file: mis.Silver_Resp_SCD.sql
+2026-02-25 16:22:12,089 [INFO] Finished file: mis.Silver_Resp_SCD.sql
+2026-02-25 16:22:12,089 [INFO] Processing file: mis.Silver_Stages_SCD.sql
+2026-02-25 16:22:12,089 [INFO] Finished file: mis.Silver_Stages_SCD.sql
+2026-02-25 16:22:12,089 [INFO] Processing file: mis.Silver_SCD_GroupMembershipPeriods.sql
+2026-02-25 16:22:12,090 [INFO] Finished file: mis.Silver_SCD_GroupMembershipPeriods.sql
+2026-02-25 16:22:12,090 [INFO] Processing file: mis.Silver_Sold_Owner.sql
+2026-02-25 16:22:12,091 [INFO] Finished file: mis.Silver_Sold_Owner.sql
+2026-02-25 16:22:12,091 [INFO] Processing file: mis.Silver_Limits.sql
+2026-02-25 16:22:12,091 [INFO] Finished file: mis.Silver_Limits.sql
+2026-02-25 16:22:12,091 [INFO] Processing file: mis.Silver_Conditions_After_Disb.sql
+2026-02-25 16:22:12,092 [INFO] Finished file: mis.Silver_Conditions_After_Disb.sql
+2026-02-25 16:22:12,093 [INFO] Processing file: mis.Silver_CPD_TaskDays.sql
+2026-02-25 16:22:12,093 [INFO] Finished file: mis.Silver_CPD_TaskDays.sql
+2026-02-25 16:22:12,098 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql
+2026-02-25 16:22:18,136 [INFO] === Starting Silver SQL Compilation Job ===
+2026-02-25 16:22:18,137 [INFO] Total SQL files to process: 15
+2026-02-25 16:22:18,138 [INFO] Processing file: mis.Silver_Employee_User.sql
+2026-02-25 16:22:18,138 [INFO] Finished file: mis.Silver_Employee_User.sql
+2026-02-25 16:22:18,138 [INFO] Processing file: mis.Silver_CommiteeProtocol.sql
+2026-02-25 16:22:18,139 [INFO] Finished file: mis.Silver_CommiteeProtocol.sql
+2026-02-25 16:22:18,139 [INFO] Processing file: mis.Silver_EmployeesPosition_SCD.sql
+2026-02-25 16:22:18,140 [INFO] Finished file: mis.Silver_EmployeesPosition_SCD.sql
+2026-02-25 16:22:18,140 [INFO] Processing file: mis.Silver_CerereOnline_base.sql
+2026-02-25 16:22:18,141 [INFO] Finished file: mis.Silver_CerereOnline_base.sql
+2026-02-25 16:22:18,141 [INFO] Processing file: mis.Silver_Restruct_SCD.sql
+2026-02-25 16:22:18,141 [INFO] Finished file: mis.Silver_Restruct_SCD.sql
+2026-02-25 16:22:18,141 [INFO] Processing file: mis.Silver_RestructState_SCD.sql
+2026-02-25 16:22:18,142 [INFO] Finished file: mis.Silver_RestructState_SCD.sql
+2026-02-25 16:22:18,142 [INFO] Processing file: mis.Silver_Restruct_Merged_SCD.sql
+2026-02-25 16:22:18,142 [INFO] Finished file: mis.Silver_Restruct_Merged_SCD.sql
+2026-02-25 16:22:18,142 [INFO] Processing file: mis.Silver_Client_UnhealedFlag.sql
+2026-02-25 16:22:18,143 [INFO] Finished file: mis.Silver_Client_UnhealedFlag.sql
+2026-02-25 16:22:18,143 [INFO] Processing file: mis.Silver_Resp_SCD.sql
+2026-02-25 16:22:18,143 [INFO] Finished file: mis.Silver_Resp_SCD.sql
+2026-02-25 16:22:18,143 [INFO] Processing file: mis.Silver_Stages_SCD.sql
+2026-02-25 16:22:18,144 [INFO] Finished file: mis.Silver_Stages_SCD.sql
+2026-02-25 16:22:18,144 [INFO] Processing file: mis.Silver_SCD_GroupMembershipPeriods.sql
+2026-02-25 16:22:18,144 [INFO] Finished file: mis.Silver_SCD_GroupMembershipPeriods.sql
+2026-02-25 16:22:18,144 [INFO] Processing file: mis.Silver_Sold_Owner.sql
+2026-02-25 16:22:18,145 [INFO] Finished file: mis.Silver_Sold_Owner.sql
+2026-02-25 16:22:18,145 [INFO] Processing file: mis.Silver_Limits.sql
+2026-02-25 16:22:18,146 [INFO] Finished file: mis.Silver_Limits.sql
+2026-02-25 16:22:18,146 [INFO] Processing file: mis.Silver_Conditions_After_Disb.sql
+2026-02-25 16:22:18,147 [INFO] Finished file: mis.Silver_Conditions_After_Disb.sql
+2026-02-25 16:22:18,147 [INFO] Processing file: mis.Silver_CPD_TaskDays.sql
+2026-02-25 16:22:18,147 [INFO] Finished file: mis.Silver_CPD_TaskDays.sql
+2026-02-25 16:22:18,155 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql

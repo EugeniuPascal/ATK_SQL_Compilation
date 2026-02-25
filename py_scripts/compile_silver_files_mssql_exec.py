@@ -79,23 +79,23 @@ try:
         "mis.Silver_CommiteeProtocol.sql",
 
         # creates Gold_Fact_CerereOnline
-        "mis.Silver_EmployeesPosition_SCD.sql"
-        #"mis.Silver_CerereOnline_base.sql",
+        "mis.Silver_EmployeesPosition_SCD.sql",
+        "mis.Silver_CerereOnline_base.sql",
 
         # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
-        #"mis.Silver_Restruct_SCD.sql",    
-        #"mis.Silver_RestructState_SCD.sql",
-        #"mis.Silver_Restruct_Merged_SCD.sql",
-        #"mis.Silver_Client_UnhealedFlag.sql",
-        #"mis.Silver_Resp_SCD.sql",
-        #"mis.Silver_Stages_SCD.sql",
+        "mis.Silver_Restruct_SCD.sql",    
+        "mis.Silver_RestructState_SCD.sql",
+        "mis.Silver_Restruct_Merged_SCD.sql",
+        "mis.Silver_Client_UnhealedFlag.sql",
+        "mis.Silver_Resp_SCD.sql",
+        "mis.Silver_Stages_SCD.sql",
 
         # below table execution order to create mis.Gold_Fact_CPD_Sold 
-        #"mis.Silver_SCD_GroupMembershipPeriods.sql", 
-        #"mis.Silver_Sold_Owner.sql",
-        #"mis.Silver_Limits.sql",
-        #"mis.Silver_Conditions_After_Disb.sql",
-        #"mis.Silver_CPD_TaskDays.sql",
+        "mis.Silver_SCD_GroupMembershipPeriods.sql", 
+        "mis.Silver_Sold_Owner.sql",
+        "mis.Silver_Limits.sql",
+        "mis.Silver_Conditions_After_Disb.sql",
+        "mis.Silver_CPD_TaskDays.sql",
     ]
 
     sql_files = [SOURCE_FOLDER / f for f in SQL_ORDER if (SOURCE_FOLDER / f).exists()]

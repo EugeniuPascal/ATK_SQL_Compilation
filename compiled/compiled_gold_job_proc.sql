@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-02-24 17:02:41.908561
+-- Generated: 2026-02-25 09:55:04.924022
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -1903,6 +1903,84 @@ WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';';
     SET @EndTime = NULL;
     SET @Status = 'Running';
     SET @sql = N'SET NOCOUNT ON;
+
+IF OBJECT_ID(''mis.[Gold_Fact_CerereOnline]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[Gold_Fact_CerereOnline];
+
+CREATE TABLE mis.[Gold_Fact_CerereOnline] 
+(
+    [ID]                     VARCHAR(36)    NULL,
+    [Date]                   DATETIME       NULL,
+    [Status]                 NVARCHAR(256)  NULL,
+    [Posted]                 VARCHAR(36)    NULL,
+    [BusinessSector]         NVARCHAR(150)  NULL,
+    [Type]                   NVARCHAR(100)  NULL,
+    [HistoryType]            NVARCHAR(256)  NULL,
+    [CreditID]               VARCHAR(36)    NULL,
+    [AuthorID]               VARCHAR(36)    NULL,
+    [Author]                 NVARCHAR(100)  NULL,
+    [Purpose]                NVARCHAR(150)  NULL,
+    [IsGreen]                NVARCHAR(36)   NULL,
+    [ClientID]               VARCHAR(36)    NULL,
+    [CreditAmount]           DECIMAL(15,2)  NULL,
+    [CurrencyType]           NVARCHAR(36)   NULL,
+    [CreditAmountInMDL]      DECIMAL(18,2)  NULL,
+    [NewExisting_Client]     NVARCHAR(20)   NULL,
+    [RefusalReason]          NVARCHAR(200)  NULL,
+    [CreditProduct]          NVARCHAR(150)  NULL,
+    [ProductID]              VARCHAR(36)    NULL,
+    [CreditProductID]        VARCHAR(36)    NULL,
+    [InternetID]             VARCHAR(36)    NULL,
+    [EmployeeID]             VARCHAR(36)    NULL,
+    [BranchID]               VARCHAR(36)    NULL,
+    [PartnerID]              VARCHAR(36)    NULL,
+    [Partner]                NVARCHAR(150)  NULL,
+    [WebDate]                DATETIME       NULL,
+    [WebNr]                  NVARCHAR(50)   NULL,
+    [WebPosted]              VARCHAR(36)    NULL,
+    [WebIncomeTypeOnline]    NVARCHAR(200)  NULL,
+    [WebAge]                 INT            NULL,
+    [WebSubmissionDate]      DATETIME       NULL,
+    [WebCredit]              NVARCHAR(100)  NULL,
+    [WebIdentifier]          NVARCHAR(50)   NULL,
+    [WebCreditEmployee]      NVARCHAR(50)   NULL,
+    [WebMobilePhone]         NVARCHAR(20)   NULL,
+    [WebSentForReview]       NVARCHAR(36)   NULL,
+    [WebGender]              NVARCHAR(256)  NULL,
+    [WebStatus]              NVARCHAR(256)  NULL,
+    [WebCreditTerm]          INT            NULL,
+    [WebBranchID]            VARCHAR(36)    NULL,
+	[ContactPerson]          NVARCHAR(100)  NULL,
+	[ContactPersonPhone]     NVARCHAR(50)   NULL,
+    [CommitteeDecisionDate]  DATETIME       NULL,
+	[CommitteeDecision]      NVARCHAR(256)  NULL,
+	[Data autorizarii]       DATETIME       NULL,
+    [Data depunerii cererii] DATETIME       NULL,
+    [Data votarii]           DATETIME       NULL,
+    [Autor Votare]           NVARCHAR(256)  NULL,
+    [AutorVotare ID]         VARCHAR(36)    NULL,
+    [Autor Votare Position]  VARCHAR(36)    NULL,
+    [Autor decizie]          NVARCHAR(256)  NULL,
+    [AutorDecizie ID]        VARCHAR(36)    NULL,
+    [Кредиты Сегмент Доходов] NVARCHAR(256)  NULL,
+    [Tip Рассмотрения Заявки RO] NVARCHAR(56)  NULL,
+    [Viteza de decizie]          DECIMAL(18,2) NULL,
+    [Viteza de votare]           DECIMAL(18,2) NULL,
+    [Viteza de procesare]        DECIMAL(18,2) NULL,
+    [Analyse]                    DECIMAL(18,2) NULL,
+    [Viteza de votare CC]        DECIMAL(18,2) NULL,
+    [CC]                         DECIMAL(18,2) NULL,
+    [Disbusement speed]          DECIMAL(18,2) NULL,
+    [Total speed]                DECIMAL(18,2) NULL,
+    [Timpul de asteptare]        DECIMAL(18,2) NULL,
+    [Viteza de decizie CC]       DECIMAL(18,2) NULL,
+    [Viteza debursare(dupa procesare)] DECIMAL(18,2) NULL,
+    [Viteza debursare(dupa Decizie)]   DECIMAL(18,2) NULL,
+    [Depasire norma viteza]            BIT           NULL,
+    [LoadDttm_Ext]                     DATETIME      NULL
+ );
+
+SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
 DECLARE @TargetPosID varchar(36);
@@ -1984,103 +2062,32 @@ SELECT
 FROM src s;
 
 
-
-
-IF OBJECT_ID(''mis.Gold_Fact_CerereOnline'',''U'') IS NOT NULL
-    DROP TABLE mis.Gold_Fact_CerereOnline;
-
-SELECT f.*
-INTO mis.Gold_Fact_CerereOnline
+INSERT INTO mis.Gold_Fact_CerereOnline
+(
+    [ID], [Date], [Status], [Posted], [BusinessSector], [Type], [HistoryType],
+    [CreditID], [AuthorID], [Author], [Purpose], [IsGreen], [ClientID],
+    [CreditAmount], [CurrencyType], [CreditAmountInMDL], [NewExisting_Client],
+    [RefusalReason], [CreditProduct], [ProductID], [CreditProductID], [InternetID],
+    [EmployeeID], [BranchID], [PartnerID], [Partner], [WebDate], [WebNr],
+    [WebPosted], [WebIncomeTypeOnline], [WebAge], [WebSubmissionDate], [WebCredit],
+    [WebIdentifier], [WebCreditEmployee], [WebMobilePhone], [WebSentForReview],
+    [WebGender], [WebStatus], [WebCreditTerm], [WebBranchID], [ContactPerson],
+    [ContactPersonPhone], [CommitteeDecisionDate], [CommitteeDecision]
+    
+)
+SELECT
+    [ID], [Date], [Status], [Posted], [BusinessSector], [Type], [HistoryType],
+    [CreditID], [AuthorID], [Author], [Purpose], [IsGreen], [ClientID],
+    [CreditAmount], [CurrencyType], [CreditAmountInMDL], [NewExisting_Client],
+    [RefusalReason], [CreditProduct], [ProductID], [CreditProductID], [InternetID],
+    [EmployeeID], [BranchID], [PartnerID], [Partner], [WebDate], [WebNr],
+    [WebPosted], [WebIncomeTypeOnline], [WebAge], [WebSubmissionDate], [WebCredit],
+    [WebIdentifier], [WebCreditEmployee], [WebMobilePhone], [WebSentForReview],
+    [WebGender], [WebStatus], [WebCreditTerm], [WebBranchID], [ContactPerson],
+    [ContactPersonPhone], [CommitteeDecisionDate], [CommitteeDecision]
+    
 FROM [ATK].[mis].[Silver_CerereOnline_base] f
 WHERE f.[Date] >= @FromDate;
-
-
-
-
-CREATE INDEX IX_CerereOnline_ID       ON mis.Gold_Fact_CerereOnline([ID]);
-CREATE INDEX IX_CerereOnline_CreditID ON mis.Gold_Fact_CerereOnline([CreditID]);
-CREATE INDEX IX_CerereOnline_AuthorID ON mis.Gold_Fact_CerereOnline([AuthorID]);
-CREATE INDEX IX_CerereOnline_Date     ON mis.Gold_Fact_CerereOnline([Date]);
-
-
-
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Data autorizarii'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Data autorizarii] datetime2(0) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Data depunerii cererii'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Data depunerii cererii] datetime2(0) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Data votarii'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Data votarii] datetime2(0) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Autor Votare'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Autor Votare] nvarchar(255) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''AutorVotare ID'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [AutorVotare ID] varchar(36) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Autor Votare Position'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Autor Votare Position] varchar(36) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Autor decizie'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Autor decizie] nvarchar(255) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''AutorDecizie ID'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [AutorDecizie ID] varchar(36) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Кредиты Сегмент Доходов'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Кредиты Сегмент Доходов] nvarchar(255) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Tip Рассмотрения Заявки RO'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Tip Рассмотрения Заявки RO] nvarchar(50) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Viteza de decizie'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de decizie] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Viteza de votare'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de votare] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Viteza de procesare'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de procesare] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Analyse'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Analyse] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Viteza de votare CC'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de votare CC] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''CC'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [CC] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Disbusement speed'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Disbusement speed] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Total speed'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Total speed] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Timpul de asteptare'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Timpul de asteptare] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Viteza de decizie CC'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza de decizie CC] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Viteza debursare(dupa procesare)'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza debursare(dupa procesare)] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Viteza debursare(dupa Decizie)'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Viteza debursare(dupa Decizie)] decimal(18,2) NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''Depasire norma viteza'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline ADD [Depasire norma viteza] bit NULL;
-
-IF COL_LENGTH(''mis.Gold_Fact_CerereOnline'', ''LoadDttm_Ext'') IS NULL
-    ALTER TABLE mis.Gold_Fact_CerereOnline
-        ADD [LoadDttm_Ext] datetime NOT NULL
-            CONSTRAINT DF_Gold_Fact_CerereOnline_LoadDttm DEFAULT (GETDATE());
-
-
-
 
 
 
@@ -2192,7 +2199,7 @@ LEFT JOIN #proto_last pl
 OUTER APPLY
 (
     SELECT TOP (1) s.PositionID
-    FROM [ATK].[mis].[dev_Silver_EmployeesPosition_SCD] s
+    FROM [ATK].[mis].[Silver_EmployeesPosition_SCD] s
     WHERE s.EmployeeID = m.MemberEmployeeID
       AND COALESCE(m.VoteDate, pl.ProtocolDate) >= s.ValidFrom
       AND COALESCE(m.VoteDate, pl.ProtocolDate) <  ISNULL(s.ValidTo, ''9999-12-31'')
@@ -2248,7 +2255,7 @@ FROM #vote_final v
 OUTER APPLY
 (
     SELECT TOP (1) s.PositionID
-    FROM [ATK].[mis].[dev_Silver_EmployeesPosition_SCD] s
+    FROM [ATK].[mis].[Silver_EmployeesPosition_SCD] s
     WHERE s.EmployeeID = v.[AutorVotare ID]
       AND v.VoteDate   >= s.ValidFrom
       AND v.VoteDate   <  ISNULL(s.ValidTo, ''9999-12-31'')
@@ -2410,7 +2417,12 @@ OUTER APPLY
              THEN NULL
              ELSE mis.fn_WorkMinutesSigned(d.Dep, v.VoteDate, 8*60, 20*60)
         END
-) mx;';
+) mx;
+
+CREATE INDEX IX_CerereOnline_ID       ON mis.Gold_Fact_CerereOnline([ID]);
+CREATE INDEX IX_CerereOnline_CreditID ON mis.Gold_Fact_CerereOnline([CreditID]);
+CREATE INDEX IX_CerereOnline_AuthorID ON mis.Gold_Fact_CerereOnline([AuthorID]);
+CREATE INDEX IX_CerereOnline_Date     ON mis.Gold_Fact_CerereOnline([Date]);';
     BEGIN TRY
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';

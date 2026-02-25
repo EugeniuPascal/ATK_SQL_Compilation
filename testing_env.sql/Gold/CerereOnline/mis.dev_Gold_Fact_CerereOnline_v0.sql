@@ -284,7 +284,7 @@ LEFT JOIN [ATK].[dbo].[Документы.ПротоколКомитета.Чл�
 CREATE INDEX IX_members_ID  ON #members(CerereOnlineID);
 CREATE INDEX IX_members_emp ON #members(MemberEmployeeID);
 
--- positions for members (SCD by date) from dev_Silver_EmployeesPosition_SCD
+-- positions for members (SCD by date) from Silver_EmployeesPosition_SCD
 IF OBJECT_ID('tempdb..#m_pos') IS NOT NULL DROP TABLE #m_pos;
 SELECT
       m.CerereOnlineID
@@ -299,7 +299,7 @@ LEFT JOIN #proto_last pl
 OUTER APPLY
 (
     SELECT TOP (1) s.PositionID
-    FROM [ATK].[mis].[dev_Silver_EmployeesPosition_SCD] s
+    FROM [ATK].[mis].[Silver_EmployeesPosition_SCD] s
     WHERE s.EmployeeID = m.MemberEmployeeID
       AND COALESCE(m.VoteDate, pl.ProtocolDate) >= s.ValidFrom
       AND COALESCE(m.VoteDate, pl.ProtocolDate) <  ISNULL(s.ValidTo, '9999-12-31')
@@ -355,7 +355,7 @@ FROM #vote_final v
 OUTER APPLY
 (
     SELECT TOP (1) s.PositionID
-    FROM [ATK].[mis].[dev_Silver_EmployeesPosition_SCD] s
+    FROM [ATK].[mis].[Silver_EmployeesPosition_SCD] s
     WHERE s.EmployeeID = v.[AutorVotare ID]
       AND v.VoteDate   >= s.ValidFrom
       AND v.VoteDate   <  ISNULL(s.ValidTo, '9999-12-31')

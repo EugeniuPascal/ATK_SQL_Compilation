@@ -52,10 +52,14 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
+def escape_sql_string(text: str) -> str:
+    """Escape single quotes for NVARCHAR literal."""
+    return text.replace("'", "''")
+
 # --------------------------------------------------------------------
 # Main compilation
 # --------------------------------------------------------------------
-def compile_sql_safe():
+def compile_sql_dynamic():
     sql_files = []
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
@@ -65,11 +69,15 @@ def compile_sql_safe():
             print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
     header = (
-        f"-- Compiled SQL bundle (Gold) with Logging (Safe Version)\n"
+        f"-- Compiled SQL bundle (Gold) with Logging (Dynamic Execution)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
         f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join([f.name for f in sql_files]) + "\n"
         f"{DIV}\n\nSET NOCOUNT ON;\n\n"
+        f"DECLARE @StartTime DATETIME;\n"
+        f"DECLARE @EndTime DATETIME;\n"
+        f"DECLARE @Status NVARCHAR(50);\n"
+        f"DECLARE @sql NVARCHAR(MAX);\n\n"
     )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
@@ -80,48 +88,39 @@ def compile_sql_safe():
             content = read_text_with_fallback(f)
             table_name = f.stem
 
-            # remove GO lines
             if content:
                 content = GO_RE.sub("", content)
+                safe_sql = escape_sql_string(content)
 
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
-
-            # BEGIN block per file + independent batch
-            out.write("GO\n")  # start new batch
             out.write("BEGIN\n")
-            out.write("    DECLARE @StartTime DATETIME = GETDATE();\n")
-            out.write("    DECLARE @EndTime DATETIME;\n")
-            out.write("    DECLARE @Status NVARCHAR(50) = 'Running';\n\n")
+            out.write("    SET @StartTime = GETDATE();\n")
+            out.write("    SET @Status = 'Running';\n\n")
 
-            # Drop temp tables if necessary
-            out.write("    -- Drop temp tables if they exist\n")
-            out.write("    IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;\n\n")
-
-            # TRY/CATCH block
+            # Dynamic SQL execution with TRY/CATCH
             out.write("    BEGIN TRY\n")
-            if content:
-                indented_content = "\n        ".join(content.rstrip().splitlines())
-                out.write(f"        {indented_content}\n")
+            if content and safe_sql.strip():
+                out.write(f"        SET @sql = N'{safe_sql}';\n")
+                out.write("        EXEC sys.sp_executesql @sql;\n")
+                out.write("        SET @Status = 'Success';\n")
             else:
-                out.write("        -- Could not decode file\n")
-            out.write("        SET @Status = 'Success';\n")
+                out.write("        SET @Status = 'Failed'; -- could not read/parse file\n")
             out.write("    END TRY\n")
             out.write("    BEGIN CATCH\n")
             out.write("        SET @Status = 'Failed';\n")
-            out.write("        THROW;\n")
+            out.write("        -- Continue to next file without throwing\n")
             out.write("    END CATCH;\n\n")
 
-            # Insert log
+            # Logging always runs
             out.write("    SET @EndTime = GETDATE();\n")
             out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
             out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
-            out.write("END\n")
-            out.write("GO\n\n")  # end batch
 
+            out.write("END\n\n")
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
 
-    print(f"✅ Compiled Gold SQL file with safe logging created at: {OUTPUT}")
+    print(f"✅ Compiled Gold SQL file with dynamic execution and logging created at: {OUTPUT}")
 
 
 if __name__ == "__main__":
-    compile_sql_safe()
+    compile_sql_dynamic()

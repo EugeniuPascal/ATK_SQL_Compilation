@@ -1,5 +1,5 @@
--- Compiled SQL bundle (Silver) with Logging
--- Generated: 2026-02-25 15:14:06
+-- Compiled SQL bundle (Silver) with Logging (Dynamic Execution)
+-- Generated: 2026-02-25 15:39:39
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (3):
 --   mis.Silver_Employee_User.sql
@@ -12,6 +12,7 @@ SET NOCOUNT ON;
 DECLARE @StartTime DATETIME;
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50);
+DECLARE @sql NVARCHAR(MAX);
 
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Silver_Employee_User.sql
@@ -21,83 +22,86 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        USE [ATK];
-        
-        IF OBJECT_ID('mis.[Silver_Employee_User]', 'U') IS NOT NULL
-            DROP TABLE mis.[Silver_Employee_User];
-        
-        CREATE TABLE mis.[Silver_Employee_User]
-        (
-            [SalaryPeriod]        DATETIME      NULL,
-            [EmployeeID]          VARCHAR(36)   NULL,
-            [PositionName]        NVARCHAR(100) NULL,
-            [PositionID]          VARCHAR(36)   NULL,
-            [BranchName]          NVARCHAR(100) NULL,
-        
-            [UserID]              VARCHAR(36)   NULL,
-            [IsDeleted]           VARCHAR(36)   NULL,
-            [UserName]            NVARCHAR(100) NULL,
-            [Primary_EmployeeGroup] NVARCHAR(256) NULL,
-            [Employee_UserID]     VARCHAR(36)   NULL,
-            [EmployeeName]        NVARCHAR(40)  NULL,
-            [CashDeskID]          VARCHAR(36)   NULL,
-            [CashDeskName]        NVARCHAR(50)  NULL,
-            [IsConnected]         INT           NULL,
-            [IsDisabled]          INT           NULL,
-            [MI_RepresentativeID] VARCHAR(36)   NULL,
-            [MI_RepresentativeName] NVARCHAR(55) NULL,
-            [IsInvalid]           VARCHAR(36)   NULL,
-            [DepartmentName]      NVARCHAR(10)  NULL,
-            [PersonName]          NVARCHAR(10)  NULL,
-            [IsSys_User]          VARCHAR(36)   NULL,
-            [IsPrepared]          VARCHAR(36)   NULL,
-            [IB_ID]               VARCHAR(36)   NULL,
-            [ServiceID]           VARCHAR(36)   NULL,
-            [IB_Properties]       VARCHAR(36)   NULL,
-            [DebtRemind]          VARCHAR(36)   NULL,
-            [ClientID]            VARCHAR(36)   NULL
-        );
-        
-        INSERT INTO mis.[Silver_Employee_User]
-        SELECT 
-        
-            a.[СотрудникиДанныеПоЗарплате Период]        AS SalaryPeriod,
-            a.[СотрудникиДанныеПоЗарплате Сотрудник ID] AS EmployeeID,
-            a.[СотрудникиДанныеПоЗарплате Должность]    AS PositionName,
-            a.[СотрудникиДанныеПоЗарплате Должность ID] AS PositionID,
-            a.[СотрудникиДанныеПоЗарплате Филиал]       AS BranchName,
-        
-            -- Users
-            u.[Пользователи ID]                           AS UserID,
-            u.[Пользователи Пометка Удаления]            AS IsDeleted,
-            u.[Пользователи Наименование]                AS UserName,
-            u.[Пользователи Основная Группа Сотрудников] AS Primary_EmployeeGroup,
-            u.[Пользователи Сотрудник ID]                AS Employee_UserID,
-            u.[Пользователи Сотрудник]                   AS EmployeeName,
-            u.[Пользователи Касса ID]                    AS CashDeskID,
-            u.[Пользователи Касса]                       AS CashDeskName,
-            u.[Пользователи Подключен]                   AS IsConnected,
-            u.[Пользователи Отключить]                   AS IsDisabled,
-            u.[Пользователи Представитель MI ID]         AS MI_RepresentativeID,
-            u.[Пользователи Представитель MI]            AS MI_RepresentativeName,
-            u.[Пользователи Недействителен]              AS IsInvalid,
-            u.[Пользователи Подразделение]               AS DepartmentName,
-            u.[Пользователи Физическое Лицо]             AS PersonName,
-            u.[Пользователи Служебный]                   AS IsSys_User,
-            u.[Пользователи Подготовлен]                 AS IsPrepared,
-            u.[Пользователи Идентификатор Пользователя ИБ]    AS IB_ID,
-            u.[Пользователи Идентификатор Пользователя Сервиса] AS ServiceID,
-            u.[Пользователи Свойства Пользователя ИБ]         AS IB_Properties,
-            u.[Пользователи Напоминать о Задолженности Поставщики] AS DebtRemind,
-            u.[Пользователи Контрагент ID]                    AS ClientID
-        FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] a
-        LEFT JOIN [ATK].[dbo].[Справочники.Пользователи] u
-            ON u.[Пользователи Сотрудник ID] = a.[СотрудникиДанныеПоЗарплате Сотрудник ID]
-        WHERE u.[Пользователи Пометка Удаления] <> '01';
+        SET @sql = N'USE [ATK];
+
+IF OBJECT_ID(''mis.[Silver_Employee_User]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[Silver_Employee_User];
+
+CREATE TABLE mis.[Silver_Employee_User]
+(
+    [SalaryPeriod]        DATETIME      NULL,
+    [EmployeeID]          VARCHAR(36)   NULL,
+    [PositionName]        NVARCHAR(100) NULL,
+    [PositionID]          VARCHAR(36)   NULL,
+    [BranchName]          NVARCHAR(100) NULL,
+
+    [UserID]              VARCHAR(36)   NULL,
+    [IsDeleted]           VARCHAR(36)   NULL,
+    [UserName]            NVARCHAR(100) NULL,
+    [Primary_EmployeeGroup] NVARCHAR(256) NULL,
+    [Employee_UserID]     VARCHAR(36)   NULL,
+    [EmployeeName]        NVARCHAR(40)  NULL,
+    [CashDeskID]          VARCHAR(36)   NULL,
+    [CashDeskName]        NVARCHAR(50)  NULL,
+    [IsConnected]         INT           NULL,
+    [IsDisabled]          INT           NULL,
+    [MI_RepresentativeID] VARCHAR(36)   NULL,
+    [MI_RepresentativeName] NVARCHAR(55) NULL,
+    [IsInvalid]           VARCHAR(36)   NULL,
+    [DepartmentName]      NVARCHAR(10)  NULL,
+    [PersonName]          NVARCHAR(10)  NULL,
+    [IsSys_User]          VARCHAR(36)   NULL,
+    [IsPrepared]          VARCHAR(36)   NULL,
+    [IB_ID]               VARCHAR(36)   NULL,
+    [ServiceID]           VARCHAR(36)   NULL,
+    [IB_Properties]       VARCHAR(36)   NULL,
+    [DebtRemind]          VARCHAR(36)   NULL,
+    [ClientID]            VARCHAR(36)   NULL
+);
+
+INSERT INTO mis.[Silver_Employee_User]
+SELECT 
+
+    a.[СотрудникиДанныеПоЗарплате Период]        AS SalaryPeriod,
+    a.[СотрудникиДанныеПоЗарплате Сотрудник ID] AS EmployeeID,
+    a.[СотрудникиДанныеПоЗарплате Должность]    AS PositionName,
+    a.[СотрудникиДанныеПоЗарплате Должность ID] AS PositionID,
+    a.[СотрудникиДанныеПоЗарплате Филиал]       AS BranchName,
+
+    -- Users
+    u.[Пользователи ID]                           AS UserID,
+    u.[Пользователи Пометка Удаления]            AS IsDeleted,
+    u.[Пользователи Наименование]                AS UserName,
+    u.[Пользователи Основная Группа Сотрудников] AS Primary_EmployeeGroup,
+    u.[Пользователи Сотрудник ID]                AS Employee_UserID,
+    u.[Пользователи Сотрудник]                   AS EmployeeName,
+    u.[Пользователи Касса ID]                    AS CashDeskID,
+    u.[Пользователи Касса]                       AS CashDeskName,
+    u.[Пользователи Подключен]                   AS IsConnected,
+    u.[Пользователи Отключить]                   AS IsDisabled,
+    u.[Пользователи Представитель MI ID]         AS MI_RepresentativeID,
+    u.[Пользователи Представитель MI]            AS MI_RepresentativeName,
+    u.[Пользователи Недействителен]              AS IsInvalid,
+    u.[Пользователи Подразделение]               AS DepartmentName,
+    u.[Пользователи Физическое Лицо]             AS PersonName,
+    u.[Пользователи Служебный]                   AS IsSys_User,
+    u.[Пользователи Подготовлен]                 AS IsPrepared,
+    u.[Пользователи Идентификатор Пользователя ИБ]    AS IB_ID,
+    u.[Пользователи Идентификатор Пользователя Сервиса] AS ServiceID,
+    u.[Пользователи Свойства Пользователя ИБ]         AS IB_Properties,
+    u.[Пользователи Напоминать о Задолженности Поставщики] AS DebtRemind,
+    u.[Пользователи Контрагент ID]                    AS ClientID
+FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] a
+LEFT JOIN [ATK].[dbo].[Справочники.Пользователи] u
+    ON u.[Пользователи Сотрудник ID] = a.[СотрудникиДанныеПоЗарплате Сотрудник ID]
+WHERE u.[Пользователи Пометка Удаления] <> ''01'';
+';
+        EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        -- Continue to next file without throwing
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -117,62 +121,64 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        USE [ATK];
-        
-        IF OBJECT_ID('mis.[Silver_CommiteeProtocol]', 'U') IS NOT NULL
-            DROP TABLE mis.[Silver_CommiteeProtocol];
-        
-        CREATE TABLE mis.[Silver_CommiteeProtocol]
-        (
-            [ПротоколКомитета Дата]                DATETIME NULL,
-        	[ПротоколКомитета Дата Решения]        DATETIME NULL,
-        	[ПротоколКомитета Кредит ID]           VARCHAR(36) NOT NULL,
-            [ПротоколКомитета ID]	               VARCHAR(36) NOT NULL,
-        	[ПротоколКомитета Заявка ID]           VARCHAR(36) NOT NULL,
-            [ПротоколКомитета Сумма на Выдачу]	   DECIMAL(15, 2) NULL,
-        	[ПротоколКомитета Сумма Рефинансирования Кредита] DECIMAL(15, 2) NULL,
-        	[ПротоколКомитета Назначение Использования Кредита] NVARCHAR(150) NULL,
-        	[ПротоколКомитета Категория Риска AML]  
-        	[ПротоколКомитета Это Зеленый Кредит] VARCHAR(36) NOT NULL,
-        	[ПротоколКомитета Комитет]            NVARCHAR(156) NULL,
-        	[ПротоколКомитета Партнер]  NVARCHAR(256) NULL
-        	
-        );
-        
-        INSERT INTO mis.[Silver_CommiteeProtocol] 
-        (
-            [ПротоколКомитета Дата],
-        	[ПротоколКомитета Дата Решения],
-        	[ПротоколКомитета Кредит ID], 
-        	[ПротоколКомитета ID],
-        	[ПротоколКомитета Заявка ID],
-            [ПротоколКомитета Сумма на Выдачу],
-        	[ПротоколКомитета Сумма Рефинансирования Кредита],
-        	[ПротоколКомитета Назначение Использования Кредита],
-        	[ПротоколКомитета Категория Риска AML],
-        	[ПротоколКомитета Это Зеленый Кредит],
-        	[ПротоколКомитета Комитет],
-        	[ПротоколКомитета Партнер]
-        )
-        SELECT
-            [ПротоколКомитета Дата],
-        	[ПротоколКомитета Дата Решения],
-        	[ПротоколКомитета Кредит ID], 
-        	[ПротоколКомитета ID],
-        	[ПротоколКомитета Заявка ID],
-            [ПротоколКомитета Сумма на Выдачу],
-        	[ПротоколКомитета Сумма Рефинансирования Кредита],
-        	[ПротоколКомитета Назначение Использования Кредита],
-        	[ПротоколКомитета Категория Риска AML],
-        	[ПротоколКомитета Это Зеленый Кредит],
-        	[ПротоколКомитета Комитет],
-        	[ПротоколКомитета Партнер]
-        	
-        FROM [ATK].[mis].[Bronze_Документы.ПротоколКомитета];
+        SET @sql = N'USE [ATK];
+
+IF OBJECT_ID(''mis.[Silver_CommiteeProtocol]'', ''U'') IS NOT NULL
+    DROP TABLE mis.[Silver_CommiteeProtocol];
+
+CREATE TABLE mis.[Silver_CommiteeProtocol]
+(
+    [ПротоколКомитета Дата]                DATETIME NULL,
+	[ПротоколКомитета Дата Решения]        DATETIME NULL,
+	[ПротоколКомитета Кредит ID]           VARCHAR(36) NOT NULL,
+    [ПротоколКомитета ID]	               VARCHAR(36) NOT NULL,
+	[ПротоколКомитета Заявка ID]           VARCHAR(36) NOT NULL,
+    [ПротоколКомитета Сумма на Выдачу]	   DECIMAL(15, 2) NULL,
+	[ПротоколКомитета Сумма Рефинансирования Кредита] DECIMAL(15, 2) NULL,
+	[ПротоколКомитета Назначение Использования Кредита] NVARCHAR(150) NULL,
+	[ПротоколКомитета Категория Риска AML]  
+	[ПротоколКомитета Это Зеленый Кредит] VARCHAR(36) NOT NULL,
+	[ПротоколКомитета Комитет]            NVARCHAR(156) NULL,
+	[ПротоколКомитета Партнер]  NVARCHAR(256) NULL
+	
+);
+
+INSERT INTO mis.[Silver_CommiteeProtocol] 
+(
+    [ПротоколКомитета Дата],
+	[ПротоколКомитета Дата Решения],
+	[ПротоколКомитета Кредит ID], 
+	[ПротоколКомитета ID],
+	[ПротоколКомитета Заявка ID],
+    [ПротоколКомитета Сумма на Выдачу],
+	[ПротоколКомитета Сумма Рефинансирования Кредита],
+	[ПротоколКомитета Назначение Использования Кредита],
+	[ПротоколКомитета Категория Риска AML],
+	[ПротоколКомитета Это Зеленый Кредит],
+	[ПротоколКомитета Комитет],
+	[ПротоколКомитета Партнер]
+)
+SELECT
+    [ПротоколКомитета Дата],
+	[ПротоколКомитета Дата Решения],
+	[ПротоколКомитета Кредит ID], 
+	[ПротоколКомитета ID],
+	[ПротоколКомитета Заявка ID],
+    [ПротоколКомитета Сумма на Выдачу],
+	[ПротоколКомитета Сумма Рефинансирования Кредита],
+	[ПротоколКомитета Назначение Использования Кредита],
+	[ПротоколКомитета Категория Риска AML],
+	[ПротоколКомитета Это Зеленый Кредит],
+	[ПротоколКомитета Комитет],
+	[ПротоколКомитета Партнер]
+	
+FROM [ATK].[mis].[Bronze_Документы.ПротоколКомитета];';
+        EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        -- Continue to next file without throwing
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -192,129 +198,131 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        USE [ATK];
-        SET NOCOUNT ON;
-        SET XACT_ABORT ON;
-        
-        
-        IF OBJECT_ID('mis.Silver_EmployeesPosition_SCD','U') IS NOT NULL
-            DROP TABLE mis.Silver_EmployeesPosition_SCD;
-        
-        CREATE TABLE mis.Silver_EmployeesPosition_SCD
-        (
-              EmployeeID   varchar(36)   NOT NULL
-            , PositionID   varchar(36)   NULL
-            , PositionName nvarchar(255) NULL
-            , BranchName   nvarchar(255) NULL
-        
-            , ValidFrom    datetime2(0)  NOT NULL
-            , ValidTo      datetime2(0)  NOT NULL
-            , IsCurrent    bit           NOT NULL
-        
-            , RowHash      varbinary(32) NOT NULL
-            , SourcePeriod datetime2(0)  NOT NULL
-        
-            , CONSTRAINT PK_Silver_EmployeesPosition_SCD
-                PRIMARY KEY CLUSTERED (EmployeeID, ValidFrom)
-        );
-        
-        ;WITH src0 AS
-        (
-            SELECT
-                  PeriodDttm   = CAST(s.[СотрудникиДанныеПоЗарплате Период] AS datetime2(0))
-                , EmployeeID   = CAST(s.[СотрудникиДанныеПоЗарплате Сотрудник ID] AS varchar(36))
-                , PositionName = s.[СотрудникиДанныеПоЗарплате Должность]
-                , PositionID   = CAST(s.[СотрудникиДанныеПоЗарплате Должность ID] AS varchar(36))
-                , BranchName   = s.[СотрудникиДанныеПоЗарплате Филиал]
-            FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] s
-            WHERE s.[СотрудникиДанныеПоЗарплате Сотрудник ID] IS NOT NULL
-              AND s.[СотрудникиДанныеПоЗарплате Период] IS NOT NULL
-        ),
-        dedup AS
-        (
-            SELECT *
-            FROM
-            (
-                SELECT
-                      *
-                    , rn = ROW_NUMBER() OVER
-                      (
-                        PARTITION BY EmployeeID, PeriodDttm
-                        ORDER BY
-                            ISNULL(PositionID,'') DESC,
-                            ISNULL(BranchName,N'') DESC,
-                            ISNULL(PositionName,N'') DESC
-                      )
-                FROM src0
-            ) x
-            WHERE rn = 1
-        ),
-        hashed AS
-        (
-            SELECT
-                  PeriodDttm, EmployeeID, PositionID, PositionName, BranchName
-                , RowHash = HASHBYTES(
-                    'SHA2_256',
-                    CONCAT(
-                        ISNULL(PositionID,''), '|',
-                        ISNULL(CONVERT(nvarchar(255), BranchName), N'')
-                    )
-                  )
-            FROM dedup
-        ),
-        chg AS
-        (
-            SELECT
-                  *
-                , PrevHash = LAG(RowHash) OVER (PARTITION BY EmployeeID ORDER BY PeriodDttm)
-            FROM hashed
-        ),
-        starts AS
-        (
-            SELECT
-                  EmployeeID, PositionID, PositionName, BranchName
-                , ValidFrom    = PeriodDttm
-                , RowHash
-                , SourcePeriod = PeriodDttm
-            FROM chg
-            WHERE PrevHash IS NULL OR PrevHash <> RowHash
-        ),
-        scd AS
-        (
-            SELECT
-                  s.*
-                , NextFrom = LEAD(ValidFrom) OVER (PARTITION BY EmployeeID ORDER BY ValidFrom)
-            FROM starts s
-        )
-        INSERT INTO mis.Silver_EmployeesPosition_SCD
-        (
-            EmployeeID, PositionID, PositionName, BranchName,
-            ValidFrom, ValidTo, IsCurrent,
-            RowHash, SourcePeriod
-        )
+        SET @sql = N'USE [ATK];
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+
+IF OBJECT_ID(''mis.Silver_EmployeesPosition_SCD'',''U'') IS NOT NULL
+    DROP TABLE mis.Silver_EmployeesPosition_SCD;
+
+CREATE TABLE mis.Silver_EmployeesPosition_SCD
+(
+      EmployeeID   varchar(36)   NOT NULL
+    , PositionID   varchar(36)   NULL
+    , PositionName nvarchar(255) NULL
+    , BranchName   nvarchar(255) NULL
+
+    , ValidFrom    datetime2(0)  NOT NULL
+    , ValidTo      datetime2(0)  NOT NULL
+    , IsCurrent    bit           NOT NULL
+
+    , RowHash      varbinary(32) NOT NULL
+    , SourcePeriod datetime2(0)  NOT NULL
+
+    , CONSTRAINT PK_Silver_EmployeesPosition_SCD
+        PRIMARY KEY CLUSTERED (EmployeeID, ValidFrom)
+);
+
+;WITH src0 AS
+(
+    SELECT
+          PeriodDttm   = CAST(s.[СотрудникиДанныеПоЗарплате Период] AS datetime2(0))
+        , EmployeeID   = CAST(s.[СотрудникиДанныеПоЗарплате Сотрудник ID] AS varchar(36))
+        , PositionName = s.[СотрудникиДанныеПоЗарплате Должность]
+        , PositionID   = CAST(s.[СотрудникиДанныеПоЗарплате Должность ID] AS varchar(36))
+        , BranchName   = s.[СотрудникиДанныеПоЗарплате Филиал]
+    FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате] s
+    WHERE s.[СотрудникиДанныеПоЗарплате Сотрудник ID] IS NOT NULL
+      AND s.[СотрудникиДанныеПоЗарплате Период] IS NOT NULL
+),
+dedup AS
+(
+    SELECT *
+    FROM
+    (
         SELECT
-              EmployeeID, PositionID, PositionName, BranchName
-            , ValidFrom
-            , CASE
-                WHEN NextFrom IS NULL THEN CONVERT(datetime2(0),'9999-12-31 23:59:59')
-                ELSE DATEADD(second, -1, NextFrom)
-              END AS ValidTo
-            , CASE WHEN NextFrom IS NULL THEN 1 ELSE 0 END AS IsCurrent
-            , RowHash
-            , SourcePeriod
-        FROM scd;
-        
-        CREATE INDEX IX_Silver_EmployeesPosition_SCD_Current
-        ON mis.Silver_EmployeesPosition_SCD(EmployeeID, IsCurrent)
-        INCLUDE(PositionID, PositionName, BranchName, ValidFrom, ValidTo);
-        
-        CREATE INDEX IX_Silver_EmployeesPosition_SCD_AsOf
-        ON mis.Silver_EmployeesPosition_SCD(EmployeeID, ValidFrom, ValidTo)
-        INCLUDE(PositionID, PositionName, BranchName);
+              *
+            , rn = ROW_NUMBER() OVER
+              (
+                PARTITION BY EmployeeID, PeriodDttm
+                ORDER BY
+                    ISNULL(PositionID,'''') DESC,
+                    ISNULL(BranchName,N'''') DESC,
+                    ISNULL(PositionName,N'''') DESC
+              )
+        FROM src0
+    ) x
+    WHERE rn = 1
+),
+hashed AS
+(
+    SELECT
+          PeriodDttm, EmployeeID, PositionID, PositionName, BranchName
+        , RowHash = HASHBYTES(
+            ''SHA2_256'',
+            CONCAT(
+                ISNULL(PositionID,''''), ''|'',
+                ISNULL(CONVERT(nvarchar(255), BranchName), N'''')
+            )
+          )
+    FROM dedup
+),
+chg AS
+(
+    SELECT
+          *
+        , PrevHash = LAG(RowHash) OVER (PARTITION BY EmployeeID ORDER BY PeriodDttm)
+    FROM hashed
+),
+starts AS
+(
+    SELECT
+          EmployeeID, PositionID, PositionName, BranchName
+        , ValidFrom    = PeriodDttm
+        , RowHash
+        , SourcePeriod = PeriodDttm
+    FROM chg
+    WHERE PrevHash IS NULL OR PrevHash <> RowHash
+),
+scd AS
+(
+    SELECT
+          s.*
+        , NextFrom = LEAD(ValidFrom) OVER (PARTITION BY EmployeeID ORDER BY ValidFrom)
+    FROM starts s
+)
+INSERT INTO mis.Silver_EmployeesPosition_SCD
+(
+    EmployeeID, PositionID, PositionName, BranchName,
+    ValidFrom, ValidTo, IsCurrent,
+    RowHash, SourcePeriod
+)
+SELECT
+      EmployeeID, PositionID, PositionName, BranchName
+    , ValidFrom
+    , CASE
+        WHEN NextFrom IS NULL THEN CONVERT(datetime2(0),''9999-12-31 23:59:59'')
+        ELSE DATEADD(second, -1, NextFrom)
+      END AS ValidTo
+    , CASE WHEN NextFrom IS NULL THEN 1 ELSE 0 END AS IsCurrent
+    , RowHash
+    , SourcePeriod
+FROM scd;
+
+CREATE INDEX IX_Silver_EmployeesPosition_SCD_Current
+ON mis.Silver_EmployeesPosition_SCD(EmployeeID, IsCurrent)
+INCLUDE(PositionID, PositionName, BranchName, ValidFrom, ValidTo);
+
+CREATE INDEX IX_Silver_EmployeesPosition_SCD_AsOf
+ON mis.Silver_EmployeesPosition_SCD(EmployeeID, ValidFrom, ValidTo)
+INCLUDE(PositionID, PositionName, BranchName);';
+        EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
+        -- Continue to next file without throwing
     END CATCH;
 
     SET @EndTime = GETDATE();

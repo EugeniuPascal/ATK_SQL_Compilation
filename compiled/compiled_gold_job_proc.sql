@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-02-25 15:55:46.558146
+-- Generated: 2026-02-25 16:35:18.328008
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -108,7 +108,7 @@ CREATE TABLE mis.[Gold_Dim_Branch]
     ActivityType NVARCHAR(100) NULL,
     EFSERegion NVARCHAR(50) NULL,
     Address NVARCHAR(150) NULL,
-    Phones 
+    Phones NVARCHAR(150) NULL,
     Email NVARCHAR(150) NULL,
     PrintBranchName NVARCHAR(100) NULL,
     Latitude DECIMAL(12, 8) NULL,

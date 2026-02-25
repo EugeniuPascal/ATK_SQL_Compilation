@@ -1,6 +1,10 @@
--- Compiled SQL bundle (Bronze) with Logging (Dynamic)
--- Generated: 2026-02-25 15:27:17
+-- Compiled SQL bundle (Bronze) with Logging (Dynamic Execution)
+-- Generated: 2026-02-25 15:34:42
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
+-- Files (3):
+--   mis.Bronze_Документы.НаправлениеНаВыплату.sql
+--   mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql
+--   mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql
 ----------------------------------------------------------------------------------------------------
 
 SET NOCOUNT ON;
@@ -8,20 +12,17 @@ SET NOCOUNT ON;
 DECLARE @StartTime DATETIME;
 DECLARE @EndTime DATETIME;
 DECLARE @Status NVARCHAR(50);
-DECLARE @ErrorMessage NVARCHAR(MAX);
 DECLARE @sql NVARCHAR(MAX);
 
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Bronze_Документы.НаправлениеНаВыплату.sql
 ----------------------------------------------------------------------------------------------------
-
 BEGIN
     SET @StartTime = GETDATE();
     SET @Status = 'Running';
-    SET @ErrorMessage = NULL;
 
-    SET @sql = N'
-USE [ATK];
+    BEGIN TRY
+        SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_Документы.НаправлениеНаВыплату]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Bronze_Документы.НаправлениеНаВыплату];
@@ -111,21 +112,19 @@ FROM LastValid lv
 LEFT JOIN CreditLine cl
     ON cl.CreditID = lv.[НаправлениеНаВыплату Кредит ID]
 WHERE lv.rn = 1;
-    ';
 
-    BEGIN TRY
+';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        SET @ErrorMessage = ERROR_MESSAGE();
+        -- Continue to next file without throwing
     END CATCH;
 
     SET @EndTime = GETDATE();
-
-    INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status, ErrorMessage)
-    VALUES ('mis.Bronze_Документы.НаправлениеНаВыплату', @StartTime, @EndTime, @Status, @ErrorMessage);
+    INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Bronze_Документы.НаправлениеНаВыплату', @StartTime, @EndTime, @Status);
 END
 
 ----------------------------------------------------------------------------------------------------
@@ -135,14 +134,12 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql
 ----------------------------------------------------------------------------------------------------
-
 BEGIN
     SET @StartTime = GETDATE();
     SET @Status = 'Running';
-    SET @ErrorMessage = NULL;
 
-    SET @sql = N'
-USE [ATK];
+    BEGIN TRY
+        SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_Документы.ОбъединеннаяИнтернетЗаявка]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Bronze_Документы.ОбъединеннаяИнтернетЗаявка];
@@ -270,21 +267,18 @@ SELECT
 	[ОбъединеннаяИнтернетЗаявка Пометка Удаления]
 	
 FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗаявка];
-    ';
-
-    BEGIN TRY
+';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        SET @ErrorMessage = ERROR_MESSAGE();
+        -- Continue to next file without throwing
     END CATCH;
 
     SET @EndTime = GETDATE();
-
-    INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status, ErrorMessage)
-    VALUES ('mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка', @StartTime, @EndTime, @Status, @ErrorMessage);
+    INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка', @StartTime, @EndTime, @Status);
 END
 
 ----------------------------------------------------------------------------------------------------
@@ -294,14 +288,12 @@ END
 ----------------------------------------------------------------------------------------------------
 -- Start of: mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql
 ----------------------------------------------------------------------------------------------------
-
 BEGIN
     SET @StartTime = GETDATE();
     SET @Status = 'Running';
-    SET @ErrorMessage = NULL;
 
-    SET @sql = N'
-USE [ATK];
+    BEGIN TRY
+        SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы]'', ''U'') IS NOT NULL
     DROP TABLE mis.[Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы];
@@ -334,21 +326,18 @@ SELECT
     [ОбъединеннаяИнтернетЗаявка.РискФакторы Риск Фактор]
 	
 FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы];
-    ';
-
-    BEGIN TRY
+';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        SET @ErrorMessage = ERROR_MESSAGE();
+        -- Continue to next file without throwing
     END CATCH;
 
     SET @EndTime = GETDATE();
-
-    INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status, ErrorMessage)
-    VALUES ('mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы', @StartTime, @EndTime, @Status, @ErrorMessage);
+    INSERT INTO mis.Bronze_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
+    VALUES ('mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы', @StartTime, @EndTime, @Status);
 END
 
 ----------------------------------------------------------------------------------------------------

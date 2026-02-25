@@ -2406,3 +2406,12 @@
 2026-02-25 14:40:05,952 [INFO] Processing file: mis.Gold_Dim_Clients.sql
 2026-02-25 14:40:05,954 [INFO] Finished file: mis.Gold_Dim_Clients.sql
 2026-02-25 14:40:05,956 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql
+2026-02-25 14:58:21,807 [INFO] === Starting Gold SQL Compilation Job ===
+2026-02-25 14:58:21,809 [INFO] Total SQL files to process: 3
+2026-02-25 14:58:21,809 [INFO] Processing file: mis.Gold_Dim_AppUsers.sql
+2026-02-25 14:58:21,810 [INFO] Finished file: mis.Gold_Dim_AppUsers.sql
+2026-02-25 14:58:21,810 [INFO] Processing file: mis.Gold_Dim_Branch.sql
+2026-02-25 14:58:21,810 [INFO] Finished file: mis.Gold_Dim_Branch.sql
+2026-02-25 14:58:21,810 [INFO] Processing file: mis.Gold_Dim_Clients.sql
+2026-02-25 14:58:21,812 [INFO] Finished file: mis.Gold_Dim_Clients.sql
+2026-02-25 14:58:21,815 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql

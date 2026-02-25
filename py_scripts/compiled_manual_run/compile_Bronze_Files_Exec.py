@@ -11,6 +11,38 @@ LOG_TABLE = "mis.Bronze_Proc_Exec_Log"
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
+SQL_ORDER = [
+    
+        #"mis.Bronze_Документы.ЗаявкаНаКредит.sql",
+        "mis.Bronze_Документы.НаправлениеНаВыплату.sql",
+        "mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql",
+        "mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql"
+        #"mis.Bronze_Документы.ПротоколКомитета.sql",    
+        #"mis.Bronze_Документы.УстановкаДанныхКредита.sql",
+        #"mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.sql",
+        #"mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов.sql",
+        #"mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров.sql",
+        #"mis.Bronze_РегистрыСведений.Валюта.sql", 
+        #"mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных.sql", 
+        #"mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах.sql",
+        #"mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным.sql",
+        #"mis.Bronze_РегистрыСведений.РеструктурированныеКредиты.sql",
+        #"mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату.sql",
+        #"mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения.sql",
+        #"mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов.sql",
+        #"mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате.sql",
+        #"mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных.sql",
+        #"mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки.sql",
+        #"mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита.sql",
+        #"mis.Bronze_Справочники.Дилеры.sql",
+        #"mis.Bronze_Справочники.Контрагенты.sql",
+        #"mis.Bronze_Справочники.Кредиты.sql",
+        #"mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов.sql",
+        #"mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей.sql",
+        #"mis.Bronze_Справочники.ФилиалыКонтрагентов.sql",
+        #"mis.Bronze_Справочники.ФинансовыеПродукты.sql"
+    ]
+
 # Remove GO lines from content
 GO_RE = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
 
@@ -29,11 +61,15 @@ def read_text_with_fallback(p: Path) -> str | None:
 # --------------------------------------------------------------------
 # Main compilation
 # --------------------------------------------------------------------
-def compile_sql():
-    sql_files = sorted(
-        [f for f in MAIN_DIR.iterdir() if f.is_file() and f.suffix.lower() == ".sql"],
-        key=lambda p: p.name.lower()
-    )
+def compile_sql_strict():
+    # Build final list strictly from SQL_ORDER
+    sql_files = []
+    for fname in SQL_ORDER:
+        fpath = MAIN_DIR / fname
+        if fpath.exists():
+            sql_files.append(fpath)
+        else:
+            print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
     header = (
         f"-- Compiled SQL bundle (Bronze) with Logging\n"
@@ -54,37 +90,39 @@ def compile_sql():
             content = read_text_with_fallback(f)
             table_name = f.stem
 
-            # Remove GO from content
+            # remove GO from content
             if content:
                 content = GO_RE.sub("", content)
 
             out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
 
-            # Set start time and status
-            out.write(f"SET @StartTime = GETDATE();\n")
-            out.write(f"SET @Status = 'Running';\n\n")
+            # Wrap each file in BEGIN...END to contain variables
+            out.write("BEGIN\n")
+            out.write("    SET @StartTime = GETDATE();\n")
+            out.write("    SET @Status = 'Running';\n\n")
 
-            # Wrap file SQL in TRY/CATCH
-            out.write("BEGIN TRY\n")
+            # Wrap SQL in TRY/CATCH
+            out.write("    BEGIN TRY\n")
             if content:
-                indented_content = "\n    ".join(content.rstrip().splitlines())
-                out.write(f"    {indented_content}\n")
+                indented_content = "\n        ".join(content.rstrip().splitlines())
+                out.write(f"        {indented_content}\n")
             else:
-                out.write("    -- Could not decode file\n")
-            out.write("    SET @Status = 'Success';\n")
-            out.write("END TRY\n")
-            out.write("BEGIN CATCH\n")
-            out.write("    SET @Status = 'Failed';\n")
-            out.write("END CATCH;\n\n")
+                out.write("        -- Could not decode file\n")
+            out.write("        SET @Status = 'Success';\n")
+            out.write("    END TRY\n")
+            out.write("    BEGIN CATCH\n")
+            out.write("        SET @Status = 'Failed';\n")
+            out.write("    END CATCH;\n\n")
 
             # Capture end time and insert log
-            out.write("SET @EndTime = GETDATE();\n")
-            out.write(f"INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
-            out.write(f"VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n\n")
+            out.write("    SET @EndTime = GETDATE();\n")
+            out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
+            out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
+            out.write("END\n\n")  # end BEGIN block
 
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
 
     print(f"✅ Compiled SQL file with logging created at: {OUTPUT}")
 
 if __name__ == "__main__":
-    compile_sql()
+    compile_sql_strict()

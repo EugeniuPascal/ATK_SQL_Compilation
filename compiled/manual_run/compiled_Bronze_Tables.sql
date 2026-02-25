@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze) with Logging (Dynamic Execution)
--- Generated: 2026-02-25 15:55:33
+-- Generated: 2026-02-25 16:35:36
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (28):
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -263,7 +263,7 @@ IF OBJECT_ID(''mis.[Bronze_Документы.НаправлениеНаВыпл
 
 CREATE TABLE mis.[Bronze_Документы.НаправлениеНаВыплату]
 (
-    [НаправлениеНаВыплату Дата],
+    [НаправлениеНаВыплату Дата] DATETIME NULL,
     [НаправлениеНаВыплату Кредит ID] VARCHAR(36) NOT NULL,
     [НаправлениеНаВыплату ID] VARCHAR(36) NOT NULL,
     [НаправлениеНаВыплату Форма Кредитования ID] VARCHAR(36) NOT NULL,

@@ -1,4 +1,4 @@
-# compile_bronze_tables_folder_with_log_dynamic.py
+# compile_bronze_tables_folder_with_log_fixed.py
 from pathlib import Path
 from datetime import datetime
 import re
@@ -43,13 +43,14 @@ SQL_ORDER = [
         #"mis.Bronze_Справочники.ФинансовыеПродукты.sql"
     ]
 
+# Remove GO lines from content
 GO_RE = re.compile(r"^\s*GO\s*$", re.IGNORECASE | re.MULTILINE)
-
 
 # --------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------
 def read_text_with_fallback(p: Path) -> str | None:
+    """Try multiple encodings to safely read SQL text files."""
     for enc in FALLBACK_ENCODINGS:
         try:
             return p.read_text(encoding=enc)
@@ -57,40 +58,36 @@ def read_text_with_fallback(p: Path) -> str | None:
             continue
     return None
 
-
 def escape_sql_string(text: str) -> str:
     """Escape single quotes for NVARCHAR literal."""
     return text.replace("'", "''")
 
-
 # --------------------------------------------------------------------
 # Main compilation
 # --------------------------------------------------------------------
-def compile_sql_strict():
-
+def compile_sql_dynamic():
+    # Build final list strictly from SQL_ORDER
     sql_files = []
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
         if fpath.exists():
             sql_files.append(fpath)
         else:
-            print(f"⚠ Warning: file not found -> {fpath}")
+            print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
     header = (
-        f"-- Compiled SQL bundle (Bronze) with Logging (Dynamic)\n"
+        f"-- Compiled SQL bundle (Bronze) with Logging (Dynamic Execution)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"-- Source folder: {MAIN_DIR}\n"
-        f"{DIV}\n\n"
-        f"SET NOCOUNT ON;\n\n"
+        f"-- Files ({len(sql_files)}):\n--   " + "\n--   ".join(f.name for f in sql_files) + "\n"
+        f"{DIV}\n\nSET NOCOUNT ON;\n\n"
         f"DECLARE @StartTime DATETIME;\n"
         f"DECLARE @EndTime DATETIME;\n"
         f"DECLARE @Status NVARCHAR(50);\n"
-        f"DECLARE @ErrorMessage NVARCHAR(MAX);\n"
         f"DECLARE @sql NVARCHAR(MAX);\n\n"
     )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-
     with OUTPUT.open("w", encoding="utf-8", newline="\n") as out:
         out.write(header)
 
@@ -100,45 +97,38 @@ def compile_sql_strict():
 
             if content:
                 content = GO_RE.sub("", content)
-                content = escape_sql_string(content.strip())
-            else:
-                content = "-- Could not decode file"
+                safe_sql = escape_sql_string(content)
 
-            out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n\n")
+            out.write(f"{DIV}\n-- Start of: {f.name}\n{DIV}\n")
 
             out.write("BEGIN\n")
             out.write("    SET @StartTime = GETDATE();\n")
-            out.write("    SET @Status = 'Running';\n")
-            out.write("    SET @ErrorMessage = NULL;\n\n")
+            out.write("    SET @Status = 'Running';\n\n")
 
-            # Dynamic SQL assignment
-            out.write("    SET @sql = N'\n")
-            out.write(content)
-            out.write("\n    ';\n\n")
-
-            # TRY CATCH
+            # Dynamic SQL execution with TRY/CATCH
             out.write("    BEGIN TRY\n")
-            out.write("        EXEC sys.sp_executesql @sql;\n")
-            out.write("        SET @Status = 'Success';\n")
+            if content and safe_sql.strip():
+                # Indent the dynamic SQL assignment
+                out.write(f"        SET @sql = N'{safe_sql}';\n")
+                out.write("        EXEC sys.sp_executesql @sql;\n")
+                out.write("        SET @Status = 'Success';\n")
+            else:
+                out.write("        SET @Status = 'Failed'; -- could not read/parse file\n")
             out.write("    END TRY\n")
             out.write("    BEGIN CATCH\n")
             out.write("        SET @Status = 'Failed';\n")
-            out.write("        SET @ErrorMessage = ERROR_MESSAGE();\n")
+            out.write("        -- Continue to next file without throwing\n")
             out.write("    END CATCH;\n\n")
 
-            out.write("    SET @EndTime = GETDATE();\n\n")
-
-            # Logging insert
-            out.write(f"    INSERT INTO {LOG_TABLE} ")
-            out.write("(TableName, StartTime, EndTime, Status, ErrorMessage)\n")
-            out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status, @ErrorMessage);\n")
+            # Logging always runs
+            out.write("    SET @EndTime = GETDATE();\n")
+            out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
+            out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
 
             out.write("END\n\n")
-
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")
 
-    print(f"✅ Compiled SQL file created at: {OUTPUT}")
-
+    print(f"✅ Compiled SQL file with dynamic execution and logging created at: {OUTPUT}")
 
 if __name__ == "__main__":
-    compile_sql_strict()
+    compile_sql_dynamic()

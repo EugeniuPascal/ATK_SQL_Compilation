@@ -76,10 +76,10 @@ try:
     SQL_ORDER = [
         # independent
         "mis.Silver_Employee_User.sql",
-        "mis.Silver_CommiteeProtocol.sql"
+        "mis.Silver_CommiteeProtocol.sql",
 
         # creates Gold_Fact_CerereOnline
-        #"mis.Silver_EmployeesPosition_SCD.sql"
+        "mis.Silver_EmployeesPosition_SCD.sql"
         #"mis.Silver_CerereOnline_base.sql",
 
         # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 

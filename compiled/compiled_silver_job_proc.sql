@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent with Logging
--- Generated: 2026-02-25 16:22:18.138254
+-- Generated: 2026-02-25 16:24:52.636732
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 15
 --   mis.Silver_Employee_User.sql
@@ -142,7 +142,7 @@ CREATE TABLE mis.[Silver_CommiteeProtocol]
     [ПротоколКомитета Сумма на Выдачу]	   DECIMAL(15, 2) NULL,
 	[ПротоколКомитета Сумма Рефинансирования Кредита] DECIMAL(15, 2) NULL,
 	[ПротоколКомитета Назначение Использования Кредита] NVARCHAR(150) NULL,
-	[ПротоколКомитета Категория Риска AML]  
+	[ПротоколКомитета Категория Риска AML]  NVARCHAR(256) NULL,
 	[ПротоколКомитета Это Зеленый Кредит] VARCHAR(36) NOT NULL,
 	[ПротоколКомитета Комитет]            NVARCHAR(156) NULL,
 	[ПротоколКомитета Партнер]  NVARCHAR(256) NULL

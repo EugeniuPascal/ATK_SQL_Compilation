@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent with Logging
--- Generated: 2026-02-25 11:44:07.571426
+-- Generated: 2026-02-25 11:54:12.112938
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 3
 --   mis.Silver_Employee_User.sql
@@ -106,7 +106,7 @@ WHERE u.[Пользователи Пометка Удаления] <> ''01'';';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -173,7 +173,7 @@ FROM [ATK].[mis].[Bronze_Документы.ПротоколКомитета];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -308,7 +308,7 @@ INCLUDE(PositionID, PositionName, BranchName);';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();

@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze) with Logging
--- Generated: 2026-02-25 09:54:49
+-- Generated: 2026-02-25 14:24:52
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (28):
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -256,7 +256,7 @@ BEGIN TRY
     
     CREATE TABLE mis.[Bronze_Документы.НаправлениеНаВыплату]
     (
-        [НаправлениеНаВыплату Дата] DATETIME NULL,
+        [НаправлениеНаВыплату Дата],
         [НаправлениеНаВыплату Кредит ID] VARCHAR(36) NOT NULL,
         [НаправлениеНаВыплату ID] VARCHAR(36) NOT NULL,
         [НаправлениеНаВыплату Форма Кредитования ID] VARCHAR(36) NOT NULL,

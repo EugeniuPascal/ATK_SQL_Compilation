@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-02-25 09:55:04.924022
+-- Generated: 2026-02-25 14:25:06.984377
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -85,7 +85,7 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.СведенияОПо
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -108,7 +108,7 @@ CREATE TABLE mis.[Gold_Dim_Branch]
     ActivityType NVARCHAR(100) NULL,
     EFSERegion NVARCHAR(50) NULL,
     Address NVARCHAR(150) NULL,
-    Phones NVARCHAR(150) NULL,
+    Phones 
     Email NVARCHAR(150) NULL,
     PrintBranchName NVARCHAR(100) NULL,
     Latitude DECIMAL(12, 8) NULL,
@@ -178,7 +178,7 @@ LEFT JOIN LastSvedeniya s
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -417,7 +417,7 @@ ON mis.Gold_Dim_Clients (Phone);';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -789,7 +789,7 @@ FROM FinalData
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -826,7 +826,7 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиД
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1020,7 +1020,7 @@ OUTER APPLY (
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1088,7 +1088,7 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.Ответственн
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1185,7 +1185,7 @@ WHERE NOT EXISTS (
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1298,7 +1298,7 @@ ORDER BY GroupID, PersonID, PeriodOriginal;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1405,7 +1405,7 @@ LEFT JOIN ContactInfoRanked ci
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1681,7 +1681,7 @@ WHERE rn = 1;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1815,7 +1815,7 @@ WHERE r.[АктыПередачиКредитныхДел Период] >= ''202
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1891,7 +1891,7 @@ WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2429,7 +2429,7 @@ CREATE INDEX IX_CerereOnline_Date     ON mis.Gold_Fact_CerereOnline([Date]);';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2481,7 +2481,7 @@ DROP TABLE #FilteredComments;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2616,7 +2616,7 @@ FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВы�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2711,7 +2711,7 @@ FROM calc;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2841,7 +2841,7 @@ CREATE INDEX IX_WriteOff_Final
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3136,7 +3136,7 @@ COMMIT TRAN;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3421,7 +3421,7 @@ DROP TABLE #FirstDisbursementPerClient;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3640,7 +3640,7 @@ DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR, #MaxDays;'
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3720,7 +3720,7 @@ WHERE NOT EXISTS (
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3779,7 +3779,7 @@ WHERE NOT EXISTS (
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -3936,7 +3936,7 @@ WHERE d.[РегистрацияЛимита Проведен] = ''01''
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -4193,7 +4193,7 @@ PRINT N''🏁 Incremental load completed successfully'';';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();

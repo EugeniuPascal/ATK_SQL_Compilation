@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent with Logging
--- Generated: 2026-02-25 09:55:00.739665
+-- Generated: 2026-02-25 14:25:02.236790
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files included: 28
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -241,7 +241,7 @@ FROM [ATK].[dbo].[Документы.ЗаявкаНаКредит];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -257,7 +257,7 @@ FROM [ATK].[dbo].[Документы.ЗаявкаНаКредит];';
 
 CREATE TABLE mis.[Bronze_Документы.НаправлениеНаВыплату]
 (
-    [НаправлениеНаВыплату Дата] DATETIME NULL,
+    [НаправлениеНаВыплату Дата],
     [НаправлениеНаВыплату Кредит ID] VARCHAR(36) NOT NULL,
     [НаправлениеНаВыплату ID] VARCHAR(36) NOT NULL,
     [НаправлениеНаВыплату Форма Кредитования ID] VARCHAR(36) NOT NULL,
@@ -346,7 +346,7 @@ WHERE lv.rn = 1;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -489,7 +489,7 @@ FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗ�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -537,7 +537,7 @@ FROM [ATK].[dbo].[Документы.ОбъединеннаяИнтернетЗ�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1152,7 +1152,7 @@ FROM [ATK].[dbo].[Документы.ПротоколКомитета];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1195,7 +1195,7 @@ WHERE [УстановкаДанныхКредита Проведен] = 01;';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1327,7 +1327,7 @@ FROM [ATK].[dbo].[Задачи.ЗадачаАдминистратораКред�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1387,7 +1387,7 @@ FROM [ATK].[dbo].[Задачи.ЗадачаАдминистратораКред�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1430,7 +1430,7 @@ FROM [ATK].[dbo].[РегистрыСведений.АнулированныеК�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1478,7 +1478,7 @@ FROM [ATK].[dbo].[РегистрыСведений.Валюта];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1529,7 +1529,7 @@ FROM [ATK].[dbo].[РегистрыСведений.ДанныеКредитов�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1589,7 +1589,7 @@ FROM [ATK].[dbo].[РегистрыСведений.КредитыВТеневы�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1649,7 +1649,7 @@ FROM [ATK].[dbo].[РегистрыСведений.ОтветственныеП�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1691,7 +1691,7 @@ FROM [ATK].[dbo].[РегистрыСведений.Реструктуриров�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1751,7 +1751,7 @@ FROM [ATK].[dbo].[РегистрыСведений.СведенияОНапра�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1797,7 +1797,7 @@ FROM [ATK].[dbo].[РегистрыСведений.СведенияОПольз�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1837,7 +1837,7 @@ FROM [ATK].[dbo].[РегистрыСведений.СостоянияРестр�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1882,7 +1882,7 @@ FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанн�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1930,7 +1930,7 @@ FROM [ATK].[dbo].[РегистрыСведений.СтатусыКредито�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -1983,7 +1983,7 @@ AND [СуммыЗадолженностиПоПериодамПросрочки 
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2081,7 +2081,7 @@ FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВы�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2146,7 +2146,7 @@ FROM [ATK].[dbo].[Справочники.Дилеры];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2275,7 +2275,7 @@ FROM [ATK].[dbo].[Справочники.Контрагенты];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2386,7 +2386,7 @@ FROM [ATK].[dbo].[Справочники.Кредиты];';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2450,7 +2450,7 @@ FROM dbo.[Справочники.ТипыЗадачАдминистратора�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2498,7 +2498,7 @@ FROM dbo.[Справочники.ТипыЗадачАдминистратора�
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2548,7 +2548,7 @@ FROM [ATK].[dbo].[Справочники.ФилиалыКонтрагентов]
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
@@ -2584,7 +2584,7 @@ FROM [ATK].[dbo].[Справочники.ФинансовыеПродукты];'
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        THROW;
+        -- continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();

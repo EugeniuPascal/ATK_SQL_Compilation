@@ -1355,3 +1355,12 @@
 2026-02-25 14:25:05,070 [INFO] Processing file: mis.Silver_EmployeesPosition_SCD.sql
 2026-02-25 14:25:05,071 [INFO] Finished file: mis.Silver_EmployeesPosition_SCD.sql
 2026-02-25 14:25:05,077 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql
+2026-02-25 14:40:03,703 [INFO] === Starting Silver SQL Compilation Job ===
+2026-02-25 14:40:03,704 [INFO] Total SQL files to process: 3
+2026-02-25 14:40:03,705 [INFO] Processing file: mis.Silver_Employee_User.sql
+2026-02-25 14:40:03,705 [INFO] Finished file: mis.Silver_Employee_User.sql
+2026-02-25 14:40:03,705 [INFO] Processing file: mis.Silver_CommiteeProtocol.sql
+2026-02-25 14:40:03,706 [INFO] Finished file: mis.Silver_CommiteeProtocol.sql
+2026-02-25 14:40:03,706 [INFO] Processing file: mis.Silver_EmployeesPosition_SCD.sql
+2026-02-25 14:40:03,707 [INFO] Finished file: mis.Silver_EmployeesPosition_SCD.sql
+2026-02-25 14:40:03,713 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql

@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Bronze) - Idempotent with Logging
--- Generated: 2026-02-25 15:55:42.189949
+-- Generated: 2026-02-25 16:08:40.665181
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files included: 28
 --   mis.Bronze_Документы.ЗаявкаНаКредит.sql
@@ -257,7 +257,7 @@ FROM [ATK].[dbo].[Документы.ЗаявкаНаКредит];';
 
 CREATE TABLE mis.[Bronze_Документы.НаправлениеНаВыплату]
 (
-    [НаправлениеНаВыплату Дата],
+    [НаправлениеНаВыплату Дата] DATETIME NULL,
     [НаправлениеНаВыплату Кредит ID] VARCHAR(36) NOT NULL,
     [НаправлениеНаВыплату ID] VARCHAR(36) NOT NULL,
     [НаправлениеНаВыплату Форма Кредитования ID] VARCHAR(36) NOT NULL,

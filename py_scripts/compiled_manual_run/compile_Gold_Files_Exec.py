@@ -14,33 +14,30 @@ DIV = "-" * 100
 
 SQL_ORDER = [
     "mis.Gold_Dim_AppUsers.sql",
-    #broken
     "mis.Gold_Dim_Branch.sql",
-    #"mis.Gold_Dim_Clients.sql",
-    #"mis.Gold_Dim_Credits.sql",
+    "mis.Gold_Dim_Clients.sql",
+    "mis.Gold_Dim_Credits.sql",
     "mis.Gold_Dim_EmployeePayrollData.sql",
-    #broken
     "mis.Gold_Dim_Employees.sql",
-    #"mis.Gold_Dim_EmployeesHistory.sql",
-    #"mis.Gold_Dim_Events.sql",
+    "mis.Gold_Dim_EmployeesHistory.sql",
+    "mis.Gold_Dim_Events.sql",
     "mis.Gold_Dim_GroupMembershipPeriods.sql",
-    #"mis.Gold_Dim_PartnersBranch.sql",
-    #"mis.Gold_Fact_AdminTasks.sql",
-    #"mis.Gold_Fact_ArchiveDocument.sql",
-    #broken
+    "mis.Gold_Dim_PartnersBranch.sql",
+    "mis.Gold_Fact_AdminTasks.sql",
+    "mis.Gold_Fact_ArchiveDocument.sql",
     "mis.Gold_Fact_BudgetEmployees.sql",
-    #"mis.Gold_Fact_CerereOnline.sql",
+    "mis.Gold_Fact_CerereOnline.sql",
     "mis.Gold_Fact_Comments.sql",
     "mis.Gold_Fact_CPD.sql",
     "mis.Gold_Fact_CreditsInShadowBranches.sql",
-    "mis.Gold_Fact_WriteOffCredits.sql"
-    #"mis.Gold_Fact_Restruct_Daily_Min.sql",
-    #"mis.Gold_Fact_Disbursement.sql",
-    #"mis.Gold_Fact_Sold_Par.sql",
-    #"V2__inc_Gold_Dim_Event_InProgress.sql",
-    #"V2__inc_Gold_Dim_Event_Responsible.sql",
-    #"V2__inc_Gold_Dim_Limits.sql",
-    #"V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
+    "mis.Gold_Fact_WriteOffCredits.sql",
+    "mis.Gold_Fact_Restruct_Daily_Min.sql",
+    "mis.Gold_Fact_Disbursement.sql",
+    "mis.Gold_Fact_Sold_Par.sql",
+    "V2__inc_Gold_Dim_Event_InProgress.sql",
+    "V2__inc_Gold_Dim_Event_Responsible.sql",
+    "V2__inc_Gold_Dim_Limits.sql",
+    "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
 ]
 
 # ---- remove GO lines ----

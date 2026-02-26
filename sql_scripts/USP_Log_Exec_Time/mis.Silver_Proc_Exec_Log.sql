@@ -17,6 +17,7 @@ CREATE TABLE mis.[Silver_Proc_Exec_Log]
                 CAST(DATEDIFF(SECOND, StartTime, EndTime) % 60 AS NVARCHAR(10)) + 'sec'
         END
     ) PERSISTED,
-	Status NVARCHAR(50) -- 'Running', 'Success', 'Failed'
+	Status NVARCHAR(50), 	-- 'Running', 'Success', 'Failed'
+    Failure_Note NVARCHAR(MAX) NULL
 
 );

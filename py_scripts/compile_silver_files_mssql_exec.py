@@ -74,28 +74,33 @@ def make_idempotent(sql: str) -> str:
 # --------------------------------------------------------------------
 try:
     SQL_ORDER = [
-        # independent
-        "mis.Silver_Employee_User.sql",
-        "mis.Silver_CommiteeProtocol.sql",
+    # independent
+    "mis.Silver_Employee_User.sql",
+    
+    #broken
+    "mis.Silver_CommiteeProtocol.sql",
 
-        # creates Gold_Fact_CerereOnline
-        "mis.Silver_EmployeesPosition_SCD.sql",
-        "mis.Silver_CerereOnline_base.sql",
+    # creates Gold_Fact_CerereOnline
+    #"mis.Silver_EmployeesPosition_SCD.sql",
+    #"mis.Silver_CerereOnline_base.sql",
 
-        # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
-        "mis.Silver_Restruct_SCD.sql",    
-        "mis.Silver_RestructState_SCD.sql",
-        "mis.Silver_Restruct_Merged_SCD.sql",
-        "mis.Silver_Client_UnhealedFlag.sql",
-        "mis.Silver_Resp_SCD.sql",
-        "mis.Silver_Stages_SCD.sql",
+    # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
+    "mis.Silver_Restruct_SCD.sql",  
+    
+    #broken    
+    "mis.Silver_RestructState_SCD.sql",
+    
+    "mis.Silver_Restruct_Merged_SCD.sql"
+    #"mis.Silver_Client_UnhealedFlag.sql",
+    #"mis.Silver_Resp_SCD.sql",
+    #"mis.Silver_Stages_SCD.sql",
 
-        # below table execution order to create mis.Gold_Fact_CPD_Sold 
-        "mis.Silver_SCD_GroupMembershipPeriods.sql", 
-        "mis.Silver_Sold_Owner.sql",
-        "mis.Silver_Limits.sql",
-        "mis.Silver_Conditions_After_Disb.sql",
-        "mis.Silver_CPD_TaskDays.sql",
+    # below table execution order to create mis.Gold_Fact_CPD_Sold 
+    #"mis.Silver_SCD_GroupMembershipPeriods.sql", 
+    #"mis.Silver_Sold_Owner.sql",
+    #"mis.Silver_Limits.sql",
+    #"mis.Silver_Conditions_After_Disb.sql",
+    #"mis.Silver_CPD_TaskDays.sql"
     ]
 
     sql_files = [SOURCE_FOLDER / f for f in SQL_ORDER if (SOURCE_FOLDER / f).exists()]
@@ -124,6 +129,7 @@ try:
         f_out.write("    DECLARE @StartTime DATETIME;\n")
         f_out.write("    DECLARE @EndTime DATETIME;\n")
         f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
+        f_out.write("    DECLARE @FailureNote NVARCHAR(MAX);\n\n")
 
         for sf in sql_files:
             try:
@@ -141,18 +147,24 @@ try:
 
                         # Fail-safe TRY/CATCH with logging
                         f_out.write("    BEGIN TRY\n")
+                        f_out.write("        SET @FailureNote = '';\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("        SET @Status = 'Success';\n")
                         f_out.write("    END TRY\n")
                         f_out.write("    BEGIN CATCH\n")
                         f_out.write("        SET @Status = 'Failed';\n")
-                        f_out.write("        -- continue to next file without THROW\n")
+                        f_out.write("        SET @FailureNote = CONCAT(\n")
+                        f_out.write("            'Msg: ', ERROR_MESSAGE(),\n")
+                        f_out.write("            ' | Line: ', ERROR_LINE(),\n")
+                        f_out.write("            ' | Number: ', ERROR_NUMBER()\n")
+                        f_out.write("        );\n")
+                        f_out.write("        -- Continue to next file without THROW\n")
                         f_out.write("    END CATCH;\n\n")
 
                         # Logging always runs
                         f_out.write("    SET @EndTime = GETDATE();\n")
-                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
-                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status, Failure_Note)\n")
+                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status, @FailureNote);\n\n")
 
                 logging.info(f"Finished file: {sf.name}")
             except Exception as e:

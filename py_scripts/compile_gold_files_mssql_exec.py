@@ -127,6 +127,7 @@ try:
         f_out.write("    DECLARE @StartTime DATETIME;\n")
         f_out.write("    DECLARE @EndTime DATETIME;\n")
         f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
+        f_out.write("    DECLARE @FailureNote NVARCHAR(MAX);\n\n")
 
         for sf in sql_files:
             try:
@@ -144,18 +145,24 @@ try:
 
                         # Fail-safe TRY/CATCH with logging
                         f_out.write("    BEGIN TRY\n")
+                        f_out.write("        SET @FailureNote = '';\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("        SET @Status = 'Success';\n")
                         f_out.write("    END TRY\n")
                         f_out.write("    BEGIN CATCH\n")
                         f_out.write("        SET @Status = 'Failed';\n")
-                        f_out.write("        -- continue to next file without THROW\n")
+                        f_out.write("        SET @FailureNote = CONCAT(\n")
+                        f_out.write("            'Msg: ', ERROR_MESSAGE(),\n")
+                        f_out.write("            ' | Line: ', ERROR_LINE(),\n")
+                        f_out.write("            ' | Number: ', ERROR_NUMBER()\n")
+                        f_out.write("        );\n")
+                        f_out.write("        -- Continue to next file without THROW\n")
                         f_out.write("    END CATCH;\n\n")
 
                         # Logging always runs
                         f_out.write("    SET @EndTime = GETDATE();\n")
-                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
-                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status, Failure_Note)\n")
+                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status, @FailureNote);\n\n")
 
                 logging.info(f"Finished file: {sf.name}")
             except Exception as e:

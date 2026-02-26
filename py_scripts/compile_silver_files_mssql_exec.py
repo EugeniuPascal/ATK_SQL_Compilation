@@ -96,7 +96,7 @@ SQL_ORDER = [
     "mis.Silver_Limits.sql",
     "mis.Silver_Conditions_After_Disb.sql",
     "mis.Silver_CPD_TaskDays.sql"
-]
+    ]
 
     sql_files = [SOURCE_FOLDER / f for f in SQL_ORDER if (SOURCE_FOLDER / f).exists()]
     logging.info(f"Total SQL files to process: {len(sql_files)}")

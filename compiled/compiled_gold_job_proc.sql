@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-02-25 16:35:49.210407
+-- Generated: 2026-02-26 10:59:53.633681
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 25
 --   mis.Gold_Dim_AppUsers.sql
@@ -47,6 +47,8 @@ BEGIN
     DECLARE @EndTime DATETIME;
     DECLARE @Status NVARCHAR(50);
 
+    DECLARE @FailureNote NVARCHAR(MAX);
+
     -- Start of: mis.Gold_Dim_AppUsers.sql
     SET @StartTime = GETDATE();
     SET @EndTime = NULL;
@@ -80,17 +82,23 @@ SELECT
 
 FROM [ATK].[mis].[Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения];';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_AppUsers', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_AppUsers', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_Branch.sql
     SET @StartTime = GETDATE();
@@ -173,17 +181,23 @@ LEFT JOIN LastSvedeniya s
     ON f.[Филиалы ID] = s.[СведенияОФилиалах Филиал ID]
     AND s.rn = 1;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Branch', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_Branch', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_Clients.sql
     SET @StartTime = GETDATE();
@@ -412,17 +426,23 @@ ON mis.Gold_Dim_Clients (IsGroupOwner, GroupID);
 CREATE NONCLUSTERED INDEX IX_Clients_Phone2
 ON mis.Gold_Dim_Clients (Phone);';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Clients', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_Clients', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_Credits.sql
     SET @StartTime = GETDATE();
@@ -784,17 +804,23 @@ SELECT *
 FROM FinalData
 ;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Credits', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_Credits', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_EmployeePayrollData.sql
     SET @StartTime = GETDATE();
@@ -821,17 +847,23 @@ SELECT
 
 FROM [ATK].[mis].[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате];';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_EmployeePayrollData', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_EmployeePayrollData', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_Employees.sql
     SET @StartTime = GETDATE();
@@ -1015,17 +1047,23 @@ OUTER APPLY (
       AND b.[СотрудникиДанныеПоЗарплате Вид Должности ID] = lastPos.[СотрудникиДанныеПоЗарплате Вид Должности ID]
 ) AS firstAssigned;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Employees', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_Employees', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_EmployeesHistory.sql
     SET @StartTime = GETDATE();
@@ -1083,17 +1121,23 @@ SELECT
     )                                                           AS DateTo
 FROM [ATK].[mis].[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным];';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_EmployeesHistory', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_EmployeesHistory', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_Events.sql
     SET @StartTime = GETDATE();
@@ -1180,17 +1224,23 @@ WHERE NOT EXISTS (
     WHERE g.Event_ID = ed.Event_ID
 );';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_Events', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_Events', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_GroupMembershipPeriods.sql
     SET @StartTime = GETDATE();
@@ -1293,17 +1343,23 @@ WHERE EventType = ''Included''
   AND DeletionFlag = ''00''
 ORDER BY GroupID, PersonID, PeriodOriginal;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_GroupMembershipPeriods', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_GroupMembershipPeriods', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_PartnersBranch.sql
     SET @StartTime = GETDATE();
@@ -1400,17 +1456,23 @@ LEFT JOIN ContactInfoRanked ci
        ON ci.ObjectID = k.[Контрагенты ID]
       AND ci.rn = 1;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Dim_PartnersBranch', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_PartnersBranch', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_AdminTasks.sql
     SET @StartTime = GETDATE();
@@ -1676,17 +1738,23 @@ SELECT
 FROM AllTasks
 WHERE rn = 1;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_AdminTasks', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_AdminTasks', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_ArchiveDocument.sql
     SET @StartTime = GETDATE();
@@ -1810,17 +1878,23 @@ LEFT JOIN [ATK].[dbo].[РегистрыСведений.Ответственны
        AND o.[ОтветственныеПоКредитнымДелам Кредит ID] = r.[АктыПередачиКредитныхДел Кредит ID]
 WHERE r.[АктыПередачиКредитныхДел Период] >= ''2023-09-01'';';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_ArchiveDocument', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_ArchiveDocument', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_BudgetEmployees.sql
     SET @StartTime = GETDATE();
@@ -1886,17 +1960,23 @@ LEFT JOIN [ATK].[dbo].[Документы.БюджетПоСотрудникам
     ON s.[БюджетПоСотрудникам ID] = d.[БюджетПоСотрудникам ID]
 WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_BudgetEmployees', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_BudgetEmployees', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_CerereOnline.sql
     SET @StartTime = GETDATE();
@@ -2424,17 +2504,23 @@ CREATE INDEX IX_CerereOnline_CreditID ON mis.Gold_Fact_CerereOnline([CreditID]);
 CREATE INDEX IX_CerereOnline_AuthorID ON mis.Gold_Fact_CerereOnline([AuthorID]);
 CREATE INDEX IX_CerereOnline_Date     ON mis.Gold_Fact_CerereOnline([Date]);';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_CerereOnline', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_CerereOnline', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_Comments.sql
     SET @StartTime = GETDATE();
@@ -2476,17 +2562,23 @@ FROM (SELECT DISTINCT CommentID FROM #FilteredComments) fc1;
 
 DROP TABLE #FilteredComments;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_Comments', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_Comments', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_CPD.sql
     SET @StartTime = GETDATE();
@@ -2611,17 +2703,23 @@ SELECT
 	
 FROM [ATK].[dbo].[РегистрыСведений.УсловияПослеВыдачиКредита];';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_CPD', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_CPD', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_CreditsInShadowBranches.sql
     SET @StartTime = GETDATE();
@@ -2706,17 +2804,23 @@ SELECT
       DateTo
 FROM calc;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_CreditsInShadowBranches', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_CreditsInShadowBranches', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_WriteOffCredits.sql
     SET @StartTime = GETDATE();
@@ -2836,17 +2940,23 @@ CREATE INDEX IX_WriteOff_CreditID
 CREATE INDEX IX_WriteOff_Final 
     ON [ATK].[mis].[Gold_Fact_WriteOffCredits] ([FinalBranchID], [FinalExpertID]);';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_WriteOffCredits', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_WriteOffCredits', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_Restruct_Daily_Min.sql
     SET @StartTime = GETDATE();
@@ -3131,17 +3241,23 @@ PRINT N''🏁 Готово. Строк: '' + CONVERT(varchar(30), @cnt);
 
 COMMIT TRAN;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_Restruct_Daily_Min', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_Restruct_Daily_Min', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_Disbursement.sql
     SET @StartTime = GETDATE();
@@ -3416,17 +3532,23 @@ DROP TABLE #Status;
 DROP TABLE #Final;
 DROP TABLE #FirstDisbursementPerClient;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_Disbursement', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_Disbursement', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Fact_Sold_Par.sql
     SET @StartTime = GETDATE();
@@ -3635,17 +3757,23 @@ ON mis.[Gold_Fact_Sold_Par];
 
 DROP TABLE IF EXISTS #ShadowBranch, #Responsible, #EmployeePos, #IRR, #MaxDays;';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('mis.Gold_Fact_Sold_Par', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Fact_Sold_Par', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: V2__inc_Gold_Dim_Event_InProgress.sql
     SET @StartTime = GETDATE();
@@ -3715,17 +3843,23 @@ WHERE NOT EXISTS (
       AND g.ResponsibleID = e.[СведенияОСобытияхВРаботе Ответственный ID]
       );';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('V2__inc_Gold_Dim_Event_InProgress', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('V2__inc_Gold_Dim_Event_InProgress', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: V2__inc_Gold_Dim_Event_Responsible.sql
     SET @StartTime = GETDATE();
@@ -3774,17 +3908,23 @@ WHERE NOT EXISTS (
       AND g.EventRowNumber  = e.[УстановкаОтветственныхПоКредитамИКлиентам.События Номер Строки]
 );';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('V2__inc_Gold_Dim_Event_Responsible', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('V2__inc_Gold_Dim_Event_Responsible', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: V2__inc_Gold_Dim_Limits.sql
     SET @StartTime = GETDATE();
@@ -3931,17 +4071,23 @@ WHERE d.[РегистрацияЛимита Проведен] = ''01''
       WHERE gl.LimitRegistrationID = d.[РегистрацияЛимита ID]
   );';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('V2__inc_Gold_Dim_Limits', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('V2__inc_Gold_Dim_Limits', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql
     SET @StartTime = GETDATE();
@@ -4188,17 +4334,23 @@ FROM #Joined j;
 
 PRINT N''🏁 Incremental load completed successfully'';';
     BEGIN TRY
+        SET @FailureNote = '';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY
     BEGIN CATCH
         SET @Status = 'Failed';
-        -- continue to next file without THROW
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
     END CATCH;
 
     SET @EndTime = GETDATE();
-    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status)
-    VALUES ('V3__inc_Gold_Fact_Restruct_Daily_Sold_Par', @StartTime, @EndTime, @Status);
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('V3__inc_Gold_Fact_Restruct_Daily_Sold_Par', @StartTime, @EndTime, @Status, @FailureNote);
 
 END
 GO

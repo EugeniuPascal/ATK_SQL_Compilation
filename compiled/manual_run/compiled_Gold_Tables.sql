@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Gold) with Logging (Dynamic Execution)
--- Generated: 2026-02-26 11:49:54
+-- Generated: 2026-02-26 13:10:05
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (10):
 --   mis.Gold_Dim_AppUsers.sql
@@ -128,7 +128,7 @@ WITH LastSvedeniya AS (
             PARTITION BY [СведенияОФилиалах Филиал ID] 
             ORDER BY [СведенияОФилиалах Период] DESC
         ) AS rn
-    FROM [ATK].[dbo].[РегистрыСведени.СведенияОФилиалах]
+    FROM [ATK].[dbo].[РегистрыСведений.СведенияОФилиалах]
 )
 INSERT INTO mis.[Gold_Dim_Branch] 
 (
@@ -421,7 +421,7 @@ SELECT
 FROM [ATK].[dbo].[Справочники.Сотрудники] AS e
 OUTER APPLY (
     -- get last/current position
-   
+    SELECT TOP 1 *
     FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] AS b
     WHERE b.[СотрудникиДанныеПоЗарплате Сотрудник ID] = e.[Сотрудники ID]
     ORDER BY b.[СотрудникиДанныеПоЗарплате Период] DESC
@@ -651,7 +651,7 @@ SELECT
     d.[БюджетПоСотрудникам PAR0] AS TotalPAR0,
     d.[БюджетПоСотрудникам PAR30 Нон Бизнес] AS NonBusinessPAR30
 FROM [ATK].[dbo].[Документы.БюджетПоСотрудникам.Сотрудники] s
-LEFT RIGHT [ATK].[dbo].[Документы.БюджетПоСотрудникам] d
+LEFT JOIN [ATK].[dbo].[Документы.БюджетПоСотрудникам] d
     ON s.[БюджетПоСотрудникам ID] = d.[БюджетПоСотрудникам ID]
 WHERE d.[БюджетПоСотрудникам Дата] >= ''2023-09-01'';
 ';

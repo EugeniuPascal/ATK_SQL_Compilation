@@ -168,7 +168,7 @@ SELECT
 FROM [ATK].[dbo].[Справочники.Сотрудники] AS e
 OUTER APPLY (
     -- get last/current position
-   
+    SELECT TOP 1 *
     FROM [ATK].[dbo].[РегистрыСведений.СотрудникиДанныеПоЗарплате] AS b
     WHERE b.[СотрудникиДанныеПоЗарплате Сотрудник ID] = e.[Сотрудники ID]
     ORDER BY b.[СотрудникиДанныеПоЗарплате Период] DESC

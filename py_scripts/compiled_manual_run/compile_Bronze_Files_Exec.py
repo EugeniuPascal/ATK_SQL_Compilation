@@ -112,7 +112,7 @@ def compile_sql_dynamic():
             # TRY/CATCH block
             out.write("    BEGIN TRY\n")
             if content and safe_sql.strip():
-                out.write("        SET @FailureNote = NULL;\n")
+                out.write("        SET @FailureNote = '';\n")
                 out.write(f"        SET @sql = N'{safe_sql}';\n")
                 out.write("        EXEC sys.sp_executesql @sql;\n")
                 out.write("        SET @Status = 'Success';\n")

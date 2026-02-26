@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze) with Logging (Dynamic Execution)
--- Generated: 2026-02-26 10:06:09
+-- Generated: 2026-02-26 10:09:43
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (14):
 --   mis.Bronze_Документы.УстановкаДанныхКредита.sql
@@ -34,7 +34,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_Документы.УстановкаДанныхКредита]'', ''U'') IS NOT NULL
@@ -93,7 +93,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_Задачи.ЗадачаАдминистратораКредитов]'', ''U'') IS NOT NULL
@@ -240,7 +240,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов]'', ''U'') IS NOT NULL
@@ -316,7 +316,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.АнулированныеКредитыПартнеров]'', ''U'') IS NOT NULL
@@ -374,7 +374,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.Валюта]'', ''U'') IS NOT NULL
@@ -437,7 +437,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.ДанныеКредитовВыданных]'', ''U'') IS NOT NULL
@@ -503,7 +503,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.КредитыВТеневыхФилиалах]'', ''U'') IS NOT NULL
@@ -578,7 +578,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным]'', ''U'') IS NOT NULL
@@ -654,7 +654,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.РеструктурированныеКредиты]'', ''U'') IS NOT NULL
@@ -711,7 +711,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату]'', ''U'') IS NOT NULL
@@ -788,7 +788,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения]'', ''U'') IS NOT NULL
@@ -849,7 +849,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов]'', ''U'') IS NOT NULL
@@ -904,7 +904,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате]'', ''U'') IS NOT NULL
@@ -964,7 +964,7 @@ BEGIN
     SET @Status = 'Running';
 
     BEGIN TRY
-        SET @FailureNote = NULL;
+        SET @FailureNote = '';
         SET @sql = N'USE [ATK];
 
 IF OBJECT_ID(''mis.[Bronze_РегистрыСведений.СтатусыКредитовВыданных]'', ''U'') IS NOT NULL

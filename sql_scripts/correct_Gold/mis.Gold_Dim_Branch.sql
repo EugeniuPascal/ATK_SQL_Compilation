@@ -37,7 +37,7 @@ WITH LastSvedeniya AS (
             PARTITION BY [СведенияОФилиалах Филиал ID] 
             ORDER BY [СведенияОФилиалах Период] DESC
         ) AS rn
-    FROM [ATK].[dbo].[РегистрыСведени.СведенияОФилиалах]
+    FROM [ATK].[dbo].[РегистрыСведений.СведенияОФилиалах]
 )
 INSERT INTO mis.[Gold_Dim_Branch] 
 (

@@ -1615,3 +1615,16 @@
 2026-02-26 11:09:29,422 [INFO] Processing file: mis.Silver_Restruct_Merged_SCD.sql
 2026-02-26 11:09:29,423 [INFO] Finished file: mis.Silver_Restruct_Merged_SCD.sql
 2026-02-26 11:09:29,428 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql
+2026-02-26 11:11:59,738 [INFO] === Starting Silver SQL Compilation Job ===
+2026-02-26 11:11:59,739 [INFO] Total SQL files to process: 5
+2026-02-26 11:11:59,739 [INFO] Processing file: mis.Silver_Employee_User.sql
+2026-02-26 11:11:59,740 [INFO] Finished file: mis.Silver_Employee_User.sql
+2026-02-26 11:11:59,740 [INFO] Processing file: mis.Silver_CommiteeProtocol.sql
+2026-02-26 11:11:59,740 [INFO] Finished file: mis.Silver_CommiteeProtocol.sql
+2026-02-26 11:11:59,741 [INFO] Processing file: mis.Silver_Restruct_SCD.sql
+2026-02-26 11:11:59,741 [INFO] Finished file: mis.Silver_Restruct_SCD.sql
+2026-02-26 11:11:59,741 [INFO] Processing file: mis.Silver_RestructState_SCD.sql
+2026-02-26 11:11:59,741 [INFO] Finished file: mis.Silver_RestructState_SCD.sql
+2026-02-26 11:11:59,741 [INFO] Processing file: mis.Silver_Restruct_Merged_SCD.sql
+2026-02-26 11:11:59,742 [INFO] Finished file: mis.Silver_Restruct_Merged_SCD.sql
+2026-02-26 11:11:59,748 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_silver_job_proc.sql

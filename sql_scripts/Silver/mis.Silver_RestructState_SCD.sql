@@ -30,7 +30,7 @@ END
                 CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE)
             ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
         ) AS rn
-    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] 
+    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
 ),
 dedup AS (
     SELECT CreditID, PeriodDate, StateName
@@ -45,7 +45,8 @@ rng AS (
         StateName
     FROM dedup
 )
-
+INSERT INTO mis.Silver_RestructState_SCD
+    (CreditID, ValidFrom, ValidTo, StateName)
 SELECT
     CreditID,
     ValidFrom,

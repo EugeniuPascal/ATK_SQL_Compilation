@@ -73,11 +73,40 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
-    # 1) Collect all SQL files alphabetically
-    sql_files = sorted([f for f in SOURCE_FOLDER.iterdir() if f.is_file() and f.suffix.lower() == ".sql"])
-    logging.info(f"Found {len(sql_files)} SQL files to compile.")
-    if not sql_files:
-        raise FileNotFoundError(f"No .sql files found in {SOURCE_FOLDER}")
+    SQL_ORDER = [
+    
+        "mis.Bronze_Документы.ЗаявкаНаКредит.sql",
+        "mis.Bronze_Документы.НаправлениеНаВыплату.sql",
+        "mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql",
+        "mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql",
+        "mis.Bronze_Документы.ПротоколКомитета.sql",    
+        "mis.Bronze_Документы.УстановкаДанныхКредита.sql",
+        "mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.sql",
+        "mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов.sql",
+        "mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров.sql",
+        "mis.Bronze_РегистрыСведений.Валюта.sql", 
+        "mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных.sql", 
+        "mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах.sql",
+        "mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным.sql",
+        "mis.Bronze_РегистрыСведений.РеструктурированныеКредиты.sql",
+        "mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату.sql",
+        "mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения.sql",
+        "mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов.sql",
+        "mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате.sql",
+        "mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных.sql",
+        "mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки.sql",
+        "mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита.sql",
+        "mis.Bronze_Справочники.Дилеры.sql",
+        "mis.Bronze_Справочники.Контрагенты.sql",
+        "mis.Bronze_Справочники.Кредиты.sql",
+        "mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов.sql",
+        "mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей.sql",
+        "mis.Bronze_Справочники.ФилиалыКонтрагентов.sql",
+        "mis.Bronze_Справочники.ФинансовыеПродукты.sql"
+    ]
+
+    sql_files = [SOURCE_FOLDER / f for f in SQL_ORDER if (SOURCE_FOLDER / f).exists()]
+    logging.info(f"Total SQL files to process: {len(sql_files)}")
 
     # 2) Generate stored procedure
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -104,7 +133,6 @@ try:
         f_out.write("    DECLARE @EndTime DATETIME;\n")
         f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
 
-        # 3) Process each file with logging
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf.name}")
@@ -112,20 +140,21 @@ try:
                     content = f_in.read()
                     transformed = make_idempotent(content)
                     safe = transformed.replace("'", "''")
-                    if safe.strip():  # skip empty files
+                    if safe.strip():
                         f_out.write(f"    -- Start of: {sf.name}\n")
                         f_out.write("    SET @StartTime = GETDATE();\n")
                         f_out.write("    SET @EndTime = NULL;\n")
                         f_out.write("    SET @Status = 'Running';\n")
                         f_out.write("    SET @sql = N'" + safe + "';\n")
 
+                        # Fail-safe TRY/CATCH with logging
                         f_out.write("    BEGIN TRY\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("        SET @Status = 'Success';\n")
                         f_out.write("    END TRY\n")
                         f_out.write("    BEGIN CATCH\n")
                         f_out.write("        SET @Status = 'Failed';\n")
-                        f_out.write("        THROW;\n")  # must be inside CATCH
+                        f_out.write("        -- continue to next file without THROW\n")
                         f_out.write("    END CATCH;\n\n")
 
                         # Logging always runs

@@ -79,7 +79,7 @@ try:
         "mis.Silver_CommiteeProtocol.sql",
 
         # creates Gold_Fact_CerereOnline
-        "mis.Silver_EmployeesPosition_SCD.sql"
+        "mis.Silver_EmployeesPosition_SCD.sql",
         "mis.Silver_CerereOnline_base.sql",
 
         # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
@@ -125,7 +125,6 @@ try:
         f_out.write("    DECLARE @EndTime DATETIME;\n")
         f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
 
-        # 3) Process each file with logging
         for sf in sql_files:
             try:
                 logging.info(f"Processing file: {sf.name}")
@@ -133,20 +132,21 @@ try:
                     content = f_in.read()
                     transformed = make_idempotent(content)
                     safe = transformed.replace("'", "''")
-                    if safe.strip():  # skip empty files
+                    if safe.strip():
                         f_out.write(f"    -- Start of: {sf.name}\n")
                         f_out.write("    SET @StartTime = GETDATE();\n")
                         f_out.write("    SET @EndTime = NULL;\n")
                         f_out.write("    SET @Status = 'Running';\n")
                         f_out.write("    SET @sql = N'" + safe + "';\n")
 
+                        # Fail-safe TRY/CATCH with logging
                         f_out.write("    BEGIN TRY\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("        SET @Status = 'Success';\n")
                         f_out.write("    END TRY\n")
                         f_out.write("    BEGIN CATCH\n")
                         f_out.write("        SET @Status = 'Failed';\n")
-                        f_out.write("        THROW;\n")  # must be inside CATCH
+                        f_out.write("        -- continue to next file without THROW\n")
                         f_out.write("    END CATCH;\n\n")
 
                         # Logging always runs

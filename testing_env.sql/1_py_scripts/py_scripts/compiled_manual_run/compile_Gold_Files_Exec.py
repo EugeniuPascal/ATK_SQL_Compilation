@@ -22,6 +22,7 @@ SQL_ORDER = [
     "mis.Gold_Dim_EmployeesHistory.sql",
     "mis.Gold_Dim_Events.sql",
     "mis.Gold_Dim_GroupMembershipPeriods.sql",
+    "mis.Gold_Dim_Leads.sql",
     "mis.Gold_Dim_PartnersBranch.sql",
     "mis.Gold_Fact_AdminTasks.sql",
     "mis.Gold_Fact_ArchiveDocument.sql",
@@ -78,6 +79,7 @@ def compile_sql_dynamic():
         f"DECLARE @EndTime DATETIME;\n"
         f"DECLARE @Status NVARCHAR(50);\n"
         f"DECLARE @sql NVARCHAR(MAX);\n\n"
+        f"DECLARE @FailureNote NVARCHAR(MAX);\n\n"
     )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
@@ -100,21 +102,27 @@ def compile_sql_dynamic():
             # Dynamic SQL execution with TRY/CATCH
             out.write("    BEGIN TRY\n")
             if content and safe_sql.strip():
+                out.write("        SET @FailureNote = '';\n")
                 out.write(f"        SET @sql = N'{safe_sql}';\n")
                 out.write("        EXEC sys.sp_executesql @sql;\n")
                 out.write("        SET @Status = 'Success';\n")
             else:
                 out.write("        SET @Status = 'Failed'; -- could not read/parse file\n")
+                out.write("        SET @FailureNote = N'File could not be read or parsed';\n")
             out.write("    END TRY\n")
             out.write("    BEGIN CATCH\n")
             out.write("        SET @Status = 'Failed';\n")
-            out.write("        -- Continue to next file without throwing\n")
+            out.write("        SET @FailureNote = CONCAT(\n")
+            out.write("            'Msg: ', ERROR_MESSAGE(),\n")
+            out.write("            ' | Line: ', ERROR_LINE(),\n")
+            out.write("            ' | Number: ', ERROR_NUMBER()\n")
+            out.write("        );\n")
             out.write("    END CATCH;\n\n")
 
             # Logging always runs
             out.write("    SET @EndTime = GETDATE();\n")
-            out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
-            out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status);\n")
+            out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status, Failure_Note)\n")
+            out.write(f"    VALUES ('{table_name}', @StartTime, @EndTime, @Status, @FailureNote);\n")
 
             out.write("END\n\n")
             out.write(f"{DIV}\n-- End of: {f.name}\n{DIV}\n\n")

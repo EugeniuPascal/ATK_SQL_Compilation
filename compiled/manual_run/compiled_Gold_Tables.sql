@@ -1,7 +1,7 @@
 -- Compiled SQL bundle (Gold) with Logging (Dynamic Execution)
--- Generated: 2026-02-26 13:17:04
+-- Generated: 2026-02-26 13:58:49
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files (25):
+-- Files (26):
 --   mis.Gold_Dim_AppUsers.sql
 --   mis.Gold_Dim_Branch.sql
 --   mis.Gold_Dim_Clients.sql
@@ -11,6 +11,7 @@
 --   mis.Gold_Dim_EmployeesHistory.sql
 --   mis.Gold_Dim_Events.sql
 --   mis.Gold_Dim_GroupMembershipPeriods.sql
+--   mis.Gold_Dim_Leads.sql
 --   mis.Gold_Dim_PartnersBranch.sql
 --   mis.Gold_Fact_AdminTasks.sql
 --   mis.Gold_Fact_ArchiveDocument.sql
@@ -1449,6 +1450,143 @@ END
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_GroupMembershipPeriods.sql
+----------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.Gold_Dim_Leads.sql
+----------------------------------------------------------------------------------------------------
+BEGIN
+    SET @StartTime = GETDATE();
+    SET @Status = 'Running';
+
+    BEGIN TRY
+        SET @FailureNote = '';
+        SET @sql = N'USE [ATK];
+
+IF OBJECT_ID(''mis.Gold_Dim_Leads'', ''U'') IS NOT NULL
+    DROP TABLE mis.Gold_Dim_Leads;
+
+CREATE TABLE mis.Gold_Dim_Leads
+(
+    Lead_ID                             VARCHAR(36) NULL,
+    Lead_IsDeleted                      VARCHAR(36) NULL,
+    Lead_Name                           NVARCHAR(100) NULL,
+    Lead_CounterpartyType               NVARCHAR(256) NULL,
+    Lead_BirthOrRegistrationDate        DATETIME2 NULL,
+    Lead_Counterparty_ID                VARCHAR(36) NULL,
+    Lead_Counterparty                   NVARCHAR(100) NULL,
+    Lead_ActivityDescription            NVARCHAR(1000) NULL,
+    Lead_City                           NVARCHAR(150) NULL,
+    Lead_Comment                        NVARCHAR(1000) NULL,
+    Lead_PrimaryPhoneNumber             NVARCHAR(9) NULL,
+    Lead_CreditExpert_ID                VARCHAR(36) NULL,
+    Lead_CreditExpert                   NVARCHAR(40) NULL,
+    Lead_Branch_ID                      VARCHAR(36) NULL,
+    Lead_Branch                         NVARCHAR(100) NULL,
+    Lead_EconomicSector_ID              VARCHAR(36) NULL,
+    Lead_EconomicSector                 NVARCHAR(150) NULL,
+    Lead_Region_ID                      VARCHAR(36) NULL,
+    Lead_Region                         NVARCHAR(100) NULL,
+    Lead_ClientRepresentative           NVARCHAR(150) NULL,
+    Lead_PEP                            VARCHAR(36) NULL,
+    Lead_LastName                       NVARCHAR(25) NULL,
+    Lead_FirstName                      NVARCHAR(25) NULL,
+    Lead_DoNotSendPromotionalSMS        VARCHAR(36) NULL,
+    Lead_DoNotDisturb                   VARCHAR(36) NULL,
+    Lead_TaxCode                        NVARCHAR(20) NULL,
+    Lead_CreationDate                   DATETIME2 NULL,
+    Lead_InformationSource              NVARCHAR(150) NULL,
+    Lead_CRM_Segment                    NVARCHAR(50) NULL,
+    Lead_ConvertedToCounterpartyDate    DATETIME2 NULL,
+    Lead_Language                       NVARCHAR(25) NULL
+);
+
+INSERT INTO mis.Gold_Dim_Leads
+(
+    Lead_ID,
+    Lead_IsDeleted,
+    Lead_Name,
+    Lead_CounterpartyType,
+    Lead_BirthOrRegistrationDate,
+    Lead_Counterparty_ID,
+    Lead_Counterparty,
+    Lead_ActivityDescription,
+    Lead_City,
+    Lead_Comment,
+    Lead_PrimaryPhoneNumber,
+    Lead_CreditExpert_ID,
+    Lead_CreditExpert,
+    Lead_Branch_ID,
+    Lead_Branch,
+    Lead_EconomicSector_ID,
+    Lead_EconomicSector,
+    Lead_Region_ID,
+    Lead_Region,
+    Lead_ClientRepresentative,
+    Lead_PEP,
+    Lead_LastName,
+    Lead_FirstName,
+    Lead_DoNotSendPromotionalSMS,
+    Lead_DoNotDisturb,
+    Lead_TaxCode,
+    Lead_CreationDate,
+    Lead_InformationSource,
+    Lead_CRM_Segment,
+    Lead_ConvertedToCounterpartyDate,
+    Lead_Language
+)
+SELECT
+    [Лиды ID]                           AS Lead_ID,
+    [Лиды Пометка Удаления]             AS Lead_IsDeleted,
+    [Лиды Наименование]                 AS Lead_Name,
+    [Лиды Вид Контрагента]              AS Lead_CounterpartyType,
+    [Лиды Дата Рождения Регистрации]    AS Lead_BirthOrRegistrationDate,
+    [Лиды Контрагент Ссылка ID]         AS Lead_Counterparty_ID,
+    [Лиды Контрагент Ссылка]            AS Lead_Counterparty,
+    [Лиды Описание Деятельности]        AS Lead_ActivityDescription,
+    [Лиды Населенный Пункт]             AS Lead_City,
+    [Лиды Комментарий]                  AS Lead_Comment,
+    [Лиды Основной Номер Телефона]      AS Lead_PrimaryPhoneNumber,
+    [Лиды Кредитный Эксперт ID]         AS Lead_CreditExpert_ID,
+    [Лиды Кредитный Эксперт]            AS Lead_CreditExpert,
+    [Лиды Филиал ID]                    AS Lead_Branch_ID,
+    [Лиды Филиал]                       AS Lead_Branch,
+    [Лиды Сектор Экономики ID]          AS Lead_EconomicSector_ID,
+    [Лиды Сектор Экономики]             AS Lead_EconomicSector,
+    [Лиды Регион ID]                    AS Lead_Region_ID,
+    [Лиды Регион]                       AS Lead_Region,
+    [Лиды Представитель Клиента]        AS Lead_ClientRepresentative,
+    [Лиды PEP]                          AS Lead_PEP,
+    [Лиды Фамилия]                      AS Lead_LastName,
+    [Лиды Имя]                          AS Lead_FirstName,
+    [Лиды Не Отправлять Рекламные СМС]  AS Lead_DoNotSendPromotionalSMS,
+    [Лиды Не Беспокоить]                AS Lead_DoNotDisturb,
+    [Лиды Фиск Код]                     AS Lead_TaxCode,
+    [Лиды Дата Создания]                AS Lead_CreationDate,
+    [Лиды Источник Информации]          AS Lead_InformationSource,
+    [Лиды Сегмент CRM]                  AS Lead_CRM_Segment,
+    [Лиды Дата Перевода в Контрагенты]  AS Lead_ConvertedToCounterpartyDate,
+    [Лиды Язык]                         AS Lead_Language
+FROM [ATK].[dbo].[Справочники.Лиды];';
+        EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
+    END TRY
+    BEGIN CATCH
+        SET @Status = 'Failed';
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_Leads', @StartTime, @EndTime, @Status, @FailureNote);
+END
+
+----------------------------------------------------------------------------------------------------
+-- End of: mis.Gold_Dim_Leads.sql
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------

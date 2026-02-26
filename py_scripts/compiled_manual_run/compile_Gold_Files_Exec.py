@@ -22,6 +22,7 @@ SQL_ORDER = [
     "mis.Gold_Dim_EmployeesHistory.sql",
     "mis.Gold_Dim_Events.sql",
     "mis.Gold_Dim_GroupMembershipPeriods.sql",
+    "mis.Gold_Dim_Leads.sql",
     "mis.Gold_Dim_PartnersBranch.sql",
     "mis.Gold_Fact_AdminTasks.sql",
     "mis.Gold_Fact_ArchiveDocument.sql",

@@ -73,36 +73,35 @@ def make_idempotent(sql: str) -> str:
 # Main
 # --------------------------------------------------------------------
 try:
-    SQL_ORDER = [
-    
-        "mis.Bronze_Документы.ЗаявкаНаКредит.sql",
-        "mis.Bronze_Документы.НаправлениеНаВыплату.sql",
-        "mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql",
-        "mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql",
-        "mis.Bronze_Документы.ПротоколКомитета.sql",    
-        "mis.Bronze_Документы.УстановкаДанныхКредита.sql",
-        "mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.sql",
-        "mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов.sql",
-        "mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров.sql",
-        "mis.Bronze_РегистрыСведений.Валюта.sql", 
-        "mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных.sql", 
-        "mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах.sql",
-        "mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным.sql",
-        "mis.Bronze_РегистрыСведений.РеструктурированныеКредиты.sql",
-        "mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату.sql",
-        "mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения.sql",
-        "mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов.sql",
-        "mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате.sql",
-        "mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных.sql",
-        "mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки.sql",
-        "mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита.sql",
-        "mis.Bronze_Справочники.Дилеры.sql",
-        "mis.Bronze_Справочники.Контрагенты.sql",
-        "mis.Bronze_Справочники.Кредиты.sql",
-        "mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов.sql",
-        "mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей.sql",
-        "mis.Bronze_Справочники.ФилиалыКонтрагентов.sql",
-        "mis.Bronze_Справочники.ФинансовыеПродукты.sql"
+    SQL_ORDER = [  
+    "mis.Bronze_Документы.ЗаявкаНаКредит.sql",
+    "mis.Bronze_Документы.НаправлениеНаВыплату.sql",
+    "mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.sql",
+    "mis.Bronze_Документы.ОбъединеннаяИнтернетЗаявка.РискФакторы.sql",
+    "mis.Bronze_Документы.ПротоколКомитета.sql",
+    "mis.Bronze_Документы.УстановкаДанныхКредита.sql",
+    "mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.sql",   
+    "mis.Bronze_Задачи.ЗадачаАдминистратораКредитов.ИсторияСтатусов.sql",
+    "mis.Bronze_РегистрыСведений.АнулированныеКредитыПартнеров.sql",   
+    "mis.Bronze_РегистрыСведений.Валюта.sql",
+    "mis.Bronze_РегистрыСведений.ДанныеКредитовВыданных.sql",
+    "mis.Bronze_РегистрыСведений.КредитыВТеневыхФилиалах.sql",
+    "mis.Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным.sql",
+    "mis.Bronze_РегистрыСведений.РеструктурированныеКредиты.sql",
+    "mis.Bronze_РегистрыСведений.СведенияОНаправленияхНаВыплату.sql",
+    "mis.Bronze_РегистрыСведений.СведенияОПользователяхМобильногоПриложения.sql",
+    "mis.Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов.sql",
+    "mis.Bronze_РегистрыСведений.СотрудникиДанныеПоЗарплате.sql",
+    "mis.Bronze_РегистрыСведений.СтатусыКредитовВыданных.sql",
+    "mis.Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки.sql",
+    "mis.Bronze_РегистрыСведений.УсловияПослеВыдачиКредита.sql",
+    "mis.Bronze_Справочники.Дилеры.sql",
+    "mis.Bronze_Справочники.Контрагенты.sql",
+    "mis.Bronze_Справочники.Кредиты.sql",
+    "mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов.sql",
+    "mis.Bronze_Справочники.ТипыЗадачАдминистратораКредитов_ИсторияПоказателей.sql",
+    "mis.Bronze_Справочники.ФилиалыКонтрагентов.sql",
+    "mis.Bronze_Справочники.ФинансовыеПродукты.sql"
     ]
 
     sql_files = [SOURCE_FOLDER / f for f in SQL_ORDER if (SOURCE_FOLDER / f).exists()]
@@ -132,6 +131,7 @@ try:
         f_out.write("    DECLARE @StartTime DATETIME;\n")
         f_out.write("    DECLARE @EndTime DATETIME;\n")
         f_out.write("    DECLARE @Status NVARCHAR(50);\n\n")
+        f_out.write("    DECLARE @FailureNote NVARCHAR(MAX);\n\n")
 
         for sf in sql_files:
             try:
@@ -145,22 +145,27 @@ try:
                         f_out.write("    SET @StartTime = GETDATE();\n")
                         f_out.write("    SET @EndTime = NULL;\n")
                         f_out.write("    SET @Status = 'Running';\n")
-                        f_out.write("    SET @sql = N'" + safe + "';\n")
+                        f_out.write("    SET @sql = N'" + safe + "';\n")                       
 
                         # Fail-safe TRY/CATCH with logging
                         f_out.write("    BEGIN TRY\n")
+                        f_out.write("        SET @FailureNote = '';\n")
                         f_out.write("        EXEC sys.sp_executesql @sql;\n")
                         f_out.write("        SET @Status = 'Success';\n")
                         f_out.write("    END TRY\n")
                         f_out.write("    BEGIN CATCH\n")
                         f_out.write("        SET @Status = 'Failed';\n")
-                        f_out.write("        -- continue to next file without THROW\n")
+                        f_out.write("        SET @FailureNote = CONCAT(\n")
+                        f_out.write("            'Msg: ', ERROR_MESSAGE(),\n")
+                        f_out.write("            ' | Line: ', ERROR_LINE(),\n")
+                        f_out.write("            ' | Number: ', ERROR_NUMBER()\n")
+                        f_out.write("        );\n")
+                        f_out.write("        -- Continue to next file without THROW\n")
                         f_out.write("    END CATCH;\n\n")
-
                         # Logging always runs
                         f_out.write("    SET @EndTime = GETDATE();\n")
-                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status)\n")
-                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status);\n\n")
+                        f_out.write(f"    INSERT INTO {LOG_TABLE} (TableName, StartTime, EndTime, Status, Failure_Note)\n")
+                        f_out.write(f"    VALUES ('{sf.stem}', @StartTime, @EndTime, @Status, @FailureNote);\n\n")
 
                 logging.info(f"Finished file: {sf.name}")
             except Exception as e:

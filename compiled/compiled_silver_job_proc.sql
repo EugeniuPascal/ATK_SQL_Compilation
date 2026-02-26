@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent with Logging
--- Generated: 2026-02-26 11:11:59.739766
+-- Generated: 2026-02-26 11:17:50.069673
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 5
 --   mis.Silver_Employee_User.sql
@@ -141,7 +141,7 @@ CREATE TABLE mis.[Silver_CommiteeProtocol]
 	[ПротоколКомитета Сумма Рефинансирования Кредита] DECIMAL(15, 2) NULL,
 	[ПротоколКомитета Назначение Использования Кредита] NVARCHAR(150) NULL,
 	[ПротоколКомитета Категория Риска AML]  NVARCHAR(256) NULL,
-	[] VARCHAR(36) NOT NULL,
+	[ПротоколКомитета Это Зеленый Кредит] VARCHAR(36) NOT NULL,
 	[ПротоколКомитета Комитет]            NVARCHAR(156) NULL,
 	[ПротоколКомитета Партнер]  NVARCHAR(256) NULL
 	
@@ -313,7 +313,7 @@ END
                 CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE)
             ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
         ) AS rn
-    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] 
+    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
 ),
 dedup AS (
     SELECT CreditID, PeriodDate, StateName
@@ -328,7 +328,8 @@ rng AS (
         StateName
     FROM dedup
 )
-
+INSERT INTO mis.Silver_RestructState_SCD
+    (CreditID, ValidFrom, ValidTo, StateName)
 SELECT
     CreditID,
     ValidFrom,

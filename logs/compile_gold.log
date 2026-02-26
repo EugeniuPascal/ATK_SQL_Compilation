@@ -44,3 +44,49 @@
 2026-02-26 13:10:11,388 [INFO] Processing file: mis.Gold_Fact_WriteOffCredits.sql
 2026-02-26 13:10:11,389 [INFO] Finished file: mis.Gold_Fact_WriteOffCredits.sql
 2026-02-26 13:10:11,394 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql
+2026-02-26 13:11:40,841 [INFO] === Starting Gold SQL Compilation Job ===
+2026-02-26 13:11:40,842 [INFO] Total SQL files to process: 10
+2026-02-26 13:11:40,842 [INFO] Processing file: mis.Gold_Dim_AppUsers.sql
+2026-02-26 13:11:40,843 [INFO] Finished file: mis.Gold_Dim_AppUsers.sql
+2026-02-26 13:11:40,843 [INFO] Processing file: mis.Gold_Dim_Branch.sql
+2026-02-26 13:11:40,843 [INFO] Finished file: mis.Gold_Dim_Branch.sql
+2026-02-26 13:11:40,843 [INFO] Processing file: mis.Gold_Dim_EmployeePayrollData.sql
+2026-02-26 13:11:40,844 [INFO] Finished file: mis.Gold_Dim_EmployeePayrollData.sql
+2026-02-26 13:11:40,844 [INFO] Processing file: mis.Gold_Dim_Employees.sql
+2026-02-26 13:11:40,845 [INFO] Finished file: mis.Gold_Dim_Employees.sql
+2026-02-26 13:11:40,845 [INFO] Processing file: mis.Gold_Dim_GroupMembershipPeriods.sql
+2026-02-26 13:11:40,845 [INFO] Finished file: mis.Gold_Dim_GroupMembershipPeriods.sql
+2026-02-26 13:11:40,845 [INFO] Processing file: mis.Gold_Fact_BudgetEmployees.sql
+2026-02-26 13:11:40,846 [INFO] Finished file: mis.Gold_Fact_BudgetEmployees.sql
+2026-02-26 13:11:40,846 [INFO] Processing file: mis.Gold_Fact_Comments.sql
+2026-02-26 13:11:40,846 [INFO] Finished file: mis.Gold_Fact_Comments.sql
+2026-02-26 13:11:40,846 [INFO] Processing file: mis.Gold_Fact_CPD.sql
+2026-02-26 13:11:40,847 [INFO] Finished file: mis.Gold_Fact_CPD.sql
+2026-02-26 13:11:40,847 [INFO] Processing file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2026-02-26 13:11:40,847 [INFO] Finished file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2026-02-26 13:11:40,847 [INFO] Processing file: mis.Gold_Fact_WriteOffCredits.sql
+2026-02-26 13:11:40,848 [INFO] Finished file: mis.Gold_Fact_WriteOffCredits.sql
+2026-02-26 13:11:40,852 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql
+2026-02-26 13:11:41,825 [INFO] === Starting Gold SQL Compilation Job ===
+2026-02-26 13:11:41,827 [INFO] Total SQL files to process: 10
+2026-02-26 13:11:41,827 [INFO] Processing file: mis.Gold_Dim_AppUsers.sql
+2026-02-26 13:11:41,827 [INFO] Finished file: mis.Gold_Dim_AppUsers.sql
+2026-02-26 13:11:41,827 [INFO] Processing file: mis.Gold_Dim_Branch.sql
+2026-02-26 13:11:41,828 [INFO] Finished file: mis.Gold_Dim_Branch.sql
+2026-02-26 13:11:41,828 [INFO] Processing file: mis.Gold_Dim_EmployeePayrollData.sql
+2026-02-26 13:11:41,828 [INFO] Finished file: mis.Gold_Dim_EmployeePayrollData.sql
+2026-02-26 13:11:41,828 [INFO] Processing file: mis.Gold_Dim_Employees.sql
+2026-02-26 13:11:41,829 [INFO] Finished file: mis.Gold_Dim_Employees.sql
+2026-02-26 13:11:41,829 [INFO] Processing file: mis.Gold_Dim_GroupMembershipPeriods.sql
+2026-02-26 13:11:41,830 [INFO] Finished file: mis.Gold_Dim_GroupMembershipPeriods.sql
+2026-02-26 13:11:41,830 [INFO] Processing file: mis.Gold_Fact_BudgetEmployees.sql
+2026-02-26 13:11:41,830 [INFO] Finished file: mis.Gold_Fact_BudgetEmployees.sql
+2026-02-26 13:11:41,830 [INFO] Processing file: mis.Gold_Fact_Comments.sql
+2026-02-26 13:11:41,831 [INFO] Finished file: mis.Gold_Fact_Comments.sql
+2026-02-26 13:11:41,831 [INFO] Processing file: mis.Gold_Fact_CPD.sql
+2026-02-26 13:11:41,831 [INFO] Finished file: mis.Gold_Fact_CPD.sql
+2026-02-26 13:11:41,831 [INFO] Processing file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2026-02-26 13:11:41,832 [INFO] Finished file: mis.Gold_Fact_CreditsInShadowBranches.sql
+2026-02-26 13:11:41,832 [INFO] Processing file: mis.Gold_Fact_WriteOffCredits.sql
+2026-02-26 13:11:41,832 [INFO] Finished file: mis.Gold_Fact_WriteOffCredits.sql
+2026-02-26 13:11:41,837 [INFO] \u2705 Stored procedure script generated successfully: C:\ATK_Project\compiled\compiled_gold_job_proc.sql

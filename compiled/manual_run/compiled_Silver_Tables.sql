@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Silver) with Logging (Dynamic Execution)
--- Generated: 2026-02-26 10:59:43
+-- Generated: 2026-02-26 11:09:26
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (5):
 --   mis.Silver_Employee_User.sql
@@ -338,7 +338,7 @@ END
                 CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE)
             ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
         ) AS rn
-    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
+    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] 
 ),
 dedup AS (
     SELECT CreditID, PeriodDate, StateName

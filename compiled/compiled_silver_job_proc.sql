@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Silver) - Idempotent with Logging
--- Generated: 2026-02-26 10:59:51.680238
+-- Generated: 2026-02-26 11:09:29.420344
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files included: 5
 --   mis.Silver_Employee_User.sql
@@ -313,7 +313,7 @@ END
                 CAST(s.[СостоянияРеструктурированныхКредитов Период] AS DATE)
             ORDER BY s.[СостоянияРеструктурированныхКредитов Период] DESC
         ) AS rn
-    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] s
+    FROM mis.[Bronze_РегистрыСведений.СостоянияРеструктурированныхКредитов] 
 ),
 dedup AS (
     SELECT CreditID, PeriodDate, StateName

@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Bronze) with Logging (Dynamic Execution)
--- Generated: 2026-02-26 10:00:42
+-- Generated: 2026-02-26 10:05:11
 -- Source folder: C:\ATK_Project\sql_scripts\Bronze
 -- Files (14):
 --   mis.Bronze_Документы.УстановкаДанныхКредита.sql
@@ -101,7 +101,7 @@ IF OBJECT_ID(''mis.[Bronze_Задачи.ЗадачаАдминистратора
 
 CREATE TABLE mis.[Bronze_Задачи.ЗадачаАдминистратораКредитов]
 (
-    [ЗадачаАдминистратораКредитов ID] VARCHAR(36) NOT NULL,
+    [ЗадачаАдминистратораКредитов ID]  NOT NULL,
     [ЗадачаАдминистратораКредитов Версия Данных] ROWVERSION NULL,
     [ЗадачаАдминистратораКредитов Пометка Удаления] VARCHAR(36) NOT NULL,
     [ЗадачаАдминистратораКредитов Дата] DATETIME NULL,
@@ -344,7 +344,7 @@ SELECT
 	[АнулированныеКредитыПартнеров Кредит Анулирован], 
     [АнулированныеКредитыПартнеров Кредит Восстановлен]
 	
-FROM [ATK].[dbo].[РегистрыСведений.АнулированныеКредитыПартнеров];';
+FROM ';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY

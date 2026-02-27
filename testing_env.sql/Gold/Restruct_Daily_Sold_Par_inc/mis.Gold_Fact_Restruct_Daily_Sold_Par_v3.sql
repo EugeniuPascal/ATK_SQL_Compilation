@@ -7,10 +7,6 @@ DECLARE @DateTo   date = '2026-12-31';
 
 PRINT N'=== Rebuilding [mis].[Gold_Fact_Restruct_Daily_Sold_Par] for period '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';
-	  
-DELETE FROM [mis].[Gold_Fact_Restruct_Daily_Sold_Par]
-WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
-
 
 /* ================== CLEAN TEMP ================== */
 IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
@@ -22,6 +18,41 @@ IF OBJECT_ID('tempdb..#Joined') IS NOT NULL DROP TABLE #Joined;
 IF OBJECT_ID('tempdb..#IRR') IS NOT NULL DROP TABLE #IRR;
 IF OBJECT_ID('tempdb..#Responsible') IS NOT NULL DROP TABLE #Responsible;
 
+/* ================== TARGET TABLE ================== */
+IF OBJECT_ID('[mis].[Gold_Fact_Restruct_Daily_Sold_Par]', 'U') IS NULL
+BEGIN
+    CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Sold_Par] 
+    (
+        SoldDate                  date          NOT NULL,
+        CreditID                  varchar(36)   NOT NULL,
+        ClientID                  varchar(36)   NOT NULL,
+        Balance_Total             money         NULL,
+        IRR_Values                DECIMAL(18,6) NULL,
+        DaysBucket_Credit         int           NULL,
+        DaysFact_Total            int           NULL,
+        DaysIFRS                  int           NULL,
+        [Starea imprumutului]     nvarchar(200) NULL,
+        [Tipul de restructurare]  nvarchar(200) NULL,
+        LastBranchID              varchar(64)   NULL,
+        LastEmployeeID            varchar(64)   NULL,
+        BranchID                  varchar(36)   NULL,
+        EmployeeID                varchar(36)   NULL,
+        SegmentIFRS               nvarchar(20)  NULL,
+        ParIFRS                   nvarchar(20)  NULL,
+        Par                       nvarchar(20)  NULL,
+        StageName                 nvarchar(200) NULL,
+        PRIMARY KEY (ClientID, CreditID, SoldDate)
+    );
+END
+ELSE
+BEGIN
+    -- Remove data for the period (idempotent)
+    DELETE FROM [mis].[Gold_Fact_Restruct_Daily_Sold_Par]
+    WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
+END
+
+-- ================== REST OF SCRIPT ==================
+-- Now you can safely create temp tables
 SELECT
     [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
     [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS EmployeeID,
@@ -116,7 +147,7 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Flag ON #Flag(ClientID, SoldDate);
     FROM [ATK].[mis].[Silver_Resp_SCD]
     GROUP BY CreditID
 )
-SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID 
+SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID
 
 INTO #RespEarliest
 FROM [ATK].[mis].[Silver_Resp_SCD] r
@@ -197,11 +228,11 @@ WITH FinalDedup AS (
             WHEN j.[Starea imprumutului] = N'НеИзлеченный' THEN N'Nevindecat'
             ELSE j.[Starea imprumutului]
         END AS [Starea imprumutului],
+		
         CASE 
             WHEN f.ClientID IS NOT NULL 
             AND j.[Tipul de restructurare] = N'НекомерческаяРеструктуризация'
             THEN N'Restructurizare non-comerciala' 
-
             WHEN f.ClientID IS NOT NULL 
             AND j.[Tipul de restructurare] = N'КоммерческаяРеструктуризация'
             THEN N'Restructurizare comerciala'             
@@ -246,7 +277,7 @@ INSERT INTO [mis].[Gold_Fact_Restruct_Daily_Sold_Par] (
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
     [Starea imprumutului], [Tipul de restructurare], 
-    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID, 
 	SegmentIFRS, ParIFRS, Par, StageName
 )
 SELECT
@@ -261,3 +292,6 @@ WHERE rn = 1;
 COMMIT TRAN;
 
 PRINT N'🏁 Done';
+
+
+

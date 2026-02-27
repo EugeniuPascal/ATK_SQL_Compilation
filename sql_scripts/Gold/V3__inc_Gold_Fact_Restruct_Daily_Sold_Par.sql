@@ -71,9 +71,8 @@ CREATE NONCLUSTERED INDEX IX_IRR ON #IRR (CreditID, IRRDate DESC);
         s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки Кредит] AS DaysBucket_Credit,
         s.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] AS DaysFact_Total,
         s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО] AS DaysIFRS,
-        r.StateName AS StateName_Final,
-        r.TypeName_Sticky AS TypeName_Sticky_Final,
-        r.CreditStatus AS CreditStatus_Base,
+        r.StateName AS [Starea imprumutului],
+        r.TypeName_Sticky AS [Tipul de restructurare],
         ROW_NUMBER() OVER (
             PARTITION BY
                 s.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID],
@@ -127,7 +126,8 @@ WHERE HasUnhealed = 1
     FROM mis.[Silver_Resp_SCD]
     GROUP BY CreditID
 )
-SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID, r.IsSpecialBranch
+SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID
+
 INTO #RespEarliest
 FROM mis.[Silver_Resp_SCD] r
 JOIN MinFrom m
@@ -143,7 +143,6 @@ SELECT
     COALESCE(rc.FinalExpertID, e.FinalExpertID) AS LastEmployeeID,
     f.EmployeeID,
     f.BranchID,
-    COALESCE(rc.IsSpecialBranch, e.IsSpecialBranch) AS IsSpecialBranch,
     st.StageName AS CurrentStage
 INTO #Joined_raw
 FROM #Base b
@@ -193,9 +192,9 @@ INSERT INTO mis.[Gold_Fact_Restruct_Daily_Sold_Par]
 (
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
-    StateName_Final, TypeName_Sticky_Final, CreditStatus_Base,
-    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
-    IsSpecialBranch, SegmentIFRS, ParIFRS, Par, StageName
+    [Starea imprumutului], [Tipul de restructurare],
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID, 
+	SegmentIFRS, ParIFRS, Par, StageName
 )
 SELECT
     j.SoldDate,
@@ -206,14 +205,12 @@ SELECT
     j.DaysBucket_Credit,
     j.DaysFact_Total,
     j.DaysIFRS,
-    j.StateName_Final,
-    j.TypeName_Sticky_Final,
-    j.CreditStatus_Base,
+    j.[Starea imprumutului],
+    j.[Tipul de restructurare],
     j.LastBranchID,
     j.LastEmployeeID,
     j.BranchID,
     j.EmployeeID,
-    j.IsSpecialBranch,
     CASE
         WHEN j.DaysIFRS >= 91 THEN N'e) 90 +'
         WHEN j.DaysIFRS >= 31 THEN N'd) 30 - 90'

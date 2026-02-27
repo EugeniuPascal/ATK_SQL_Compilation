@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Silver) with Logging (Dynamic Execution)
--- Generated: 2026-02-26 13:17:02
+-- Generated: 2026-02-27 16:28:57
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (15):
 --   mis.Silver_Employee_User.sql
@@ -1423,14 +1423,26 @@ CREATE TABLE mis.[Silver_Sold_Owner]
       [GroupOwner] VARCHAR(36)     NULL
 );
 
-WITH SoldCTE AS (
+;WITH SoldCTE AS
+(
     SELECT
-        CAST([СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE) AS SoldDate,
+        [СуммыЗадолженностиПоПериодамПросрочки Дата] AS SoldDate,
         [СуммыЗадолженностиПоПериодамПросрочки Клиент ID] AS ClientID,
         [СуммыЗадолженностиПоПериодамПросрочки Кредит ID] AS CreditID,
         [СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] AS SoldAmount
     FROM mis.[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки]
     WHERE [СуммыЗадолженностиПоПериодамПросрочки Дата] >= ''2025-01-01''
+),
+
+GroupCTE AS
+(
+    SELECT 
+        gm.PersonID,
+        gm.GroupOwner,
+        gm.PeriodStart,
+        gm.PeriodEnd,
+        ROW_NUMBER() OVER(PARTITION BY gm.PersonID ORDER BY gm.PeriodStart DESC) AS rn
+    FROM [ATK].[mis].[Silver_SCD_GroupMembershipPeriods] gm
 )
 INSERT INTO mis.[Silver_Sold_Owner] (SoldDate, ClientID, CreditID, SoldAmount, BranchID, GroupOwner)
 SELECT
@@ -1439,19 +1451,16 @@ SELECT
        s.CreditID,
        s.SoldAmount,
        b.[ОтветственныеПоКредитамВыданным Филиал ID] AS BranchID,
-       gm.GroupOwner
+       g.GroupOwner
 FROM SoldCTE s
 LEFT JOIN mis.[Bronze_РегистрыСведений.ОтветственныеПоКредитамВыданным] b
        ON b.[ОтветственныеПоКредитамВыданным Кредит ID] = s.CreditID
+LEFT JOIN GroupCTE g
+       ON g.PersonID = s.ClientID
+      AND s.SoldDate >= g.PeriodStart
+      AND s.SoldDate <  g.PeriodEnd
+      AND g.rn = 1;
 
-OUTER APPLY (
-    SELECT TOP 1 gm.GroupOwner
-    FROM [ATK].[mis].[Silver_SCD_GroupMembershipPeriods] gm
-    WHERE gm.PersonID = s.ClientID
-      AND s.SoldDate >= gm.PeriodStart
-      AND s.SoldDate <  gm.PeriodEnd
-    ORDER BY gm.PeriodStart DESC
-) gm;
 
 CREATE CLUSTERED INDEX CIX_Silver_Sold_Owner_SoldDate
 ON [mis].[Silver_Sold_Owner] (SoldDate, ClientID, CreditID);
@@ -1462,8 +1471,7 @@ INCLUDE (CreditID, SoldAmount, GroupOwner, BranchID);
 
 CREATE NONCLUSTERED INDEX IX_Silver_Sold_Owner_CreditID
 ON [mis].[Silver_Sold_Owner] (CreditID, SoldDate)
-INCLUDE (ClientID, SoldAmount, GroupOwner, BranchID);
-';
+INCLUDE (ClientID, SoldAmount, GroupOwner, BranchID);';
         EXEC sys.sp_executesql @sql;
         SET @Status = 'Success';
     END TRY

@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-02-26 13:59:12.590772
+-- Generated: 2026-02-27 16:29:08.729810
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 26
 --   mis.Gold_Dim_AppUsers.sql
@@ -496,6 +496,7 @@ CREATE TABLE mis.[Gold_Dim_Credits]
     [CommitteeProt_CrPurpose] NVARCHAR(150) NULL,
     [CommitteeProt_AMLRiskCat] NVARCHAR(256) NULL,
     [DigitalSign] NVARCHAR(50) NULL,
+	[FinancialSource] NVARCHAR(25) NULL,
     [EconomicSectorEFSE] NVARCHAR(255) NULL,
     [EconomicSector] NVARCHAR(255) NULL,
     [Agro] NVARCHAR(50) NULL,
@@ -655,6 +656,7 @@ ClientPartner AS (
 DigitalSignSrc AS (
     SELECT
         [НаправлениеНаВыплату Кредит ID] AS CreditID,
+		[НаправлениеНаВыплату Источник Финансирования] AS FinancialSource,
         CASE WHEN NULLIF(LTRIM(RTRIM([НаправлениеНаВыплату Источник Заполнения])), '''') IS NOT NULL
              THEN 1 ELSE 0 END AS HasPaymentDirectionSource
     FROM mis.[Bronze_Документы.НаправлениеНаВыплату]
@@ -765,6 +767,7 @@ FinalData AS (
             WHEN ds.HasPaymentDirectionSource = 1 THEN ''True''
             ELSE ''False''
         END AS DigitalSign,
+		ds.FinancialSource,
 		e.[СекторыЭкономики Сектор Экономики EFSE] AS EconomicSectorEFSE,
         e.[СекторыЭкономики Основной Раздел] AS EconomicSector,
         CASE
@@ -799,7 +802,7 @@ INSERT INTO mis.[Gold_Dim_Credits] (
 	CreditApplicationPartnerID, CreditPartnerName, FirstFilialID, FirstEmployeeID,
     LastFilialID, LastEmployeeID, DealerID, Source, LatestOutstandingAmount, SegmentRevenue,
     GreenCredit, CommitteeProt_CrPurpose, CommitteeProt_AMLRiskCat,
-    DigitalSign, EconomicSectorEFSE, EconomicSector, Agro, IsFormal
+    DigitalSign, FinancialSource, EconomicSectorEFSE, EconomicSector, Agro, IsFormal
 )
 SELECT *
 FROM FinalData
@@ -4293,9 +4296,8 @@ CREATE NONCLUSTERED INDEX IX_IRR ON #IRR (CreditID, IRRDate DESC);
         s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки Кредит] AS DaysBucket_Credit,
         s.[СуммыЗадолженностиПоПериодамПросрочки Фактическое Количество Дней Просрочки Итого] AS DaysFact_Total,
         s.[СуммыЗадолженностиПоПериодамПросрочки Количество Дней Просрочки МСФО] AS DaysIFRS,
-        r.StateName AS StateName_Final,
-        r.TypeName_Sticky AS TypeName_Sticky_Final,
-        r.CreditStatus AS CreditStatus_Base,
+        r.StateName AS [Starea imprumutului],
+        r.TypeName_Sticky AS [Tipul de restructurare],
         ROW_NUMBER() OVER (
             PARTITION BY
                 s.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID],
@@ -4349,7 +4351,8 @@ WHERE HasUnhealed = 1
     FROM mis.[Silver_Resp_SCD]
     GROUP BY CreditID
 )
-SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID, r.IsSpecialBranch
+SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID
+
 INTO #RespEarliest
 FROM mis.[Silver_Resp_SCD] r
 JOIN MinFrom m
@@ -4365,7 +4368,6 @@ SELECT
     COALESCE(rc.FinalExpertID, e.FinalExpertID) AS LastEmployeeID,
     f.EmployeeID,
     f.BranchID,
-    COALESCE(rc.IsSpecialBranch, e.IsSpecialBranch) AS IsSpecialBranch,
     st.StageName AS CurrentStage
 INTO #Joined_raw
 FROM #Base b
@@ -4415,9 +4417,9 @@ INSERT INTO mis.[Gold_Fact_Restruct_Daily_Sold_Par]
 (
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
-    StateName_Final, TypeName_Sticky_Final, CreditStatus_Base,
-    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
-    IsSpecialBranch, SegmentIFRS, ParIFRS, Par, StageName
+    [Starea imprumutului], [Tipul de restructurare],
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID, 
+	SegmentIFRS, ParIFRS, Par, StageName
 )
 SELECT
     j.SoldDate,
@@ -4428,14 +4430,12 @@ SELECT
     j.DaysBucket_Credit,
     j.DaysFact_Total,
     j.DaysIFRS,
-    j.StateName_Final,
-    j.TypeName_Sticky_Final,
-    j.CreditStatus_Base,
+    j.[Starea imprumutului],
+    j.[Tipul de restructurare],
     j.LastBranchID,
     j.LastEmployeeID,
     j.BranchID,
     j.EmployeeID,
-    j.IsSpecialBranch,
     CASE
         WHEN j.DaysIFRS >= 91 THEN N''e) 90 +''
         WHEN j.DaysIFRS >= 31 THEN N''d) 30 - 90''

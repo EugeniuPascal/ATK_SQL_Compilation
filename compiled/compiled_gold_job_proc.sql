@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-02-27 16:29:08.729810
+-- Generated: 2026-03-02 16:14:07.058099
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 26
 --   mis.Gold_Dim_AppUsers.sql
@@ -475,10 +475,11 @@ CREATE TABLE mis.[Gold_Dim_Credits]
     [ContractDate] DATE NULL,
     [IncomeSegment] NVARCHAR(255) NULL,
     [UsagePurpose] NVARCHAR(500) NULL,
-    [PurposeDescription] NVARCHAR(1000) NULL,
+	[CreditPurposeDescription] NVARCHAR(1000) NULL,
     [ProductType] NVARCHAR(255) NULL,
     [EconomicUsageArea] NVARCHAR(255) NULL,
     [SigningSource] NVARCHAR(500) NULL,
+	[PurposeDescription] NVARCHAR(1000) NULL,
 	[CreditHistoryType] NVARCHAR(256) NULL,	
     [FinancialProductsMainGroup] NVARCHAR(255) NULL,
     [IssuedCreditsStatus] NVARCHAR(50) NULL, 
@@ -536,6 +537,7 @@ CreditRequest AS (
             znk.[ЗаявкаНаКредит Кредит ID] AS CreditID,
             znk.[ЗаявкаНаКредит Партнер ID] AS ApplicationPartnerID,
 			znk.[ЗаявкаНаКредит Вид Кредитной Истории] AS CreditHistoryType,
+			znk.[ЗаявкаНаКредит Цель Кредита Описание] AS CreditPurposeDescription,
             oia.[ОбъединеннаяИнтернетЗаявка Дилер ID] AS DealerID,
             NULLIF(LTRIM(RTRIM(oia.[ОбъединеннаяИнтернетЗаявка Источник Заполнения])), '''') AS Source,
             oia.[ОбъединеннаяИнтернетЗаявка Филиал ID] AS FilialID,
@@ -714,7 +716,7 @@ FinalData AS (
         crd.[Кредиты Дата Контракта] AS ContractDate,
         crd.[Кредиты Сегмент Доходов] AS IncomeSegment,
         crd.[Кредиты Назначение Использования Кредита] AS UsagePurpose,
-        crd.[Кредиты Цель Кредита Описание] AS PurposeDescription,
+        crd.[Кредиты Цель Кредита Описание] AS PurposeDescription,		
         crd.[Кредиты Тип Кредитного Продукта] AS ProductType,
         crd.[Кредиты Сфера Использования Кредита] AS EconomicUsageArea,
         CASE crd.[Кредиты Источник Подписания]
@@ -722,6 +724,7 @@ FinalData AS (
             WHEN ''Сайт'' THEN ''WebSite''
             ELSE crd.[Кредиты Источник Подписания]
         END AS SigningSource,
+		cr.CreditPurposeDescription,
 		cr.CreditHistoryType,		
 		CASE 
 		    WHEN seg.SegmentRevenue = ''Consum non-business''
@@ -797,12 +800,13 @@ INSERT INTO mis.[Gold_Dim_Credits] (
     CreditID, Owner, Code, Name, IssueDate, Term, Amount, EconomicSectorDetailed,
     FinancialProductID, FinancialProduct, AgroCredit, LocalityType, Currency,
     ProductID, Product, Purpose, RemoveFundingSource, ContractType, ContractDate,
-    IncomeSegment, UsagePurpose, PurposeDescription, ProductType, EconomicUsageArea,
-    SigningSource, CreditHistoryType, FinancialProductsMainGroup, IssuedCreditsStatus, 
-	CreditApplicationPartnerID, CreditPartnerName, FirstFilialID, FirstEmployeeID,
-    LastFilialID, LastEmployeeID, DealerID, Source, LatestOutstandingAmount, SegmentRevenue,
-    GreenCredit, CommitteeProt_CrPurpose, CommitteeProt_AMLRiskCat,
-    DigitalSign, FinancialSource, EconomicSectorEFSE, EconomicSector, Agro, IsFormal
+    IncomeSegment, UsagePurpose, PurposeDescription, 
+	ProductType, EconomicUsageArea, SigningSource, CreditPurposeDescription, CreditHistoryType, 
+	FinancialProductsMainGroup, IssuedCreditsStatus, CreditApplicationPartnerID, 
+	CreditPartnerName, FirstFilialID, FirstEmployeeID, LastFilialID, LastEmployeeID, 
+	DealerID, Source, LatestOutstandingAmount, SegmentRevenue, GreenCredit, 
+	CommitteeProt_CrPurpose, CommitteeProt_AMLRiskCat, DigitalSign, FinancialSource, 
+	EconomicSectorEFSE, EconomicSector, Agro, IsFormal
 )
 SELECT *
 FROM FinalData
@@ -4305,26 +4309,27 @@ CREATE NONCLUSTERED INDEX IX_IRR ON #IRR (CreditID, IRRDate DESC);
                 CAST(s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS date)
             ORDER BY s.[СуммыЗадолженностиПоПериодамПросрочки Итого Сумма Остаток Кредит] DESC
         ) AS rn,
-        (
-            SELECT TOP (1)
-                CASE WHEN i.IRR_Year < 100 THEN i.IRR_Year ELSE i.IRR_Client END
-            FROM #IRR i
-            WHERE i.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-              AND i.IRRDate <= CAST(s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS date)
-            ORDER BY i.IRRDate DESC
+        
+        (SELECT TOP (1)
+            CASE WHEN i.IRR_Year < 100 THEN i.IRR_Year ELSE i.IRR_Client END
+         FROM #IRR i
+         WHERE i.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
+           AND i.IRRDate <= CAST(s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS date)
+         ORDER BY i.IRRDate DESC
         ) AS IRR_Rate
     FROM mis.[Bronze_РегистрыСведений.СуммыЗадолженностиПоПериодамПросрочки] s
     LEFT JOIN mis.[Silver_Restruct_Merged_SCD] r
         ON r.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
-       AND CAST(s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS date)
-           BETWEEN r.ValidFrom AND r.ValidTo
-    WHERE s.[СуммыЗадолженностиПоПериодамПросрочки Дата]
-          BETWEEN @DateFrom AND @DateTo
+       AND CAST(s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS date) BETWEEN r.ValidFrom AND r.ValidTo
+    WHERE s.[СуммыЗадолженностиПоПериодамПросрочки Дата] BETWEEN @DateFrom AND @DateTo
+	
 )
 SELECT *
 INTO #Base
 FROM cte
 WHERE rn = 1;
+
+CREATE CLUSTERED INDEX CIX_Base ON #Base(ClientID, SoldDate, CreditID);
 
 
 
@@ -4333,6 +4338,8 @@ SELECT ClientID, SoldDate, MAX(DaysFact_Total) AS MaxDaysPerClientDay
 INTO #MaxDays
 FROM #Base
 GROUP BY ClientID, SoldDate;
+
+CREATE UNIQUE CLUSTERED INDEX CIX_MaxDays ON #MaxDays(ClientID, SoldDate);
 
 
 
@@ -4343,6 +4350,8 @@ FROM mis.[Silver_Client_UnhealedFlag]
 WHERE HasUnhealed = 1
   AND SoldDate BETWEEN @DateFrom AND @DateTo;
 
+CREATE UNIQUE CLUSTERED INDEX CIX_Flag ON #Flag(ClientID, SoldDate);
+
 
 
 
@@ -4352,7 +4361,6 @@ WHERE HasUnhealed = 1
     GROUP BY CreditID
 )
 SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID
-
 INTO #RespEarliest
 FROM mis.[Silver_Resp_SCD] r
 JOIN MinFrom m
@@ -4390,6 +4398,8 @@ OUTER APPLY (
     ORDER BY rr.Period DESC
 ) f;
 
+CREATE CLUSTERED INDEX CIX_JR ON #Joined_raw(ClientID, SoldDate);
+
 
 
 
@@ -4413,53 +4423,84 @@ JOIN #MaxDays md
 
 
 
-INSERT INTO mis.[Gold_Fact_Restruct_Daily_Sold_Par]
-(
+BEGIN TRAN;
+
+WITH FinalDedup AS (
+    SELECT
+        j.SoldDate,
+        j.CreditID,
+        j.ClientID,
+        j.Balance_Total,
+        ROUND(ISNULL(j.IRR_Rate,0) * j.Balance_Total, 2) AS IRR_Values,
+        j.DaysBucket_Credit,
+        j.DaysFact_Total,
+        j.DaysIFRS,
+        CASE 
+            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] = N''Излеченный'' THEN N''Nevindecat contaminat''
+            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] = N''НеИзлеченный'' THEN N''Nevindecat contaminat''
+            WHEN j.[Starea imprumutului] = N''Излеченный'' THEN N''Vindecat''
+            WHEN j.[Starea imprumutului] = N''НеИзлеченный'' THEN N''Nevindecat''
+            ELSE j.[Starea imprumutului]
+        END AS [Starea imprumutului],
+				
+        
+        CASE LTRIM(RTRIM(ISNULL(j.[Tipul de restructurare],'''')))
+            WHEN N''НекоммерческаяРеструктуризация'' THEN N''Restructurizare non-comerciala''
+            WHEN N''КоммерческаяРеструктуризация''     THEN N''Restructurizare comerciala''
+            ELSE j.[Tipul de restructurare]
+        END AS [Tipul de restructurare],
+
+        j.LastBranchID,
+        j.LastEmployeeID,
+        j.BranchID,
+        j.EmployeeID,
+        CASE
+            WHEN j.DaysIFRS >= 91 THEN N''e) 90 +''
+            WHEN j.DaysIFRS >= 31 THEN N''d) 30 - 90''
+            WHEN j.DaysIFRS >= 16 THEN N''c) 16 - 30''
+            WHEN j.DaysIFRS >= 4  THEN N''b) 4 - 15''
+            ELSE N''a) 0 - 3''
+        END AS SegmentIFRS,
+        j.ParIFRS,
+        CASE
+            WHEN j.DaysBucket_Credit BETWEEN 1   AND 30  THEN N''Par0''
+            WHEN j.DaysBucket_Credit BETWEEN 31  AND 60  THEN N''Par30''
+            WHEN j.DaysBucket_Credit BETWEEN 61  AND 90  THEN N''Par60''
+            WHEN j.DaysBucket_Credit BETWEEN 91 AND 180 THEN N''Par90''
+            WHEN j.DaysBucket_Credit BETWEEN 181 AND 270 THEN N''Par180''
+            WHEN j.DaysBucket_Credit BETWEEN 271 AND 360 THEN N''Par270''
+            WHEN j.DaysBucket_Credit > 360           THEN N''Par360''
+        END AS Par,
+        CASE j.CurrentStage
+            WHEN N''Стадия1'' THEN N''Stage1''
+            WHEN N''Стадия2'' THEN N''Stage2''
+            WHEN N''Стадия3'' THEN N''Stage3''
+            ELSE j.CurrentStage
+        END AS StageName,
+        ROW_NUMBER() OVER (
+            PARTITION BY j.ClientID, j.CreditID, j.SoldDate
+            ORDER BY j.DaysFact_Total DESC, j.Balance_Total DESC
+        ) AS rn
+    FROM #Joined j
+    LEFT JOIN #Flag f ON f.ClientID = j.ClientID AND f.SoldDate = j.SoldDate
+)
+INSERT INTO mis.[Gold_Fact_Restruct_Daily_Sold_Par] (
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
-    [Starea imprumutului], [Tipul de restructurare],
-    LastBranchID, LastEmployeeID, BranchID, EmployeeID, 
-	SegmentIFRS, ParIFRS, Par, StageName
+    [Starea imprumutului], [Tipul de restructurare], 
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
+    SegmentIFRS, ParIFRS, Par, StageName
 )
 SELECT
-    j.SoldDate,
-    j.CreditID,
-    j.ClientID,
-    j.Balance_Total,
-    ROUND(ISNULL(j.IRR_Rate,0) * j.Balance_Total, 2),
-    j.DaysBucket_Credit,
-    j.DaysFact_Total,
-    j.DaysIFRS,
-    j.[Starea imprumutului],
-    j.[Tipul de restructurare],
-    j.LastBranchID,
-    j.LastEmployeeID,
-    j.BranchID,
-    j.EmployeeID,
-    CASE
-        WHEN j.DaysIFRS >= 91 THEN N''e) 90 +''
-        WHEN j.DaysIFRS >= 31 THEN N''d) 30 - 90''
-        WHEN j.DaysIFRS >= 16 THEN N''c) 16 - 30''
-        WHEN j.DaysIFRS >= 4  THEN N''b) 4 - 15''
-        ELSE N''a) 0 - 3''
-    END,
-    j.ParIFRS,
-    CASE
-        WHEN j.DaysBucket_Credit BETWEEN 1   AND 30  THEN N''Par0''
-        WHEN j.DaysBucket_Credit BETWEEN 31  AND 60  THEN N''Par30''
-        WHEN j.DaysBucket_Credit BETWEEN 61  AND 90  THEN N''Par60''
-        WHEN j.DaysBucket_Credit BETWEEN 91 AND 180 THEN N''Par90''
-        WHEN j.DaysBucket_Credit BETWEEN 181 AND 270 THEN N''Par180''
-        WHEN j.DaysBucket_Credit BETWEEN 271 AND 360 THEN N''Par270''
-        WHEN j.DaysBucket_Credit > 360           THEN N''Par360''
-    END,
-    CASE j.CurrentStage
-        WHEN N''Стадия1'' THEN N''Stage1''
-        WHEN N''Стадия2'' THEN N''Stage2''
-        WHEN N''Стадия3'' THEN N''Stage3''
-        ELSE j.CurrentStage
-    END
-FROM #Joined j;
+    SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
+    DaysBucket_Credit, DaysFact_Total, DaysIFRS,
+    [Starea imprumutului], [Tipul de restructurare], 
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
+    SegmentIFRS, ParIFRS, Par, StageName
+FROM FinalDedup
+WHERE rn = 1;
+
+COMMIT TRAN;
 
 PRINT N''🏁 Incremental load completed successfully'';';
     BEGIN TRY

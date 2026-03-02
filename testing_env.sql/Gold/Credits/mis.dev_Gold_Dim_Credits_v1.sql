@@ -1,11 +1,11 @@
 USE [ATK];
 GO
 
-IF OBJECT_ID(N'mis.[Gold_Dim_Credits]', 'U') IS NOT NULL
-    DROP TABLE mis.[Gold_Dim_Credits];
+IF OBJECT_ID(N'mis.[dev_Gold_Dim_Credits_v1]', 'U') IS NOT NULL
+    DROP TABLE mis.[dev_Gold_Dim_Credits_v1];
 GO
 
-CREATE TABLE mis.[Gold_Dim_Credits] 
+CREATE TABLE mis.[dev_Gold_Dim_Credits_v1] 
 (
     [CreditID] VARCHAR(36) NOT NULL PRIMARY KEY CLUSTERED,
     [Owner] VARCHAR(36) NULL,
@@ -351,7 +351,7 @@ FinalData AS (
     LEFT JOIN FormalCredits fc ON crd.[Кредиты ID] = fc.CreditID
 )
 
-INSERT INTO mis.[Gold_Dim_Credits] (
+INSERT INTO mis.[dev_Gold_Dim_Credits_v1] (
     CreditID, Owner, Code, Name, IssueDate, Term, Amount, EconomicSectorDetailed,
     FinancialProductID, FinancialProduct, AgroCredit, LocalityType, Currency,
     ProductID, Product, Purpose, RemoveFundingSource, ContractType, ContractDate,

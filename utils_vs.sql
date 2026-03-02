@@ -357,6 +357,20 @@ ORDER BY _Period DESC
   
   
   
+  verify sold par incremental
+  
+  SELECT TOP(100) *    FROM mis.[Gold_Fact_Restruct_Daily_Sold_Par]
+
+WHERE [Tipul de restructurare] = 'НекоммерческаяРеструктуризация'
+AND  [Starea imprumutului] IS NOT NULL
+
+
+80FE00155D65040111EB8630DE69847C   'КоммерческаяРеструктуризация'
+
+80E800155D01450411E936AEBFCAFEF3   'НекоммерческаяРеструктуризация'
+
+B73700155D65140C11EDBCE40AEA86A0   'НекоммерческаяРеструктуризация'
+  
 
 
 

@@ -7,10 +7,6 @@ DECLARE @DateTo   date = '2026-12-31';
 
 PRINT N'=== Rebuilding [mis].[Gold_Fact_Restruct_Daily_Sold_Par] for period '
       + CONVERT(varchar(10), @DateFrom, 23) + N' — ' + CONVERT(varchar(10), @DateTo, 23) + N' ===';
-	  
-DELETE FROM [mis].[Gold_Fact_Restruct_Daily_Sold_Par]
-WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
-
 
 /* ================== CLEAN TEMP ================== */
 IF OBJECT_ID('tempdb..#Base') IS NOT NULL DROP TABLE #Base;
@@ -22,6 +18,41 @@ IF OBJECT_ID('tempdb..#Joined') IS NOT NULL DROP TABLE #Joined;
 IF OBJECT_ID('tempdb..#IRR') IS NOT NULL DROP TABLE #IRR;
 IF OBJECT_ID('tempdb..#Responsible') IS NOT NULL DROP TABLE #Responsible;
 
+/* ================== TARGET TABLE ================== */
+IF OBJECT_ID('[mis].[Gold_Fact_Restruct_Daily_Sold_Par]', 'U') IS NULL
+BEGIN
+    CREATE TABLE [mis].[Gold_Fact_Restruct_Daily_Sold_Par] 
+    (
+        SoldDate                  date          NOT NULL,
+        CreditID                  varchar(36)   NOT NULL,
+        ClientID                  varchar(36)   NOT NULL,
+        Balance_Total             money         NULL,
+        IRR_Values                DECIMAL(18,6) NULL,
+        DaysBucket_Credit         int           NULL,
+        DaysFact_Total            int           NULL,
+        DaysIFRS                  int           NULL,
+        [Starea imprumutului]     nvarchar(200) NULL,
+        [Tipul de restructurare]  nvarchar(200) NULL,
+        LastBranchID              varchar(64)   NULL,
+        LastEmployeeID            varchar(64)   NULL,
+        BranchID                  varchar(36)   NULL,
+        EmployeeID                varchar(36)   NULL,
+        SegmentIFRS               nvarchar(20)  NULL,
+        ParIFRS                   nvarchar(20)  NULL,
+        Par                       nvarchar(20)  NULL,
+        StageName                 nvarchar(200) NULL,
+        PRIMARY KEY (ClientID, CreditID, SoldDate)
+    );
+END
+ELSE
+BEGIN
+    -- Remove data for the period (idempotent)
+    DELETE FROM [mis].[Gold_Fact_Restruct_Daily_Sold_Par]
+    WHERE SoldDate BETWEEN @DateFrom AND @DateTo;
+END
+
+-- ================== REST OF SCRIPT ==================
+-- Now you can safely create temp tables
 SELECT
     [ОтветственныеПоКредитамВыданным Кредит ID] AS CreditID,
     [ОтветственныеПоКредитамВыданным Кредитный Эксперт ID] AS EmployeeID,
@@ -78,7 +109,7 @@ CREATE NONCLUSTERED INDEX IX_IRR ON #IRR(CreditID, IRRDate DESC);
         ON r.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
        AND CAST(s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE) BETWEEN r.ValidFrom AND r.ValidTo
     WHERE s.[СуммыЗадолженностиПоПериодамПросрочки Дата] BETWEEN @DateFrom AND @DateTo
-	--AND s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = 'B73700155D65140C11EDBCE40AEA86A0'
+	--AND s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = '813D00155D65040111ED35CDAF3ED6E4'
 )
 SELECT *
 INTO #Base
@@ -116,7 +147,7 @@ CREATE UNIQUE CLUSTERED INDEX CIX_Flag ON #Flag(ClientID, SoldDate);
     FROM [ATK].[mis].[Silver_Resp_SCD]
     GROUP BY CreditID
 )
-SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID 
+SELECT r.CreditID, r.FinalBranchID, r.FinalExpertID
 
 INTO #RespEarliest
 FROM [ATK].[mis].[Silver_Resp_SCD] r
@@ -190,23 +221,20 @@ WITH FinalDedup AS (
         j.DaysBucket_Credit,
         j.DaysFact_Total,
         j.DaysIFRS,
-		
-        -- Clean Starea imprumutului
         CASE 
-            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] = N'Излеченный' THEN N'Nevindecat contaminat'
-            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] = N'НеИзлеченный' THEN N'Nevindecat contaminat'
+            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] IN (N'Излеченный', N'НеИзлеченный')
+            THEN N'Nevindecat contaminat'
             WHEN j.[Starea imprumutului] = N'Излеченный' THEN N'Vindecat'
             WHEN j.[Starea imprumutului] = N'НеИзлеченный' THEN N'Nevindecat'
             ELSE j.[Starea imprumutului]
         END AS [Starea imprumutului],
-				
-        -- Tipul de restructurare simplified
-        CASE LTRIM(RTRIM(ISNULL(j.[Tipul de restructurare],'')))
-            WHEN N'НекоммерческаяРеструктуризация' THEN N'Restructurizare non-comerciala'
-            WHEN N'КоммерческаяРеструктуризация'     THEN N'Restructurizare comerciala'
-            ELSE j.[Tipul de restructurare]
-        END AS [Tipul de restructurare],
 
+        CASE 
+            WHEN LTRIM(RTRIM(j.[Tipul de restructurare])) LIKE N'%КоммерческаяРеструктуризация%' THEN N'Restructurizare comerciala'
+            WHEN LTRIM(RTRIM(j.[Tipul de restructурare])) LIKE N'%НекоммерческаяРеструктуризация%' THEN N'Restructurizare non-comerciala'
+            WHEN LTRIM(RTRIM(j.[Tipul de restructurare])) LIKE N'%НекомерческаяРеструктуризация%' THEN N'Restructurizare non-comerciala'
+            ELSE j.[Tipul de restructurare]
+        END AS [Tipul de restructurare]
         j.LastBranchID,
         j.LastEmployeeID,
         j.BranchID,
@@ -246,7 +274,7 @@ INSERT INTO [mis].[Gold_Fact_Restruct_Daily_Sold_Par] (
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
     [Starea imprumutului], [Tipul de restructurare], 
-    LastBranchID, LastEmployeeID, BranchID, EmployeeID,
+    LastBranchID, LastEmployeeID, BranchID, EmployeeID, 
 	SegmentIFRS, ParIFRS, Par, StageName
 )
 SELECT
@@ -261,3 +289,6 @@ WHERE rn = 1;
 COMMIT TRAN;
 
 PRINT N'🏁 Done';
+
+
+

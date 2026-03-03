@@ -1,9 +1,10 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-03-02 16:14:07.058099
+-- Generated: 2026-03-03 09:55:20.946993
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files included: 26
+-- Files included: 27
 --   mis.Gold_Dim_AppUsers.sql
+--   mis.Gold_Dim_BlacklistClients.sql
 --   mis.Gold_Dim_Branch.sql
 --   mis.Gold_Dim_Clients.sql
 --   mis.Gold_Dim_Credits.sql
@@ -100,6 +101,50 @@ FROM [ATK].[mis].[Bronze_РегистрыСведений.СведенияОПо
     SET @EndTime = GETDATE();
     INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
     VALUES ('mis.Gold_Dim_AppUsers', @StartTime, @EndTime, @Status, @FailureNote);
+
+    -- Start of: mis.Gold_Dim_BlacklistClients.sql
+    SET @StartTime = GETDATE();
+    SET @EndTime = NULL;
+    SET @Status = 'Running';
+    SET @sql = N'IF OBJECT_ID(''mis.Gold_Dim_BlacklistClients'', ''U'') IS NOT NULL
+    DROP TABLE mis.Gold_Dim_BlacklistClients;
+
+SELECT 
+    [КонтрагентыВЧерномСписке IDNO],
+    [КонтрагентыВЧерномСписке Клиент ID],
+    [КонтрагентыВЧерномСписке Комментарий],
+    [КонтрагентыВЧерномСписке Решение Комитета],
+    [КонтрагентыВЧерномСписке Статус]
+INTO mis.Gold_Dim_BlacklistClients
+FROM
+(
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY [КонтрагентыВЧерномСписке Клиент ID]
+               ORDER BY [КонтрагентыВЧерномСписке Период] DESC  
+           ) AS rn
+    FROM [ATK].[dbo].[РегистрыСведений.КонтрагентыВЧерномСписке]
+) AS LastStatus
+WHERE rn = 1
+  AND [КонтрагентыВЧерномСписке Статус] = ''Активный'';';
+    BEGIN TRY
+        SET @FailureNote = '';
+        EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
+    END TRY
+    BEGIN CATCH
+        SET @Status = 'Failed';
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+        -- Continue to next file without THROW
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_BlacklistClients', @StartTime, @EndTime, @Status, @FailureNote);
 
     -- Start of: mis.Gold_Dim_Branch.sql
     SET @StartTime = GETDATE();

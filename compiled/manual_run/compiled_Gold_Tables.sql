@@ -1,8 +1,9 @@
 -- Compiled SQL bundle (Gold) with Logging (Dynamic Execution)
--- Generated: 2026-03-02 16:13:48
+-- Generated: 2026-03-03 09:55:12
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
--- Files (26):
+-- Files (27):
 --   mis.Gold_Dim_AppUsers.sql
+--   mis.Gold_Dim_BlacklistClients.sql
 --   mis.Gold_Dim_Branch.sql
 --   mis.Gold_Dim_Clients.sql
 --   mis.Gold_Dim_Credits.sql
@@ -97,6 +98,60 @@ END
 
 ----------------------------------------------------------------------------------------------------
 -- End of: mis.Gold_Dim_AppUsers.sql
+----------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------
+-- Start of: mis.Gold_Dim_BlacklistClients.sql
+----------------------------------------------------------------------------------------------------
+BEGIN
+    SET @StartTime = GETDATE();
+    SET @Status = 'Running';
+
+    BEGIN TRY
+        SET @FailureNote = '';
+        SET @sql = N'USE [ATK];
+
+IF OBJECT_ID(''mis.Gold_Dim_BlacklistClients'', ''U'') IS NOT NULL
+    DROP TABLE mis.Gold_Dim_BlacklistClients;
+
+SELECT 
+    [КонтрагентыВЧерномСписке IDNO],
+    [КонтрагентыВЧерномСписке Клиент ID],
+    [КонтрагентыВЧерномСписке Комментарий],
+    [КонтрагентыВЧерномСписке Решение Комитета],
+    [КонтрагентыВЧерномСписке Статус]
+INTO mis.Gold_Dim_BlacklistClients
+FROM
+(
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY [КонтрагентыВЧерномСписке Клиент ID]
+               ORDER BY [КонтрагентыВЧерномСписке Период] DESC  
+           ) AS rn
+    FROM [ATK].[dbo].[РегистрыСведений.КонтрагентыВЧерномСписке]
+) AS LastStatus
+WHERE rn = 1
+  AND [КонтрагентыВЧерномСписке Статус] = ''Активный'';
+';
+        EXEC sys.sp_executesql @sql;
+        SET @Status = 'Success';
+    END TRY
+    BEGIN CATCH
+        SET @Status = 'Failed';
+        SET @FailureNote = CONCAT(
+            'Msg: ', ERROR_MESSAGE(),
+            ' | Line: ', ERROR_LINE(),
+            ' | Number: ', ERROR_NUMBER()
+        );
+    END CATCH;
+
+    SET @EndTime = GETDATE();
+    INSERT INTO mis.Gold_Proc_Exec_Log (TableName, StartTime, EndTime, Status, Failure_Note)
+    VALUES ('mis.Gold_Dim_BlacklistClients', @StartTime, @EndTime, @Status, @FailureNote);
+END
+
+----------------------------------------------------------------------------------------------------
+-- End of: mis.Gold_Dim_BlacklistClients.sql
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------

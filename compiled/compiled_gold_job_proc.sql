@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-03-03 13:30:20.794976
+-- Generated: 2026-03-04 09:53:47.075303
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 27
 --   mis.Gold_Dim_AppUsers.sql
@@ -4480,18 +4480,22 @@ WITH FinalDedup AS (
         j.DaysBucket_Credit,
         j.DaysFact_Total,
         j.DaysIFRS,
-        CASE 
-            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] = N''Излеченный'' THEN N''Nevindecat contaminat''
-            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] = N''НеИзлеченный'' THEN N''Nevindecat contaminat''
+        
+        CASE
+            WHEN f.ClientID IS NOT NULL
+                 AND ISNULL(j.[Starea imprumutului], N'''') <> N''НеИзлеченный''
+            THEN N''Nevindecat contaminat''
             WHEN j.[Starea imprumutului] = N''Излеченный'' THEN N''Vindecat''
             WHEN j.[Starea imprumutului] = N''НеИзлеченный'' THEN N''Nevindecat''
             ELSE j.[Starea imprumutului]
         END AS [Starea imprumutului],
-				
+
         
-        CASE LTRIM(RTRIM(ISNULL(j.[Tipul de restructurare],'''')))
-            WHEN N''НекоммерческаяРеструктуризация'' THEN N''Restructurizare non-comerciala''
-            WHEN N''КоммерческаяРеструктуризация''     THEN N''Restructurizare comerciala''
+        CASE
+            WHEN f.ClientID IS NOT NULL
+                 OR j.[Tipul de restructurare] LIKE N''%НекоммерческаяРеструктуризация%''
+            THEN N''Restructurizare non-comerciala''
+            WHEN j.[Tipul de restructurare] LIKE N''%КоммерческаяРеструктуризация%'' THEN N''Restructurizare comerciala''
             ELSE j.[Tipul de restructurare]
         END AS [Tipul de restructurare],
 

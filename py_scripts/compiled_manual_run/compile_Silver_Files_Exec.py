@@ -16,6 +16,7 @@ SQL_ORDER = [
     # independent
     "mis.Silver_Employee_User.sql",
     "mis.Silver_CommiteeProtocol.sql",
+    "mis.Silver_Events.sql",
 
     # creates Gold_Fact_CerereOnline
     "mis.Silver_EmployeesPosition_SCD.sql",

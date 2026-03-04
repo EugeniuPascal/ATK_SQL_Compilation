@@ -65,7 +65,7 @@ SELECT
     ISNULL(vh.Venit_dupa_hotare, 0) AS [Venit_dupa_hotare],
     cb.[Филиал ID]                  AS [Филиал ID]
 INTO [mis].[Gold_Dim_Clients]
-FROM [mis].[Silver_Clients_base] g
+FROM [mis].[Gold_Dim_Clients] g
 LEFT JOIN EvPhone ph
   ON ph.ClientID = g.[ClientID] AND ph.rn = 1
 LEFT JOIN EvFisk fc
@@ -74,3 +74,5 @@ LEFT JOIN VenitHotare vh
   ON vh.ClientID = g.[ClientID]
 LEFT JOIN CtrBranch cb
   ON cb.ClientID = g.[ClientID];
+
+CREATE INDEX IX_Dev_Dim_Clients_ClientID1 ON [mis].[Dev_Dim_Clients] ([ClientID]);

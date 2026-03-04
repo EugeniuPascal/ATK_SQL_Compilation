@@ -93,7 +93,7 @@ CREATE NONCLUSTERED INDEX IX_IRR ON #IRR (CreditID, IRRDate DESC);
         ON r.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
        AND CAST(s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS date) BETWEEN r.ValidFrom AND r.ValidTo
     WHERE s.[СуммыЗадолженностиПоПериодамПросрочки Дата] BETWEEN @DateFrom AND @DateTo
-	--AND s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = 'B72600155D65140C11ED76C14467C57B'
+	--AND s.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID] = 'BA930018FEFB2E3711DD78D34164392D'
 )
 SELECT *
 INTO #Base
@@ -206,18 +206,22 @@ WITH FinalDedup AS (
         j.DaysBucket_Credit,
         j.DaysFact_Total,
         j.DaysIFRS,
-        CASE 
-            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] = N'Излеченный' THEN N'Nevindecat contaminat'
-            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] = N'НеИзлеченный' THEN N'Nevindecat contaminat'
+        -- Starea logic like Gold_Fact_Restruct_Daily_Min
+        CASE
+            WHEN f.ClientID IS NOT NULL
+                 AND ISNULL(j.[Starea imprumutului], N'') <> N'НеИзлеченный'
+            THEN N'Nevindecat contaminat'
             WHEN j.[Starea imprumutului] = N'Излеченный' THEN N'Vindecat'
             WHEN j.[Starea imprumutului] = N'НеИзлеченный' THEN N'Nevindecat'
             ELSE j.[Starea imprumutului]
         END AS [Starea imprumutului],
-				
-        -- Tipul de restructurare simplified
-        CASE LTRIM(RTRIM(ISNULL(j.[Tipul de restructurare],'')))
-            WHEN N'НекоммерческаяРеструктуризация' THEN N'Restructurizare non-comerciala'
-            WHEN N'КоммерческаяРеструктуризация'     THEN N'Restructurizare comerciala'
+
+        -- Tipul de restructurare translated to Romanian
+        CASE
+            WHEN f.ClientID IS NOT NULL
+                 OR j.[Tipul de restructurare] LIKE N'%НекоммерческаяРеструктуризация%'
+            THEN N'Restructurizare non-comerciala'
+            WHEN j.[Tipul de restructurare] LIKE N'%КоммерческаяРеструктуризация%' THEN N'Restructurizare comerciala'
             ELSE j.[Tipul de restructurare]
         END AS [Tipul de restructurare],
 

@@ -109,7 +109,7 @@ CREATE NONCLUSTERED INDEX IX_IRR ON #IRR(CreditID, IRRDate DESC);
         ON r.CreditID = s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID]
        AND CAST(s.[СуммыЗадолженностиПоПериодамПросрочки Дата] AS DATE) BETWEEN r.ValidFrom AND r.ValidTo
     WHERE s.[СуммыЗадолженностиПоПериодамПросрочки Дата] BETWEEN @DateFrom AND @DateTo
-	--AND s.[СуммыЗадолженностиПоПериодамПросрочки Кредит ID] = '813D00155D65040111ED35CDAF3ED6E4'
+	--AND s.[СуммыЗадолженностиПоПериодамПросрочки Клиент ID] = 'BA930018FEFB2E3711DD78D34164392D'
 )
 SELECT *
 INTO #Base
@@ -221,24 +221,32 @@ WITH FinalDedup AS (
         j.DaysBucket_Credit,
         j.DaysFact_Total,
         j.DaysIFRS,
-        CASE 
-            WHEN f.ClientID IS NOT NULL AND j.[Starea imprumutului] IN (N'Излеченный', N'НеИзлеченный')
+
+        -- Starea logic like Gold_Fact_Restruct_Daily_Min
+        CASE
+            WHEN f.ClientID IS NOT NULL
+                 AND ISNULL(j.[Starea imprumutului], N'') <> N'НеИзлеченный'
             THEN N'Nevindecat contaminat'
             WHEN j.[Starea imprumutului] = N'Излеченный' THEN N'Vindecat'
             WHEN j.[Starea imprumutului] = N'НеИзлеченный' THEN N'Nevindecat'
             ELSE j.[Starea imprumutului]
         END AS [Starea imprumutului],
 
-        CASE 
-            WHEN LTRIM(RTRIM(j.[Tipul de restructurare])) LIKE N'%КоммерческаяРеструктуризация%' THEN N'Restructurizare comerciala'
-            WHEN LTRIM(RTRIM(j.[Tipul de restructурare])) LIKE N'%НекоммерческаяРеструктуризация%' THEN N'Restructurizare non-comerciala'
-            WHEN LTRIM(RTRIM(j.[Tipul de restructurare])) LIKE N'%НекомерческаяРеструктуризация%' THEN N'Restructurizare non-comerciala'
+        -- Tipul de restructurare translated to Romanian
+        CASE
+            WHEN f.ClientID IS NOT NULL
+                 OR j.[Tipul de restructurare] LIKE N'%НекоммерческаяРеструктуризация%'
+            THEN N'Restructurizare non-comerciala'
+            WHEN j.[Tipul de restructurare] LIKE N'%КоммерческаяРеструктуризация%' THEN N'Restructurizare comerciala'
             ELSE j.[Tipul de restructurare]
-        END AS [Tipul de restructurare]
+        END AS [Tipul de restructurare],
+
         j.LastBranchID,
         j.LastEmployeeID,
         j.BranchID,
         j.EmployeeID,
+
+        -- IFRS Segment
         CASE
             WHEN j.DaysIFRS >= 91 THEN N'e) 90 +'
             WHEN j.DaysIFRS >= 31 THEN N'd) 30 - 90'
@@ -246,7 +254,10 @@ WITH FinalDedup AS (
             WHEN j.DaysIFRS >= 4  THEN N'b) 4 - 15'
             ELSE N'a) 0 - 3'
         END AS SegmentIFRS,
+
         j.ParIFRS,
+
+        -- PAR buckets
         CASE
             WHEN j.DaysBucket_Credit BETWEEN 1   AND 30  THEN N'Par0'
             WHEN j.DaysBucket_Credit BETWEEN 31  AND 60  THEN N'Par30'
@@ -257,12 +268,16 @@ WITH FinalDedup AS (
             WHEN j.DaysBucket_Credit > 360           THEN N'Par360'
             ELSE NULL
         END AS Par,
+
+        -- Stage mapping
         CASE j.CurrentStage
             WHEN 'Стадия1' THEN 'Stage1'
             WHEN 'Стадия2' THEN 'Stage2'
             WHEN 'Стадия3' THEN 'Stage3'
             ELSE j.CurrentStage
         END AS StageName,
+
+        -- Deduplication row number
         ROW_NUMBER() OVER (
             PARTITION BY j.ClientID, j.CreditID, j.SoldDate
             ORDER BY j.DaysFact_Total DESC, j.Balance_Total DESC
@@ -270,25 +285,23 @@ WITH FinalDedup AS (
     FROM #Joined j
     LEFT JOIN #Flag f ON f.ClientID = j.ClientID AND f.SoldDate = j.SoldDate
 )
+
 INSERT INTO [mis].[Gold_Fact_Restruct_Daily_Sold_Par] (
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
     [Starea imprumutului], [Tipul de restructurare], 
     LastBranchID, LastEmployeeID, BranchID, EmployeeID, 
-	SegmentIFRS, ParIFRS, Par, StageName
+    SegmentIFRS, ParIFRS, Par, StageName
 )
 SELECT
     SoldDate, CreditID, ClientID, Balance_Total, IRR_Values,
     DaysBucket_Credit, DaysFact_Total, DaysIFRS,
-    [Starea imprumutului], [Tipul de restructurare], 
+    [Starea imprumutului], [Tipul de restructurare],
     LastBranchID, LastEmployeeID, BranchID, EmployeeID,
-	SegmentIFRS, ParIFRS, Par, StageName
+    SegmentIFRS, ParIFRS, Par, StageName
 FROM FinalDedup
 WHERE rn = 1;
 
 COMMIT TRAN;
 
 PRINT N'🏁 Done';
-
-
-

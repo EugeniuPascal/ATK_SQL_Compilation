@@ -76,6 +76,7 @@ try:
     
     SQL_ORDER = [
         "mis.Gold_Dim_AppUsers.sql",
+        "mis.Gold_Dim_BlacklistClients.sql",
         "mis.Gold_Dim_Branch.sql",
         "mis.Gold_Dim_Clients.sql",
         "mis.Gold_Dim_Credits.sql",

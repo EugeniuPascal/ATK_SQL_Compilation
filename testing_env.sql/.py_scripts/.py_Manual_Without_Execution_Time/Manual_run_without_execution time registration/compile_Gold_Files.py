@@ -1,37 +1,43 @@
-# compile_silver_tables_folder_strict.py
+# compile_gold_tables_folder_strict.py
 from pathlib import Path
 from datetime import datetime
 
 # ---- configure your folder ----
-MAIN_DIR  = Path(r"C:\ATK_Project\sql_scripts\Silver")
-OUTPUT    = Path(r"C:\ATK_Project\compiled\manual_run\compiled_Silver_Tables.sql")
+MAIN_DIR  = Path(r"C:\ATK_Project\sql_scripts\Gold")
+OUTPUT    = Path(r"C:\ATK_Project\compiled\manual_run\compiled_Gold_Tables.sql")
 
 FALLBACK_ENCODINGS = ("utf-8-sig", "utf-8", "cp1250", "cp1252", "latin-1")
 DIV = "-" * 100
 
-# ---- strictly ordered files ----
+# ---- list your files in the specific order you want ----
 SQL_ORDER = [
-    # independent
-    "mis.Silver_Employee_User.sql",
-    "mis.Silver_CommiteeProtocol.sql",
-    
-    # creates Gold_Fact_CerereOnline
-    "mis.Silver_CerereOnline_base.sql",
-    
-    # below table execution order to create mis.Gold_Fact_Restruct_Daily_Min 
-    "mis.Silver_Restruct_SCD.sql",    
-    "mis.Silver_RestructState_SCD.sql",
-    "mis.Silver_Restruct_Merged_SCD.sql",
-    "mis.Silver_Client_UnhealedFlag.sql",
-    "mis.Silver_Resp_SCD.sql",
-    "mis.Silver_Stages_SCD.sql",
-    
-    # below table execution order to create mis.Gold_Fact_CPD_Sold 
-    "mis.Silver_SCD_GroupMembershipPeriods.sql", 
-    "mis.Silver_Sold_Owner.sql",
-    "mis.Silver_Limits.sql",
-    "mis.Silver_Conditions_After_Disb.sql",
-    "mis.Silver_CPD_TaskDays.sql",
+    "mis.Gold_Dim_AppUsers.sql",
+    "mis.Gold_Dim_BlacklistClients.sql",
+    "mis.Gold_Dim_Branch.sql",
+    "mis.Gold_Dim_Clients.sql",
+    "mis.Gold_Dim_Credits.sql",
+    "mis.Gold_Dim_EmployeePayrollData.sql",
+    "mis.Gold_Dim_Employees.sql",
+    "mis.Gold_Dim_EmployeesHistory.sql",
+    "mis.Gold_Dim_Events.sql",
+    "mis.Gold_Dim_GroupMembershipPeriods.sql",
+    "mis.Gold_Dim_Leads.sql",
+    "mis.Gold_Dim_PartnersBranch.sql",
+    "mis.Gold_Fact_AdminTasks.sql",
+    "mis.Gold_Fact_ArchiveDocument.sql",
+    "mis.Gold_Fact_BudgetEmployees.sql",
+    "mis.Gold_Fact_CerereOnline.sql",
+    "mis.Gold_Fact_Comments.sql",
+    "mis.Gold_Fact_CPD.sql",
+    "mis.Gold_Fact_CreditsInShadowBranches.sql",
+    "mis.Gold_Fact_WriteOffCredits.sql",
+    "mis.Gold_Fact_Restruct_Daily_Min.sql",
+    "mis.Gold_Fact_Disbursement.sql",
+    "mis.Gold_Fact_Sold_Par.sql",
+    "V2__inc_Gold_Dim_Event_InProgress.sql",
+    "V2__inc_Gold_Dim_Event_Responsible.sql",
+    "V2__inc_Gold_Dim_Limits.sql",
+    "V3__inc_Gold_Fact_Restruct_Daily_Sold_Par.sql"
 ]
 
 # ---- helper to read files with fallback encodings ----
@@ -44,7 +50,7 @@ def read_text_with_fallback(p: Path) -> str | None:
     return None
 
 def compile_sql_strict():
-    # ---- 1) Build final list strictly from SQL_ORDER ----
+    # ---- build final processing list strictly from SQL_ORDER ----
     sql_files = []
     for fname in SQL_ORDER:
         fpath = MAIN_DIR / fname
@@ -53,7 +59,7 @@ def compile_sql_strict():
         else:
             print(f"⚠ Warning: file listed in SQL_ORDER not found -> {fpath}")
 
-    # ---- 2) header for compiled file ----
+    # ---- header for compiled file ----
     header = (
         f"-- Compiled SQL bundle (strict order)\n"
         f"-- Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"

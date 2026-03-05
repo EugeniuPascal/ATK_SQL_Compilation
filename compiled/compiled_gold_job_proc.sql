@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Compiled Stored Procedure for MSSQL Agent Job (Gold) - Idempotent with Logging
--- Generated: 2026-03-04 16:12:37.960144
+-- Generated: 2026-03-05 11:41:40.951259
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files included: 27
 --   mis.Gold_Dim_AppUsers.sql
@@ -60,9 +60,9 @@ BEGIN
 
 CREATE TABLE mis.[Gold_Dim_AppUsers]
 (
-    App_User_ClientID VARCHAR(36) NOT NULL,
-    App_User_UserID VARCHAR(36) NOT NULL,
-    App_User_Phone NVARCHAR(50) NULL,
+    App_User_ClientID   VARCHAR(36) NOT NULL,
+    App_User_UserID     VARCHAR(36) NOT NULL,
+    App_User_Phone      NVARCHAR(50) NULL,
     App_User_FiscalCode NVARCHAR(20) NULL,
     App_User_ClientName NVARCHAR(100) NULL
 );

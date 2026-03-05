@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Silver) with Logging (Dynamic Execution)
--- Generated: 2026-03-05 11:41:27
+-- Generated: 2026-03-05 15:57:40
 -- Source folder: C:\ATK_Project\sql_scripts\Silver
 -- Files (17):
 --   mis.Silver_Employee_User.sql
@@ -422,6 +422,7 @@ CREATE TABLE mis.Silver_Clients_base
     NoPromoSMS              VARCHAR(36)  NULL,
     EconomicSector          NVARCHAR(200) NULL,
 	EmployeeID              VARCHAR(36)   NULL,
+	MaritalStatus           NVARCHAR(256)  NULL,
     OrganizationType        NVARCHAR(52)  NULL,
     IsGroupOwner            BIT           NULL,
     GroupID                 NVARCHAR(20)  NULL,
@@ -488,6 +489,7 @@ BaseData AS
         s.[Контрагенты Не Отправлять Рекламные СМС] AS NoPromoSMS,
         s.[Контрагенты Сектор Экономики]        AS EconomicSector,
 		s.[Контрагенты Кредитный Эксперт ID]    AS EmployeeID,
+		s.[Контрагенты Соц Статус]              AS MaritalStatus,
         fp.[ФормыПредприятия Наименование]      AS OrganizationType,
 
         CASE WHEN g.[ГруппыАффилированныхЛиц Владелец] = s.[Контрагенты ID]
@@ -569,10 +571,21 @@ Final AS
             WHEN Age > 110 THEN ''n/a''
             ELSE ''> 65''
         END AS AgeGroup,
-        CASE Gender WHEN ''Ж'' THEN ''F'' WHEN ''М'' THEN ''M'' ELSE Gender END AS GenderClean,
+        CASE Gender 
+		     WHEN ''Ж'' THEN ''F'' WHEN ''М'' THEN ''M'' ELSE Gender END AS GenderClean,
         CASE [Language] WHEN ''Русский'' THEN ''Russian''
                         WHEN ''Română'' THEN ''Romanian''
                         ELSE [Language] END AS LanguageClean,
+						
+		CASE MaritalStatus 
+            WHEN N''ГражданскийБрак'' THEN ''Concubinaj''
+            WHEN N''Женат'' THEN ''Casatorit''
+			WHEN N''НеЖенат'' THEN ''Ne Casatorit''           
+			WHEN N''Разведен'' THEN ''Divortat''
+			WHEN N''Вдовец'' THEN ''Vaduv''
+            ELSE MaritalStatus
+		END AS m_status,
+        
         ROW_NUMBER() OVER (PARTITION BY ClientID ORDER BY RegistrationDate DESC, CreatedDate DESC) AS rn
     FROM AgeCalc
 )
@@ -583,12 +596,10 @@ SELECT
     f.ClientID, f.ParentID, f.BranchID, f.IsDeleted, f.IsGroup, f.ClientCode, f.ClientName, f.IsBlocked,
     f.Visibility, f.Age, f.AgeGroup, f.City, f.CreatedDate, f.PartnerCode, f.FullName, f.IsNonResident,
     f.NoPaymentNotification, f.GenderClean, f.PostalAddress, f.Country, f.MobilePhone1, f.MobilePhone2,
-    f.Phones, f.FiscalCode, f.LegalAddress, f.RegistrationDate, f.LanguageClean,
-    f.NoEmailNotifications, f.NoPromoSMS, f.EconomicSector, f.EmployeeID, f.OrganizationType,
-    f.IsGroupOwner, f.GroupID, f.CRM_Region_Address, f.CRM_City_Address,
-    f.CRM_Status, f.CRM_ClientType, f.CRM_Employee,
-    f.Phone, 
-    f.ANK_LegalAddress, f.ANK_ActualAddress
+    f.Phones, f.FiscalCode, f.LegalAddress, f.RegistrationDate, f.LanguageClean, f.NoEmailNotifications, 
+	f.NoPromoSMS, f.EconomicSector, f.EmployeeID, f. m_status, f.OrganizationType, f.IsGroupOwner, f.GroupID, 
+	f.CRM_Region_Address, f.CRM_City_Address, f.CRM_Status, f.CRM_ClientType, f.CRM_Employee,
+    f.Phone,f.ANK_LegalAddress, f.ANK_ActualAddress
 FROM Final f
 WHERE f.rn = 1;
 

@@ -1,5 +1,5 @@
 -- Compiled SQL bundle (Gold) with Logging (Dynamic Execution)
--- Generated: 2026-03-05 11:41:32
+-- Generated: 2026-03-05 15:57:47
 -- Source folder: C:\ATK_Project\sql_scripts\Gold
 -- Files (27):
 --   mis.Gold_Dim_AppUsers.sql
@@ -657,8 +657,14 @@ FinalData AS (
             WHEN ''Сайт'' THEN ''WebSite''
             ELSE crd.[Кредиты Источник Подписания]
         END AS SigningSource,
-		cr.CreditPurposeDescription,
-		cr.CreditHistoryType,		
+		cr.CreditPurposeDescription,		
+		CASE cr.[CreditHistoryType]
+		     WHEN ''БезКредитнойИстории'' THEN ''Nu are''
+			 WHEN ''КредитнаяИсторияМикроинвестПрочие'' THEN ''Are la MI si in alta parte''
+			 WHEN ''КредитнаяИсторияПрочие'' THEN ''Are in alta parte''
+			 WHEN ''КредитнаяИсторияМикроинвест'' THEN ''Are la MI''
+			 ELSE cr.CreditHistoryType
+	    END AS CreditHistoryType,			 
 		CASE 
 		    WHEN seg.SegmentRevenue = ''Consum non-business''
 			   AND fp.FinancialProductsMainGroup = ''Business''

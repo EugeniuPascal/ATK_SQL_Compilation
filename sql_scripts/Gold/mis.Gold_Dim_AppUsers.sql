@@ -7,9 +7,9 @@ GO
 
 CREATE TABLE mis.[Gold_Dim_AppUsers]
 (
-    App_User_ClientID VARCHAR(36) NOT NULL,
-    App_User_UserID VARCHAR(36) NOT NULL,
-    App_User_Phone NVARCHAR(50) NULL,
+    App_User_ClientID   VARCHAR(36) NOT NULL,
+    App_User_UserID     VARCHAR(36) NOT NULL,
+    App_User_Phone      NVARCHAR(50) NULL,
     App_User_FiscalCode NVARCHAR(20) NULL,
     App_User_ClientName NVARCHAR(100) NULL
 );
